@@ -65,10 +65,10 @@ PAGE 3 - HERDING CATS
   CAS+W    /p Mana break, hang on.
   CAS+E    /p Kill skull first, then X.
   CAS+R    /p Get out of the bad stuff on the ground.
-  CAS+A    /followme
-  CAS+S    /wait
-  CAS+D    /facepalm
-  CAS+F    /charge
+  CAS+A    /hello                      (icon: hello.png)
+  CAS+S    /wait                       (icon: wait.png)
+  CAS+D    /pat                        (icon: pat.png)
+  CAS+F    /thank                      (icon: thank-you.png)
   CAS+G    /cheer
 
 
@@ -81,7 +81,7 @@ PAGE 3 - HERDING CATS
   (profile auto-loads when WoW is focused, reverts to Default when you alt-tab)
 - In the WoW profile, create 3 folders: Markers, World, Crew (each gets a Back key)
 - Each tile = Hotkey action set to the combo above
-- Grab a WoW raid marker icon pack from the Elgato Marketplace (or screenshot icons)
+- Icons: install the "WoW Raid Markers" icon pack from this folder (see README.md), or drag PNGs from png/
 - Put Discord mute/deafen (Discord plugin) on the root page
 - Keep non-WoW stuff in the Default profile
 

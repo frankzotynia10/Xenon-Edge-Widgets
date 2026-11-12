@@ -24,13 +24,17 @@ cp -r com.frank.wowmarkers.sdIconPack "$APPDATA/Elgato/StreamDeck/IconPacks/"
 
 The icons appear under **WoW Raid Markers** in the icon picker of any key. You can also drag a PNG from `png/` onto a key.
 
-## Suggested key actions
-- **Markers:** a Hotkey action that presses your WoW keybind for that marker.
-- **Emotes, ready check and countdown:** a Text action that types a chat command, with Enter.
+## Key setup
+Every key is a Stream Deck **Hotkey** action that presses a Ctrl+Alt+Shift combo bound in WoW.
+
+- **Target markers:** WoW's own "Set Raid Target Icon" keybindings.
+- **Everything else:** a [BindPad](https://www.curseforge.com/wow/addons/bindpad) macro bound to the combo, for example:
   - `/hello`, `/wait`, `/pat`, `/thank`
   - `/readycheck`
   - `/countdown 10`
-  - Clear world markers: `/cwm all`
+  - `/cwm all`
+
+The full key list, macros and setup steps are in [SETUP.txt](SETUP.txt).
 
 ## Changing the icons
 Edit `icons.js`, then run `node build.js`. It renders the icons with headless Chrome or Edge. Open `preview.html` to see the whole set.
