@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
-<defs><radialGradient id="bg113" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#40C057" stop-opacity=".30"/><stop offset="1" stop-color="#40C057" stop-opacity="0"/></radialGradient></defs>
-<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg113)"/>
-<defs><linearGradient id="g110" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CE99A"/><stop offset="1" stop-color="#2B8A3E"/></linearGradient>
-  <linearGradient id="s111" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f112" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+<defs><radialGradient id="bg114" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#40C057" stop-opacity=".30"/><stop offset="1" stop-color="#40C057" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg114)"/>
+<defs><linearGradient id="g111" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CE99A"/><stop offset="1" stop-color="#2B8A3E"/></linearGradient>
+  <linearGradient id="s112" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f113" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
   <g transform="translate(33 19) scale(0.78)">
-  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="#40C057" opacity=".55" filter="url(#f112)"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="#40C057" opacity=".55" filter="url(#f113)"/>
   <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="none" stroke="#0b0c0f" stroke-width="11.538461538461538" stroke-linejoin="round"/>
-  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#g110)" stroke="#2B8A3E" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#g111)" stroke="#2B8A3E" stroke-width="1.5" stroke-linejoin="round"/>
   
-  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#s111)"/></g><path d="M53 59L67 73L92 45" fill="none" stroke="#0b0c0f" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#s112)"/></g><path d="M53 59L67 73L92 45" fill="none" stroke="#0b0c0f" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
      <path d="M53 59L67 73L92 45" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">READY?</text>
 </svg>

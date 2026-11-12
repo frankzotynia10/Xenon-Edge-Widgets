@@ -206,6 +206,16 @@
     ]
   },
   {
+    "path": "cheer.png",
+    "name": "Cheer",
+    "tags": [
+      "emote",
+      "cheer",
+      "party",
+      "celebrate"
+    ]
+  },
+  {
     "path": "ready-check.png",
     "name": "Ready check",
     "tags": [

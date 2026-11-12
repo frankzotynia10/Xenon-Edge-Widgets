@@ -69,7 +69,7 @@ PAGE 3 - HERDING CATS
   CAS+S    /wait                       (icon: wait.png)
   CAS+D    /pat                        (icon: pat.png)
   CAS+F    /thank                      (icon: thank-you.png)
-  CAS+G    /cheer
+  CAS+G    /cheer                      (icon: cheer.png)
 
 
 4. STREAM DECK SETUP

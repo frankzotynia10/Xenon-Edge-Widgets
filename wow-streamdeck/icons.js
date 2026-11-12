@@ -145,6 +145,22 @@ const EXTRAS = {
     symbol('heart', 72, 60, 86) +
     `<g fill="#FFE066"><path d="M125 12l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3Z"/><path d="M30 18l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z"/><path d="M118 84l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2Z"/></g>`,
     '#F06595', { label: 'THANK YOU', labelSize: 15 }) },
+  cheer: { name: 'Cheer', tags: ['emote', 'cheer', 'party', 'celebrate'], svg: () => {
+    const cone = 'M30 110L58 46Q82 56 94 80Z';
+    const bits = [['#FFD43B', 98, 30, 0], ['#4DABF7', 116, 46, 30], ['#69DB7C', 84, 18, -20], ['#FF6B6B', 122, 22, 45], ['#E599F7', 108, 64, 15], ['#FFA94D', 70, 26, -35]]
+      .map(([c, x, y, r]) => `<rect x="${x - 5}" y="${y - 3}" width="10" height="6" rx="1.5" fill="${c}" stroke="${INK}" stroke-width="2" transform="rotate(${r} ${x} ${y})"/>`).join('');
+    return tile(grad('cone', '#C77DFF', '#7B2CBF') +
+      `<defs><clipPath id="cc"><path d="${cone}"/></clipPath>${blur('cf', 8)}</defs>
+       <circle cx="96" cy="44" r="30" fill="#FFD43B" opacity=".25" filter="url(#cf)"/>
+       <g fill="none" stroke-width="5" stroke-linecap="round"><path d="M80 42q6 -14 -2 -26" stroke="#FFD43B"/><path d="M96 58q14 -2 22 -14" stroke="#4DABF7"/><path d="M90 48q12 -10 10 -26" stroke="#FF6B6B"/></g>
+       ${bits}<circle cx="128" cy="36" r="3.5" fill="#FFD43B"/><circle cx="64" cy="14" r="3" fill="#69DB7C"/><circle cx="118" cy="74" r="3" fill="#FF6B6B"/>
+       <path d="${cone}" fill="none" stroke="${INK}" stroke-width="9" stroke-linejoin="round"/>
+       <path d="${cone}" fill="url(#cone)"/>
+       <g clip-path="url(#cc)" stroke="#FFD43B" stroke-width="6"><path d="M38 70L84 104M46 52L100 92M28 88L70 118"/></g>
+       <path d="M58 46Q82 56 94 80" fill="none" stroke="#E5DBFF" stroke-width="3.5" stroke-linecap="round"/>
+       <path d="M40 98L56 60" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>`,
+      '#CC5DE8', { label: 'CHEER' });
+  } },
   'ready-check': { name: 'Ready check', tags: ['ready', 'check', 'raid'], svg: () => tile(
     symbol('circle', 72, 58, 78).replace(/#FFC078/g, '#8CE99A').replace(/#E8590C/g, '#2B8A3E').replace(/#FF922B/g, '#40C057') +
     `<path d="M53 59L67 73L92 45" fill="none" stroke="${INK}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>

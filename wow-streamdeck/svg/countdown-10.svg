@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
-<defs><radialGradient id="bg114" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FF922B" stop-opacity=".30"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></radialGradient></defs>
-<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg114)"/>
+<defs><radialGradient id="bg115" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FF922B" stop-opacity=".30"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg115)"/>
 <defs><linearGradient id="cd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFA94D"/><stop offset="1" stop-color="#FA5252"/></linearGradient></defs><circle cx="72" cy="58" r="38" fill="none" stroke="#2b2d31" stroke-width="9"/>
        <circle cx="72" cy="58" r="38" fill="none" stroke="url(#cd)" stroke-width="9" stroke-linecap="round" stroke-dasharray="186.2 238.8" transform="rotate(-90 72 58)"/>
        <text x="72" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="44" fill="#fff">10</text>

@@ -50,10 +50,10 @@ A widget can't start programs or read other apps on its own. So one Node process
 Folder layout: `widget/` is the iCUE widget source (HTML, manifest, translations) and `helper/` is that widget's part of the helper. Rebuild a package with `icuewidget package widget` in the widget's folder. For the App Launcher, edit `widget-src/` and run `node build.js`.
 
 ## Stream Deck: WoW raid markers
-`wow-streamdeck/` has 25 original key icons:
+`wow-streamdeck/` has 26 original key icons:
 - the 8 target markers and the 8 world markers
 - clear buttons
-- Hello, Wait, Pat and Thank You emotes
+- Hello, Wait, Pat, Thank You and Cheer emotes
 - ready check
 - a 10-second countdown
 

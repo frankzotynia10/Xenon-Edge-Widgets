@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg110" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#CC5DE8" stop-opacity=".30"/><stop offset="1" stop-color="#CC5DE8" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg110)"/>
+<defs><linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C77DFF"/><stop offset="1" stop-color="#7B2CBF"/></linearGradient></defs><defs><clipPath id="cc"><path d="M30 110L58 46Q82 56 94 80Z"/></clipPath><filter id="cf" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8"/></filter></defs>
+       <circle cx="96" cy="44" r="30" fill="#FFD43B" opacity=".25" filter="url(#cf)"/>
+       <g fill="none" stroke-width="5" stroke-linecap="round"><path d="M80 42q6 -14 -2 -26" stroke="#FFD43B"/><path d="M96 58q14 -2 22 -14" stroke="#4DABF7"/><path d="M90 48q12 -10 10 -26" stroke="#FF6B6B"/></g>
+       <rect x="93" y="27" width="10" height="6" rx="1.5" fill="#FFD43B" stroke="#0b0c0f" stroke-width="2" transform="rotate(0 98 30)"/><rect x="111" y="43" width="10" height="6" rx="1.5" fill="#4DABF7" stroke="#0b0c0f" stroke-width="2" transform="rotate(30 116 46)"/><rect x="79" y="15" width="10" height="6" rx="1.5" fill="#69DB7C" stroke="#0b0c0f" stroke-width="2" transform="rotate(-20 84 18)"/><rect x="117" y="19" width="10" height="6" rx="1.5" fill="#FF6B6B" stroke="#0b0c0f" stroke-width="2" transform="rotate(45 122 22)"/><rect x="103" y="61" width="10" height="6" rx="1.5" fill="#E599F7" stroke="#0b0c0f" stroke-width="2" transform="rotate(15 108 64)"/><rect x="65" y="23" width="10" height="6" rx="1.5" fill="#FFA94D" stroke="#0b0c0f" stroke-width="2" transform="rotate(-35 70 26)"/><circle cx="128" cy="36" r="3.5" fill="#FFD43B"/><circle cx="64" cy="14" r="3" fill="#69DB7C"/><circle cx="118" cy="74" r="3" fill="#FF6B6B"/>
+       <path d="M30 110L58 46Q82 56 94 80Z" fill="none" stroke="#0b0c0f" stroke-width="9" stroke-linejoin="round"/>
+       <path d="M30 110L58 46Q82 56 94 80Z" fill="url(#cone)"/>
+       <g clip-path="url(#cc)" stroke="#FFD43B" stroke-width="6"><path d="M38 70L84 104M46 52L100 92M28 88L70 118"/></g>
+       <path d="M58 46Q82 56 94 80" fill="none" stroke="#E5DBFF" stroke-width="3.5" stroke-linecap="round"/>
+       <path d="M40 98L56 60" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">CHEER</text>
+</svg>
