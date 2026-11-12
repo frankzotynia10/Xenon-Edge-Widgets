@@ -197,15 +197,23 @@ function face(inner, hi = '#FFE066', lo = '#F08C00', cx = 72, cy = 62, r = 40) {
 }
 
 // thumbs up, upright around 72,64
+// Fist faces left like the 👍 emoji: curled fingers stacked on the left, short fat thumb on top, wrist cuff on the right.
 function thumb(gid) {
-  const fist = 'M44 70Q44 58 56 58H82Q92 58 92 70V96Q92 106 82 106H56Q44 106 44 96Z';
-  const fingers = [60, 71, 82, 93].map(y => `<rect x="76" y="${y}" width="24" height="11" rx="5.5"/>`).join('');
-  return grad(gid, '#FFE066', '#F08C00') + grad(gid + 's', '#74C0FC', '#1971C2') +
-    outlined('M30 62H46V106H30Z', `url(#${gid}s)`, 6) +
-    ln('M57 64L60 24', 28) + `<path d="${fist}" fill="${INK}" stroke="${INK}" stroke-width="7"/>` +
-    ln('M57 64L60 24', 20, `url(#${gid})`) + `<path d="${fist}" fill="url(#${gid})"/>` +
-    `<g stroke="${INK}" stroke-width="6">${fingers}</g><g fill="url(#${gid})">${fingers}</g>` +
-    ln('M52 58L54 30', 3, 'rgba(255,255,255,.5)');
+  const f = `url(#${gid})`;
+  const fist = 'M56 58H92Q102 58 102 68V98Q102 110 90 110H60Q50 110 50 100V64Q50 58 56 58Z';
+  const thumbD = 'M54 64C50 50 50 36 56 26C60 19 70 18 73 26C76 34 72 44 74 60Z';
+  const fingers = [[38, 58, 48, 14], [38, 71, 48, 13.5], [40, 84, 46, 13], [44, 96.5, 42, 12]]
+    .map(([x, y, w, h]) => outlined(`M${x + h / 2} ${y}H${x + w}V${y + h}H${x + h / 2}A${h / 2} ${h / 2} 0 0 1 ${x + h / 2} ${y}Z`, f, 6) +
+      ln(`M${x + h / 2} ${y + 3.5}H${x + w - 14}`, 2.2, 'rgba(255,255,255,.45)')).join('');
+  return `<defs><linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="0" y1="18" x2="0" y2="112"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#F08C00"/></linearGradient></defs>` +
+    grad(gid + 's', '#74C0FC', '#1971C2') +
+    outlined('M98 60H116V112H98Z', `url(#${gid}s)`, 6) +
+    `<path d="${thumbD}" fill="${INK}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>` +
+    `<path d="${fist}" fill="${INK}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/>` +
+    `<path d="${thumbD}" fill="${f}"/><path d="${fist}" fill="${f}"/>` +
+    ln('M57 52C55 42 56 33 60 27', 3, 'rgba(255,255,255,.55)') +
+    `<path d="M60 30Q64 24 69 28L68 36Q63 33 60 36Z" fill="#FFF3BF" opacity=".8"/>` +
+    fingers + ln('M84 100q6 2 10 -4', 3, 'rgba(11,12,15,.35)');
 }
 
 function sword() {
@@ -292,7 +300,7 @@ const EMOTES = {
   healme: { name: 'Heal me', tags: ['emote', 'heal', 'healme'], svg: () => tile(symbol('plus', 72, 62, 88) + spark(118, 26, 10, '#B2F2BB') + spark(26, 98, 8, '#B2F2BB'),
     '#40C057', { label: 'HEAL ME', labelSize: 15 }) },
   yes: { name: 'Yes', tags: ['emote', 'yes', 'thumbs up'], svg: () => tile(thumb('ty'), '#40C057', { label: 'YES' }) },
-  no: { name: 'No', tags: ['emote', 'no', 'thumbs down'], svg: () => tile(`<g transform="rotate(180 72 64)">${thumb('td')}</g>`, '#FA5252', { label: 'NO' }) },
+  no: { name: 'No', tags: ['emote', 'no', 'thumbs down'], svg: () => tile(`<g transform="translate(0 128) scale(1 -1)">${thumb('td')}</g>`, '#FA5252', { label: 'NO' }) },
 };
 
 function all() {
