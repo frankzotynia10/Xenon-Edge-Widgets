@@ -29,7 +29,7 @@ Each folder has its own README with details and settings.
    ```powershell
    powershell -ExecutionPolicy Bypass -File edge-helper\install-watchdog.ps1
    ```
-4. **Import the widgets.** In iCUE, import the `.icuewidget` file from each widget folder.
+4. **Import the widgets.** In iCUE, import the `.icuewidget` files, either from the [latest release](https://github.com/frankzotynia10/Xenon-Edge-Widgets/releases/latest) or from each widget folder.
    - **App Launcher:** first run `node build.js` in `launcher-edge/`. It fills the app dropdowns from your Start menu and creates `app-launcher.icuewidget`.
 
 ## How it fits together
