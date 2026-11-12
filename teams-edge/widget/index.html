@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Teams'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-widget-preview" content="resources/preview.png" />
+<meta name="x-icue-property" content="accentColor" data-label="tr('Accent color')" data-type="color" data-default="'#7B83EB'" />
+<meta name="x-icue-property" content="showReactions" data-label="tr('Show reactions')" data-type="switch" data-default="true" />
+<meta name="x-icue-property" content="showCalendar" data-label="tr('Show calendar (L and XL)')" data-type="switch" data-default="true" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Appearance')", "properties": ["accentColor", "showReactions", "showCalendar"], "info": "tr('Controls work while a Teams meeting window is open. The calendar shows on the L and XL sizes after a one-time Microsoft sign-in.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #26272b; --panel3: #303136; --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a;
+    --green: #23a55a; --red: #e5484d; --yellow: #f0b232; --accent: #7B83EB; --r: 2.6vh; --gap: 2vh; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", sans-serif; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+  svg { display: block; }
+  #app { width: 100%; height: 100%; padding: 3vh; display: grid; gap: var(--gap); }
+  .panel { background: var(--panel); border-radius: var(--r); min-width: 0; min-height: 0; }
+
+  /* status */
+  #status { display: flex; flex-direction: column; justify-content: center; gap: 1.2vh; padding: 2.6vh 3vh; position: relative; overflow: hidden; }
+  #status::after { content: ''; position: absolute; inset: 0; border-radius: var(--r); pointer-events: none; box-shadow: inset 0 0 0 .4vh transparent; transition: box-shadow .3s; }
+  .live #status::after { box-shadow: inset 0 0 0 .4vh color-mix(in srgb, var(--accent) 70%, transparent); }
+  #brand { display: flex; align-items: center; gap: 1.4vh; color: var(--muted); font-size: 3.6vh; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  #brand svg { width: 4.6vh; height: 4.6vh; color: var(--accent); }
+  #headline { font-size: 6.4vh; font-weight: 700; line-height: 1.1; }
+  #sub { font-size: 3.4vh; color: var(--muted); line-height: 1.3; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .no-blur #b-blur { display: none; }
+  #tags { display: flex; gap: 1vh; flex-wrap: wrap; }
+  .tag { height: 4.6vh; padding: 0 1.6vh; border-radius: 2.3vh; font-size: 2.7vh; font-weight: 700; display: none; align-items: center; gap: .8vh; background: var(--panel3); }
+  .tag.on { display: inline-flex; }
+  .tag i { width: 1.4vh; height: 1.4vh; border-radius: 50%; background: currentColor; }
+  #tag-rec { color: #ff6b6b; } #tag-rec i { animation: blink 1.2s infinite; }
+  #tag-share { color: var(--green); }
+  @keyframes blink { 50% { opacity: .2; } }
+
+  /* big controls */
+  #controls { display: grid; gap: var(--gap); }
+  .big { border-radius: var(--r); background: var(--panel2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4vh;
+    font-size: 3.8vh; font-weight: 700; transition: transform .08s ease, background .15s ease, opacity .15s; position: relative; }
+  .big svg { width: 9vh; height: 9vh; }
+  .big:active { transform: scale(.96); }
+  .big:disabled { opacity: .3; pointer-events: none; }
+  .big.warn { background: var(--red); }                 /* muted / camera off */
+  .big.on { background: var(--accent); color: #fff; }   /* hand raised */
+  .big.leave { background: #3a1d20; color: var(--red); }
+  .big.leave.confirm { background: var(--red); color: #fff; animation: arm .7s ease-in-out infinite alternate; }
+  @keyframes arm { from { box-shadow: 0 0 0 0 rgba(229,72,77,.7); } to { box-shadow: 0 0 0 1.6vh rgba(229,72,77,0); } }
+
+  /* reactions + extras */
+  #extras { display: grid; gap: var(--gap); }
+  .strip { display: flex; gap: 1.4vh; padding: 1.4vh; align-items: stretch; }
+  .small { flex: 1 1 0; min-width: 0; border-radius: 2vh; background: var(--panel2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6vh;
+    font-size: 2.7vh; font-weight: 700; color: var(--muted); position: relative; transition: transform .08s ease, background .15s; }
+  .small svg { width: 5.4vh; height: 5.4vh; color: var(--text); }
+  .small .emo { font-size: 6vh; line-height: 1; }
+  .small:active { transform: scale(.94); background: var(--panel3); }
+  .small:disabled { opacity: .3; pointer-events: none; }
+  .small.on { background: color-mix(in srgb, var(--accent) 35%, var(--panel2)); color: var(--text); }
+  .small .dot { position: absolute; top: 1vh; right: 1.2vh; width: 1.8vh; height: 1.8vh; border-radius: 50%; background: var(--red); display: none; }
+  .small.unread .dot { display: block; }
+  .no-react #reactions { display: none; }
+
+  #toast { position: absolute; left: 50%; bottom: 3vh; transform: translate(-50%, 2vh); background: var(--panel3); color: var(--text);
+    padding: 1.8vh 3.4vh; border-radius: 3vh; font-size: 3.6vh; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; white-space: nowrap; z-index: 9; }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #pairing { display: none; position: absolute; left: 3vh; right: 3vh; top: 3vh; z-index: 8; background: var(--accent); color: #fff; border-radius: var(--r);
+    padding: 2vh 3vh; font-size: 3.6vh; font-weight: 700; text-align: center; box-shadow: 0 1vh 3vh rgba(0,0,0,.5); }
+  .needs-pair #pairing { display: block; }
+
+  /* ===== sizes (set from JS): S ~840x344, M ~840x704, L ~1688x704, XL ~2544x704 ===== */
+  /* S: status + 4 icon buttons */
+  .size-s #app { grid-template-columns: 30% 1fr; }
+  .size-s #controls { grid-template-columns: repeat(4, 1fr); }
+  .size-s #extras { display: none; }
+  .size-s .big { font-size: 0; gap: 0; } .size-s .big span { display: none; } .size-s .big svg { width: 11vh; height: 11vh; }
+  .size-s #headline { font-size: 5.6vh; } .size-s #sub { font-size: 3.2vh; }
+
+  /* M: status / 2x2 big / reactions / extras */
+  .size-m #app { grid-template-rows: auto 1fr auto; }
+  .size-m #status { padding: 2vh 2.6vh; gap: .8vh; }
+  .size-m #headline { font-size: 4.6vh; } .size-m #sub { font-size: 2.8vh; } .size-m #brand { font-size: 2.6vh; } .size-m #brand svg { width: 3.4vh; height: 3.4vh; }
+  .size-m #controls { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .size-m .big svg { width: 7vh; height: 7vh; } .size-m .big { font-size: 3vh; }
+  .size-m #extras { grid-template-rows: auto auto; }
+  .size-m .strip { height: 12vh; padding: 1vh; gap: 1vh; }
+  .size-m .small .emo { font-size: 4.4vh; } .size-m .small svg { width: 4vh; height: 4vh; } .size-m .small { font-size: 2.2vh; }
+
+  /* L / XL: status | big controls | reactions + extras */
+  .size-l #app { grid-template-columns: 26% 1fr 26%; }
+  .size-xl #app { grid-template-columns: 20% 1fr 22%; }
+  .size-l #controls, .size-xl #controls { grid-template-columns: repeat(4, 1fr); }
+  .size-l #extras, .size-xl #extras { grid-template-rows: 1fr 1fr; }
+  .size-l .strip, .size-xl .strip { flex-wrap: wrap; align-content: stretch; }
+  .size-l #reactions .small, .size-xl #reactions .small { flex: 1 1 28%; }
+  .size-l .big svg { width: 10vh; height: 10vh; } .size-xl .big svg { width: 12vh; height: 12vh; } .size-xl .big { font-size: 4.4vh; }
+
+  /* ===== agenda (L / XL only) ===== */
+  #agenda { display: none; flex-direction: column; padding: 2.4vh 2.6vh; gap: 1.6vh; overflow: hidden; position: relative; }
+  .ag-head { display: flex; align-items: center; gap: 1.4vh; }
+  .ag-title { font-size: 3.4vh; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  #ag-date { font-size: 3vh; color: var(--dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #ag-add { width: 5.6vh; height: 5.6vh; border-radius: 50%; background: var(--panel2); color: var(--muted); font-size: 4vh; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  #ag-add:active { transform: scale(.92); background: var(--panel3); }
+  #ag-allday { display: flex; gap: 1vh; flex-wrap: wrap; }
+  #ag-allday:empty { display: none; }
+  .chip { max-width: 100%; padding: .6vh 1.6vh; border-radius: 2vh; background: var(--panel2); font-size: 2.6vh; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #ag-next { border-radius: 2.2vh; background: var(--panel2); padding: 2vh 2.2vh; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto; column-gap: 2vh; row-gap: .5vh; align-items: center; }
+  #ag-next.now { background: color-mix(in srgb, var(--accent) 22%, var(--panel2)); box-shadow: inset 0 0 0 .3vh color-mix(in srgb, var(--accent) 70%, transparent); }
+  #ag-next.empty { display: block; color: var(--muted); font-size: 3vh; text-align: center; padding: 3vh 2vh; }
+  .nx-when { font-size: 2.8vh; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+  .now .nx-when { color: #fff; }
+  .soon .nx-when { color: var(--yellow); }
+  .nx-title { grid-column: 1; font-size: 4vh; font-weight: 700; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .nx-time { grid-column: 1; font-size: 2.7vh; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #ag-join { grid-column: 2; grid-row: 1 / span 3; width: 14vh; height: 14vh; border-radius: 2.2vh; background: var(--panel3); color: var(--text);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6vh; font-size: 2.8vh; font-weight: 700; transition: transform .08s; }
+  #ag-join svg { width: 6vh; height: 6vh; }
+  #ag-join.hot { background: var(--green); color: #fff; }
+  #ag-join:active { transform: scale(.94); }
+  #ag-join[hidden] { display: none; }
+  #ag-list { flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .4vh; }
+  .ag-day { font-size: 2.4vh; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; margin: 1vh 0 .2vh; }
+  .ag-row { display: flex; align-items: center; gap: 1.6vh; padding: 1.1vh 1.2vh; border-radius: 1.6vh; min-height: 6.4vh; flex: 0 0 auto; }
+  .ag-row .t { width: 11vh; flex: 0 0 auto; font-size: 2.7vh; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ag-row .bar { width: .6vh; align-self: stretch; border-radius: .3vh; background: var(--accent); flex: 0 0 auto; }
+  .ag-row.personal .bar { background: var(--green); }
+  .ag-row.tent .bar { background: repeating-linear-gradient(180deg, var(--accent) 0 .6vh, transparent .6vh 1.2vh); }
+  .ag-row .s { flex: 1; min-width: 0; font-size: 3vh; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ag-row .j { flex: 0 0 auto; height: 4.6vh; padding: 0 1.6vh; border-radius: 2.3vh; background: var(--green); color: #fff; font-size: 2.4vh; font-weight: 700; display: flex; align-items: center; }
+  #ag-setup { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1.8vh; }
+  .setup #ag-setup { display: flex; }
+  .setup #ag-next, .setup #ag-list, .setup #ag-allday { display: none !important; }
+  #ag-setup h3 { font-size: 3.8vh; } #ag-setup p { font-size: 2.7vh; color: var(--muted); line-height: 1.35; }
+  #ag-code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 7vh; font-weight: 700; letter-spacing: .12em; color: #fff; background: var(--panel2); padding: 1vh 2.6vh; border-radius: 2vh; }
+  .sbtn { height: 7vh; padding: 0 3.4vh; border-radius: 3.5vh; background: var(--accent); color: #fff; font-size: 3vh; font-weight: 700; }
+  .sbtn.ghost { background: var(--panel2); color: var(--muted); }
+  .sbtn:active { transform: scale(.95); }
+  #ag-err { font-size: 2.4vh; color: #ff8a8a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #ag-err:empty { display: none; }
+  .live #ag-list, .live #ag-allday { display: none; }
+
+  .cal.size-l #agenda, .cal.size-xl #agenda { display: flex; }
+  .cal.size-l #app { grid-template-columns: 31% 1fr 22%; grid-template-rows: auto 1fr; grid-template-areas: "status controls extras" "agenda controls extras"; }
+  .cal.size-l #status { grid-area: status; padding: 2vh 2.6vh; gap: .8vh; }
+  .cal.size-l #agenda { grid-area: agenda; }
+  .cal.size-l #controls { grid-area: controls; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .cal.size-l #extras { grid-area: extras; }
+  .cal.size-l #headline { font-size: 4.8vh; } .cal.size-l #sub { font-size: 2.8vh; -webkit-line-clamp: 2; }
+  .cal.size-l #brand { font-size: 2.8vh; } .cal.size-l #brand svg { width: 3.6vh; height: 3.6vh; }
+  .cal.size-l .big svg { width: 9vh; height: 9vh; }
+  .cal.size-xl #app { grid-template-columns: 17% 1fr 18% 27%; grid-template-areas: "status controls extras agenda"; }
+  .cal.size-xl #status { grid-area: status; } .cal.size-xl #controls { grid-area: controls; }
+  .cal.size-xl #extras { grid-area: extras; } .cal.size-xl #agenda { grid-area: agenda; }
+</style>
+
+<div id="app">
+  <section id="status" class="panel">
+    <div id="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 7h7a1 1 0 0 1 1 1v6a4 4 0 0 1-4 4h-.5A5.5 5.5 0 0 1 12 22a5.5 5.5 0 0 1-5.4-4.5H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11v3Zm-4 1H6v1.6h1.6V15h1.8V9.6H11V8h-1Zm8.5-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM12 5a2.5 2.5 0 1 1 0-.01V5Z"/></svg>Teams</div>
+    <div id="headline">Connecting…</div>
+    <div id="sub"></div>
+    <div id="tags"><span class="tag" id="tag-rec"><i></i>Recording</span><span class="tag" id="tag-share"><i></i>Sharing</span></div>
+  </section>
+
+  <section id="controls">
+    <button class="big" id="b-mute" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Zm-7 9a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.9V20h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.1A7 7 0 0 1 5 11Z"/><path class="slash" d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" style="display:none"/></svg><span>Mute</span></button>
+    <button class="big" id="b-video" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h10a2 2 0 0 1 2 2v1.5l4.4-2.7A1 1 0 0 1 22 7.6v8.8a1 1 0 0 1-1.6.8L16 14.5V16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path class="slash" d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" style="display:none"/></svg><span>Camera</span></button>
+    <button class="big" id="b-hand" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 3a1.5 1.5 0 0 1 3 0v7h.5V4.5a1.5 1.5 0 0 1 3 0V11h.5V7.5a1.5 1.5 0 0 1 3 0V14a8 8 0 0 1-8 8h-.6a7 7 0 0 1-5.5-2.7l-3.4-4.4a1.6 1.6 0 0 1 2.4-2.1L8 14.5V5.5a1.5 1.5 0 0 1 3 0V10h0V3Z"/></svg><span>Raise hand</span></button>
+    <button class="big leave" id="b-leave" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 13.4c.4-.4.4-1 0-1.4C19 9.2 15.6 8 12 8s-7 1.2-9.7 4c-.4.4-.4 1 0 1.4l2 2c.4.4 1 .4 1.4.1l2.4-1.8c.3-.2.4-.5.4-.8V11a10 10 0 0 1 7 0v1.9c0 .3.1.6.4.8l2.4 1.8c.4.3 1 .3 1.4-.1l2-2Z"/></svg><span>Leave</span></button>
+  </section>
+
+  <section id="extras">
+    <div class="panel strip" id="reactions">
+      <button class="small" data-react="like" disabled><span class="emo">👍</span></button>
+      <button class="small" data-react="love" disabled><span class="emo">❤️</span></button>
+      <button class="small" data-react="applause" disabled><span class="emo">👏</span></button>
+      <button class="small" data-react="wow" disabled><span class="emo">😮</span></button>
+      <button class="small" data-react="laugh" disabled><span class="emo">😂</span></button>
+    </div>
+    <div class="panel strip" id="tools">
+      <button class="small" id="b-blur" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm-7 15c0-3 3.5-5 7-5s7 2 7 5v1H5v-1Z" opacity=".95"/><circle cx="4" cy="5" r="1.2" opacity=".5"/><circle cx="20" cy="5" r="1.2" opacity=".5"/><circle cx="3" cy="11" r="1" opacity=".4"/><circle cx="21" cy="11" r="1" opacity=".4"/></svg>Blur</button>
+      <button class="small" id="b-share" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-6v2h3a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h3v-2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm8 3.5-4 4h3V14h2v-3.5h3l-4-4Z"/></svg><span id="share-label">Share</span></button>
+      <button class="small" id="b-chat" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>Chat<span class="dot"></span></button>
+    </div>
+  </section>
+
+  <section id="agenda" class="panel">
+    <div class="ag-head"><span class="ag-title">Today</span><span id="ag-date"></span><button id="ag-add" title="Add account">+</button></div>
+    <div id="ag-allday"></div>
+    <div id="ag-next"></div>
+    <div id="ag-list"></div>
+    <div id="ag-setup"></div>
+    <div id="ag-err"></div>
+  </section>
+</div>
+<div id="pairing">Allow “Edge Widget” in Teams — press a button, then click Allow in the Teams window</div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var WS_URL = 'ws://localhost:6793';
+  var $ = function (id) { return document.getElementById(id); };
+  var ws = null, state = null, size = '', leaveTimer = null, toastTimer = null;
+
+  // ---------- iCUE settings (payload.settings wins over load-time globals) ----------
+  var icueSettings = {};
+  function prop(name, fallback) {
+    var v;
+    if (Object.prototype.hasOwnProperty.call(icueSettings, name)) v = icueSettings[name];
+    else { try { v = new Function('return typeof ' + name + " !== 'undefined' ? " + name + ' : undefined')(); } catch (e) { v = undefined; } }
+    if (v === undefined || v === null) return fallback;
+    if (v === 'true') return true; if (v === 'false') return false;
+    return v;
+  }
+  function applySettings(payload) {
+    if (payload && typeof payload === 'object') {
+      var s = payload.settings && typeof payload.settings === 'object' ? payload.settings : payload;
+      for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) icueSettings[k] = s[k];
+    }
+    document.documentElement.style.setProperty('--accent', prop('accentColor', '#7B83EB') || '#7B83EB');
+    document.body.classList.toggle('no-react', prop('showReactions', true) === false);
+    document.body.classList.toggle('cal', prop('showCalendar', true) !== false);
+    if (typeof renderAgenda === 'function') renderAgenda();
+  }
+  window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+  try { icueEvents = window.icueEvents; } catch (e) { /* no such binding */ }
+  try { if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) setTimeout(applySettings, 0); } catch (e) {}
+
+  // ---------- size from real pixels (S ~840x344, M ~840x704, L ~1688x704, XL ~2544x704) ----------
+  function pickSize() {
+    var w = innerWidth, h = innerHeight, r = w / h, s;
+    var forced = /[?&]size=(s|m|l|xl)\b/.exec(location.search || '');
+    if (forced) s = forced[1]; else if (r < 1.6) s = 'm'; else if (h < 520) s = 's'; else if (r >= 3) s = 'xl'; else s = 'l';
+    if (s !== size) { document.body.classList.remove('size-' + size); document.body.classList.add('size-' + s); size = s; if (typeof renderAgenda === 'function') renderAgenda(); }
+  }
+
+  // ---------- connection ----------
+  function connect() {
+    try { ws = new WebSocket(WS_URL); } catch (e) { return setTimeout(connect, 2000); }
+    ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } if (m.type === 'state') { state = m.state; render(); } };
+    ws.onclose = function () { state = null; render(); setTimeout(connect, 2000); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function send(action, extra) {
+    if (!ws || ws.readyState !== 1) { toast('Helper not running'); return; }
+    var o = extra || {}; o.action = action; ws.send(JSON.stringify(o));
+    if (state && state.status === 'pairing') toast('Check Teams: click Allow');
+  }
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('on'); }, 2200); }
+
+  // ---------- render ----------
+  function setBtn(id, enabled) { $(id).disabled = !enabled; }
+  function render() {
+    var m = state && state.meeting, p = state && state.perms;
+    var inMeeting = !!(m && m.isInMeeting);
+    document.body.classList.toggle('live', inMeeting);
+    document.body.classList.toggle('needs-pair', !!(state && state.source === 'api' && state.status === 'pairing' && inMeeting));
+    document.body.classList.toggle('no-blur', !!(state && state.source === 'uia'));
+
+    if (!state) { $('headline').textContent = 'Helper offline'; $('sub').textContent = 'Start the Edge helper on this PC'; }
+    else if (!inMeeting) {
+      $('headline').textContent = 'Not in a meeting';
+      $('sub').textContent = '';
+    } else {
+      $('headline').textContent = m.isMuted ? 'You\'re muted' : 'You\'re live';
+      var bits = [m.isVideoOn ? 'Camera on' : 'Camera off', m.isHandRaised ? 'Hand raised' : '', m.isBackgroundBlurred ? 'Background blurred' : ''].filter(Boolean).join(' · ');
+      $('sub').textContent = state.title ? state.title + '\n' + bits : bits;
+    }
+    $('tag-rec').classList.toggle('on', !!(inMeeting && m.isRecordingOn));
+    $('tag-share').classList.toggle('on', !!(inMeeting && m.isSharing));
+
+    var live = inMeeting;
+    setBtn('b-mute', live && p.canToggleMute);
+    setBtn('b-video', live && p.canToggleVideo);
+    setBtn('b-hand', live && p.canToggleHand);
+    setBtn('b-leave', live && p.canLeave);
+    setBtn('b-blur', live && p.canToggleBlur);
+    setBtn('b-share', live && (p.canToggleShareTray || p.canStopSharing));
+    setBtn('b-chat', live && p.canToggleChat);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-react]'), function (b) { b.disabled = !(live && p.canReact); });
+
+    var muted = live && m.isMuted, camOff = live && !m.isVideoOn;
+    $('b-mute').classList.toggle('warn', !!muted);
+    $('b-mute').querySelector('.slash').style.display = muted ? '' : 'none';
+    $('b-mute').querySelector('span').textContent = muted ? 'Unmute' : 'Mute';
+    $('b-video').classList.toggle('warn', !!(live && camOff));
+    $('b-video').querySelector('.slash').style.display = live && camOff ? '' : 'none';
+    $('b-video').querySelector('span').textContent = live && camOff ? 'Camera off' : 'Camera';
+    $('b-hand').classList.toggle('on', !!(live && m.isHandRaised));
+    $('b-hand').querySelector('span').textContent = live && m.isHandRaised ? 'Lower hand' : 'Raise hand';
+    $('b-blur').classList.toggle('on', !!(live && m.isBackgroundBlurred));
+    $('share-label').textContent = live && m.isSharing ? 'Stop share' : 'Share';
+    $('b-chat').classList.toggle('unread', !!(live && m.hasUnreadMessages));
+    if (!live) resetLeave();
+    renderAgenda();
+  }
+
+  // ---------- agenda (Microsoft Graph via the helper) ----------
+  var JOIN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h10a2 2 0 0 1 2 2v1.5l4.4-2.7A1 1 0 0 1 22 7.6v8.8a1 1 0 0 1-1.6.8L16 14.5V16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/></svg>';
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function when(e) { // all-day dates are whole local days
+    if (e.allDay) { var a = e.start.split('-'), b = e.end.split('-'); return { s: new Date(+a[0], a[1] - 1, +a[2]), e: new Date(+b[0], b[1] - 1, +b[2]) }; }
+    return { s: new Date(e.start), e: new Date(e.end) };
+  }
+  function hm(d) { return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+  function until(ms) {
+    var m = Math.round(ms / 60000);
+    if (m < 1) return 'Starting';
+    if (m < 60) return 'In ' + m + ' min';
+    var h = Math.floor(m / 60), r = m % 60; return 'In ' + h + ' h' + (r ? ' ' + r + ' min' : '');
+  }
+  var agSig = '';
+  function renderAgenda() {
+    var el = $('agenda');
+    if (!document.body.classList.contains('cal') || (size !== 'l' && size !== 'xl')) return;
+    var c = state && state.calendar, now = new Date();
+    $('ag-date').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    var setup = '', setupOn = true;
+    if (!state) setup = '<h3>Helper offline</h3>';
+    else if (!c || !c.configured) setup = '<h3>Calendar not set up</h3><p>Put your app registration\'s client ID in<br>teams-edge\\helper\\graph.json</p>';
+    else if (c.signIn) setup = '<p>On your PC, go to<br><b>' + esc(String(c.signIn.url).replace(/^https?:\/\//, '')) + '</b> and enter</p><div id="ag-code">' + esc(c.signIn.code) + '</div><p>Code copied &middot; browser opened</p><button class="sbtn ghost" data-cal="calCancelSignIn">Cancel</button>';
+    else if (!c.accounts.length) setup = '<h3>Connect your calendar</h3><p>Sign in once with your work or personal Microsoft account.</p><button class="sbtn" data-cal="calSignIn">Sign in</button>';
+    else setupOn = false;
+    el.classList.toggle('setup', setupOn);
+    if (setup !== agSig) { $('ag-setup').innerHTML = setup; agSig = setup; }
+    var errs = c ? [c.error].concat((c.accounts || []).map(function (a) { return a.error ? (a.email || a.name) + ': ' + a.error : ''; })).filter(Boolean) : [];
+    $('ag-err').textContent = errs.join(' \u00b7 ');
+    $('ag-add').style.display = c && c.configured && !c.signIn && c.accounts.length ? '' : 'none';
+    if (setupOn) return;
+
+    var evs = (c.events || []).map(function (e) { var w = when(e); return { e: e, s: w.s, en: w.e }; });
+    var allDay = evs.filter(function (x) { return x.e.allDay && x.s <= now && x.en > now; });
+    $('ag-allday').innerHTML = allDay.map(function (x) { return '<span class="chip">' + esc(x.e.subject) + '</span>'; }).join('');
+    var timed = evs.filter(function (x) { return !x.e.allDay && (x.e.showAs !== 'free' || x.e.joinable); });
+    var upcoming = timed.filter(function (x) { return x.en > now; });
+    var next = upcoming[0];
+    // prefer a joinable meeting that's on now / starting within 10 min over an overlapping "busy" block
+    upcoming.some(function (x) { if (x.s - now > 10 * 60000) return true; if (x.e.joinable) { next = x; return true; } return false; });
+
+    var nx = $('ag-next');
+    if (!next) { nx.className = 'empty'; nx.innerHTML = 'Nothing else today'; }
+    else {
+      var on = next.s <= now, soon = !on && next.s - now <= 10 * 60000, tomorrow = !sameDay(next.s, now);
+      nx.className = on ? 'now' : soon ? 'soon' : '';
+      var whenTxt = on ? 'Now \u00b7 ends ' + hm(next.en) : tomorrow ? 'Tomorrow ' + hm(next.s) : until(next.s - now);
+      var acct = c.accounts.length > 1 ? ' \u00b7 ' + (next.e.kind === 'personal' ? 'Personal' : 'Work') : '';
+      var loc = next.e.location && !/microsoft teams/i.test(next.e.location) ? ' \u00b7 ' + next.e.location : '';
+      nx.innerHTML = '<div class="nx-when">' + esc(whenTxt) + '</div><div class="nx-title">' + esc(next.e.subject) + '</div>' +
+        '<div class="nx-time">' + esc(hm(next.s) + ' \u2013 ' + hm(next.en) + loc + acct) + '</div>' +
+        '<button id="ag-join" data-join="' + esc(next.e.id) + '"' + (next.e.joinable ? '' : ' hidden') + ' class="' + (on || soon ? 'hot' : '') + '">' + JOIN_SVG + 'Join</button>';
+    }
+
+    var rows = [], shownTomorrow = false, count = 0;
+    upcoming.forEach(function (x) {
+      if ((next && x.e.id === next.e.id) || count >= 8) return;
+      if (!sameDay(x.s, now) && !shownTomorrow) { rows.push('<div class="ag-day">Tomorrow</div>'); shownTomorrow = true; }
+      var hot = x.e.joinable && x.s - now <= 10 * 60000;
+      rows.push('<div class="ag-row' + (x.e.kind === 'personal' ? ' personal' : '') + (x.e.tentative ? ' tent' : '') + '">' +
+        '<span class="t">' + esc(hm(x.s)) + '</span><span class="bar"></span><span class="s">' + esc(x.e.subject) + '</span>' +
+        (hot ? '<button class="j" data-join="' + esc(x.e.id) + '">Join</button>' : '') + '</div>');
+      count++;
+    });
+    $('ag-list').innerHTML = rows.join('');
+  }
+  $('agenda').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-join],[data-cal]');
+    if (!t) return;
+    if (t.hasAttribute('data-join')) { send('calJoin', { id: t.getAttribute('data-join') }); toast('Opening in Teams\u2026'); return; }
+    send(t.getAttribute('data-cal'));
+  });
+  $('ag-add').addEventListener('click', function () { send('calSignIn'); });
+  setInterval(renderAgenda, 20000);
+
+  // ---------- actions ----------
+  $('b-mute').addEventListener('click', function () { send('toggleMute'); });
+  $('b-video').addEventListener('click', function () { send('toggleVideo'); });
+  $('b-hand').addEventListener('click', function () { send('toggleHand'); });
+  $('b-blur').addEventListener('click', function () { send('toggleBlur'); });
+  $('b-chat').addEventListener('click', function () { send('toggleChat'); });
+  $('b-share').addEventListener('click', function () { send(state && state.meeting.isSharing && state.perms.canStopSharing ? 'stopSharing' : 'toggleShareTray'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-react]'), function (b) {
+    b.addEventListener('click', function () { send('react', { type: b.getAttribute('data-react') }); });
+  });
+  function resetLeave() { clearTimeout(leaveTimer); var b = $('b-leave'); b.classList.remove('confirm'); b.querySelector('span').textContent = 'Leave'; }
+  $('b-leave').addEventListener('click', function () {
+    var b = $('b-leave');
+    if (b.classList.contains('confirm')) { resetLeave(); send('leave'); return; }
+    b.classList.add('confirm'); b.querySelector('span').textContent = 'Tap again'; toast('Tap again to leave the meeting');
+    leaveTimer = setTimeout(resetLeave, 4000);
+  });
+  window.addEventListener('resize', pickSize);
+
+  pickSize(); applySettings(); render(); connect();
+})();
+</script>
+</body>
+</html>

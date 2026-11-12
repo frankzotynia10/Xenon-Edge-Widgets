@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Notifications'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-widget-preview" content="resources/preview.png" />
+<meta name="x-icue-property" content="accentColor" data-label="tr('Accent color')" data-type="color" data-default="'#5865F2'" />
+<meta name="x-icue-property" content="showPreviews" data-label="tr('Show message text')" data-type="switch" data-default="true" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Appearance')", "properties": ["accentColor", "showPreviews"], "info": "tr('Pick which apps appear with the gear button on the widget.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #111214;
+    --panel: #1e1f22;
+    --panel2: #2b2d31;
+    --text: #f2f3f5;
+    --muted: #949ba4;
+    --green: #23a55a;
+    --red: #f23f42;
+    --accent: #5865F2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "gg sans", "Segoe UI", "Noto Sans", sans-serif; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; border: none; cursor: pointer; }
+  #app { display: flex; width: 100%; height: 100%; gap: 2.5vh; padding: 4vh; }
+
+  /* left: summary + actions */
+  #info { flex: 0 0 22%; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2.5vh;
+    background: var(--panel); border-radius: 3vh; padding: 4vh 3vh; }
+  #head { display: flex; align-items: center; gap: 2.5vh; min-width: 0; }
+  #bell { flex: 0 0 auto; width: 17vh; height: 17vh; border-radius: 50%; background: var(--panel2); color: var(--muted);
+    display: flex; align-items: center; justify-content: center; transition: background .2s, color .2s; }
+  #bell svg { width: 55%; height: 55%; }
+  #bell.on { background: var(--accent); color: #fff; }
+  #count { font-size: 15vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  #label { color: var(--muted); font-size: 5.5vh; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #status { color: var(--muted); font-size: 5vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #status i { display: inline-block; width: 2.2vh; height: 2.2vh; border-radius: 50%; background: var(--green); margin-right: 1vh; vertical-align: middle; }
+  #actions { display: flex; gap: 2vh; }
+  .btn { flex: 1 1 0; height: 16vh; border-radius: 2.5vh; background: var(--panel2); display: flex; align-items: center; justify-content: center;
+    gap: 1.5vh; font-size: 5vh; font-weight: 600; transition: transform .08s ease, background .12s ease; }
+  .btn svg { width: 7vh; height: 7vh; flex: 0 0 auto; }
+  .btn:active { transform: scale(.95); }
+  .btn:disabled { opacity: .35; pointer-events: none; }
+  .btn.confirm { background: var(--red); }
+
+  /* right: notification cards (scroll sideways on the wide strip) */
+  #list { flex: 1 1 auto; min-width: 0; display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: minmax(100vh, calc((100% - 2.5vh) / 2)); gap: 2.5vh; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity; scrollbar-width: none; }
+  #list::-webkit-scrollbar { display: none; }
+  #list.single { grid-template-rows: minmax(0, 1fr); }
+  .card { position: relative; display: flex; align-items: center; gap: 3vh; min-width: 0; min-height: 0; background: var(--panel); border-radius: 3vh;
+    padding: 3vh 3.5vh; scroll-snap-align: start; overflow: hidden; transition: opacity .2s ease, transform .2s ease; }
+  .card.new::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 1vh; border-radius: 0 1vh 1vh 0; background: var(--accent); }
+  .card.gone { opacity: 0; transform: scale(.94); }
+  .card:active { background: var(--panel2); }
+  .avatar { flex: 0 0 auto; position: relative; width: 17vh; height: 17vh; }
+  .avatar .pic, .avatar .ini { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 7.5vh; font-weight: 700; color: #fff; object-fit: cover; }
+  .avatar .app { position: absolute; right: -1vh; bottom: -1vh; width: 7.5vh; height: 7.5vh; border-radius: 2vh; border: .8vh solid var(--panel);
+    font-size: 3.6vh; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; }
+  .avatar .app[hidden] { display: none; }
+  .body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: .8vh; }
+  .meta { display: flex; align-items: center; gap: 1.5vh; color: var(--muted); font-size: 4.4vh; font-weight: 600; white-space: nowrap; }
+  .meta .name { overflow: hidden; text-overflow: ellipsis; }
+  .meta .time { margin-left: auto; flex: 0 0 auto; font-weight: 500; }
+  .title { font-size: 6.2vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .text { font-size: 4.8vh; color: var(--muted); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .subj { font-size: 4.8vh; font-weight: 600; color: var(--text); opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .subj:empty { display: none; }
+  .card.has-subj .text { -webkit-line-clamp: 1; } /* subject + one line of preview fills the same space */
+  .no-previews .text, .no-previews .subj { display: none; }
+
+  #empty { grid-row: 1 / -1; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh;
+    background: var(--panel); border-radius: 3vh; color: var(--muted); font-size: 7vh; text-align: center; }
+  #empty svg { width: 16vh; height: 16vh; color: var(--green); }
+  #empty small { font-size: 5vh; opacity: .8; }
+
+  /* app picker */
+  #picker { position: fixed; inset: 0; z-index: 5; background: var(--bg); display: flex; flex-direction: column; gap: 2.5vh; padding: 4vh;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease; }
+  #picker.open { opacity: 1; pointer-events: auto; }
+  #picker-head { display: flex; align-items: center; gap: 3vh; }
+  #picker-head h1 { font-size: 8vh; font-weight: 700; flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #picker-head h1 small { font-size: 5vh; color: var(--muted); font-weight: 600; margin-left: 2vh; }
+  #picker-head .btn { flex: 0 0 auto; padding: 0 5vh; }
+  #picker-head .btn.done { background: var(--accent); color: #fff; }
+  #apps { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(70vh, 1fr));
+    grid-auto-rows: 17vh; gap: 2vh; align-content: start; scrollbar-width: none; }
+  #apps::-webkit-scrollbar { display: none; }
+  .app-row { display: flex; align-items: center; gap: 2.5vh; padding: 0 3vh; border-radius: 2.5vh; background: var(--panel); text-align: left;
+    min-width: 0; transition: background .12s ease; }
+  .app-row:active { background: var(--panel2); }
+  .app-row .badge { flex: 0 0 auto; width: 10vh; height: 10vh; border-radius: 2.5vh; display: flex; align-items: center; justify-content: center;
+    font-size: 5vh; font-weight: 700; color: #fff; }
+  .app-row .nm { flex: 1 1 auto; min-width: 0; font-size: 5.5vh; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-row .nm small { display: block; font-size: 4vh; color: var(--muted); font-weight: 500; }
+  .app-row .check { flex: 0 0 auto; width: 8vh; height: 8vh; border-radius: 2vh; border: .6vh solid var(--muted); display: flex; align-items: center; justify-content: center; }
+  .app-row .check svg { width: 75%; height: 75%; color: #fff; visibility: hidden; }
+  .app-row.on .check { background: var(--accent); border-color: var(--accent); }
+  .app-row.on .check svg { visibility: visible; }
+
+  /* smaller widget sizes: summary becomes a top bar, cards stack vertically */
+  @media (max-aspect-ratio: 2/1) {
+    #app { flex-direction: column; }
+    #info { flex: 0 0 auto; flex-direction: row; align-items: center; padding: 2vh 2.5vh; }
+    #head { flex: 1 1 auto; }
+    #bell { width: 10vh; height: 10vh; }
+    #count { font-size: 8vh; } #label { font-size: 4vh; } #status { display: none; }
+    #actions { flex: 0 0 auto; }
+    .btn { height: 10vh; padding: 0 3vh; font-size: 0; gap: 0; }
+    #list { grid-auto-flow: row; grid-template-rows: none; grid-auto-rows: 24vh; grid-template-columns: minmax(0, 1fr); grid-auto-columns: auto;
+      overflow-x: hidden; overflow-y: auto; scroll-snap-type: y proximity; }
+    #list.single { grid-template-rows: none; }
+    .card { padding: 2vh 3vh; gap: 2.5vh; }
+    .avatar { width: 12vh; height: 12vh; }
+    .avatar .pic, .avatar .ini { font-size: 5.5vh; }
+    .avatar .app { width: 5.5vh; height: 5.5vh; border-radius: 1.5vh; font-size: 2.8vh; border-width: .6vh; }
+    .meta { font-size: 3.2vh; } .title { font-size: 4.6vh; } .text, .subj { font-size: 3.6vh; }
+    #apps { grid-template-columns: repeat(auto-fill, minmax(45vh, 1fr)); }
+  }
+</style>
+
+<div id="app">
+  <section id="info">
+    <div id="head">
+      <div id="bell"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a6.5 6.5 0 0 0-6.5 6.5v3.9l-1.7 3.3A1 1 0 0 0 4.7 17h14.6a1 1 0 0 0 .9-1.4l-1.7-3.2V8.5A6.5 6.5 0 0 0 12 2Zm-3 16.5a3 3 0 0 0 6 0Z"/></svg></div>
+      <div>
+        <div id="count">0</div>
+        <div id="label">Notifications</div>
+      </div>
+    </div>
+    <div id="status"><i></i><span id="status-text">Connecting…</span></div>
+    <div id="actions">
+      <button class="btn" id="btn-clear" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3a1 1 0 0 0-1 1v1H4a1 1 0 0 0 0 2h1v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7h1a1 1 0 1 0 0-2h-4V4a1 1 0 0 0-1-1H9Zm1 7a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Zm4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Z"/></svg>
+        <span>Clear</span>
+      </button>
+      <button class="btn" id="btn-apps" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.6 2h2.8l.5 2.6a8 8 0 0 1 1.9 1.1l2.5-.9 1.4 2.4-2 1.7a8 8 0 0 1 0 2.2l2 1.7-1.4 2.4-2.5-.9a8 8 0 0 1-1.9 1.1l-.5 2.6h-2.8l-.5-2.6a8 8 0 0 1-1.9-1.1l-2.5.9-1.4-2.4 2-1.7a8 8 0 0 1 0-2.2l-2-1.7 1.4-2.4 2.5.9a8 8 0 0 1 1.9-1.1ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" transform="translate(0 2)"/></svg>
+        <span>Apps</span>
+      </button>
+    </div>
+  </section>
+  <section id="list"></section>
+</div>
+
+<section id="picker">
+  <div id="picker-head">
+    <h1>Show notifications from<small id="picker-count"></small></h1>
+    <button class="btn done" id="btn-done">Done</button>
+  </div>
+  <div id="apps"></div>
+</section>
+
+<template id="tpl-card">
+  <div class="card">
+    <div class="avatar"><img class="pic" alt="" /><div class="ini"></div><div class="app"></div></div>
+    <div class="body">
+      <div class="meta"><span class="name"></span><span class="time"></span></div>
+      <div class="title"></div>
+      <div class="subj"></div>
+      <div class="text"></div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function () {
+  'use strict';
+  var WS_URL = 'ws://localhost:6791';
+  var NEW_MS = 15 * 60 * 1000;
+  var CHECK = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 16.2 5.3 12a1 1 0 1 0-1.4 1.4l4.9 4.9a1 1 0 0 0 1.4 0l10-10a1 1 0 1 0-1.4-1.4Z"/></svg>';
+  var BRANDS = [
+    [/BlueBubbles/i, '#34C759'], [/Outlook/i, '#0F6CBD'], [/Teams/i, '#5B5FC7'], [/Discord/i, '#5865F2'],
+    [/asana/i, '#F06A6A'], [/Edge/i, '#0C59A4'], [/Excel/i, '#107C41'], [/Word/i, '#185ABD'], [/PowerPoint/i, '#C43E1C'],
+    [/OneDrive/i, '#0364B8'], [/AppleMusic/i, '#FA2D48'], [/NVIDIA/i, '#76B900'], [/Steam/i, '#1B2838'], [/Slack/i, '#4A154B'], [/Spotify/i, '#1DB954']
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var ws = null, state = null, clearTimer = null;
+  var hidden = {}; // ids dismissed locally, waiting for the helper to confirm
+
+  // iCUE delivers changed settings in the event payload (payload.settings); the globals only hold
+  // the values from when the widget loaded. Payload values win, globals are the fallback.
+  var icueSettings = {};
+  function prop(name, fallback) {
+    var v;
+    if (Object.prototype.hasOwnProperty.call(icueSettings, name)) v = icueSettings[name];
+    else {
+      try { v = new Function('return typeof ' + name + " !== 'undefined' ? " + name + ' : undefined')(); } catch (e) { v = undefined; }
+    }
+    if (v === undefined || v === null) return fallback;
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    return v;
+  }
+  function mergeSettings(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    var s = payload.settings && typeof payload.settings === 'object' ? payload.settings : payload;
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) icueSettings[k] = s[k];
+  }
+  function applySettings(payload) {
+    mergeSettings(payload);
+    document.documentElement.style.setProperty('--accent', prop('accentColor', '#5865F2') || '#5865F2');
+    document.body.classList.toggle('no-previews', prop('showPreviews', true) === false);
+  }
+  window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+  // iCUE calls the global `icueEvents` binding (it may declare it itself), not window.icueEvents,
+  // so assign the binding directly the way Corsair's widgets do.
+  try { icueEvents = window.icueEvents; } catch (e) { /* no such binding: window.icueEvents is it */ }
+  try { if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) setTimeout(applySettings, 0); } catch (e) {}
+
+  function connect() {
+    try { ws = new WebSocket(WS_URL); } catch (e) { return retry(); }
+    ws.onmessage = function (ev) {
+      var msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.type !== 'state') return;
+      state = msg.state;
+      render();
+    };
+    ws.onclose = function () { state = null; render(); retry(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function retry() { setTimeout(connect, 2000); }
+  function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+  function colorFor(id) {
+    for (var i = 0; i < BRANDS.length; i++) if (BRANDS[i][0].test(id)) return BRANDS[i][1];
+    var h = 0; for (var j = 0; j < id.length; j++) h = (h * 31 + id.charCodeAt(j)) % 360;
+    return 'hsl(' + h + ', 45%, 42%)';
+  }
+  function initial(s) {
+    s = s || '';
+    if (/^[+(\d]/.test(s.trim())) return '#'; // phone numbers
+    var m = /[A-Za-z0-9]/.exec(s); return m ? m[0].toUpperCase() : '?';
+  }
+  function ago(ts) {
+    var d = (Date.now() - ts) / 1000;
+    if (d < 60) return 'now';
+    if (d < 3600) return Math.floor(d / 60) + 'm';
+    if (d < 86400) return Math.floor(d / 3600) + 'h';
+    var dt = new Date(ts);
+    if (d < 6 * 86400) return dt.toLocaleDateString(undefined, { weekday: 'short' });
+    return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  // Messages show the sender; for apps like Outlook reminders the "title" is already the subject.
+  function senderPic(it) { return it.image || null; }
+
+  function visibleItems() {
+    if (!state || state.status !== 'ready') return [];
+    return state.items.filter(function (it) { return !hidden[it.id]; });
+  }
+
+  function render() {
+    var ready = !!(state && state.status === 'ready');
+    var items = visibleItems();
+    var enabledCount = ready ? state.apps.filter(function (a) { return a.enabled; }).length : 0;
+
+    $('count').textContent = items.length > 99 ? '99+' : items.length;
+    $('bell').classList.toggle('on', items.length > 0);
+    $('status').querySelector('i').style.background = ready ? 'var(--green)' : 'var(--red)';
+    $('status-text').textContent = !state ? 'Helper offline' : !ready ? (state.message || 'Not connected')
+      : enabledCount + (enabledCount === 1 ? ' app' : ' apps') + ' shown';
+    $('btn-clear').disabled = !items.length;
+    $('btn-apps').disabled = !ready;
+    if (!items.length) resetClear();
+
+    var list = $('list');
+    list.classList.toggle('single', items.length === 1);
+    if (!ready || !items.length) {
+      list.innerHTML = '';
+      var e = document.createElement('div');
+      e.id = 'empty';
+      if (!state) e.innerHTML = 'Helper not running<small>Start the Notifications Edge helper on this PC</small>';
+      else if (!ready) e.innerHTML = 'Can’t read notifications<small></small>';
+      else if (!enabledCount) e.innerHTML = 'No apps selected<small>Tap Apps to pick some</small>';
+      else e.innerHTML = CHECK + 'All caught up';
+      if (!ready && state) e.querySelector('small').textContent = state.message || '';
+      list.appendChild(e);
+    } else {
+      var existing = {};
+      Array.prototype.forEach.call(list.querySelectorAll('.card'), function (el) { existing[el.dataset.id] = el; });
+      var empty = $('empty'); if (empty) empty.remove();
+      items.forEach(function (it, i) {
+        var el = existing[it.id];
+        if (!el) {
+          el = $('tpl-card').content.firstElementChild.cloneNode(true);
+          el.dataset.id = it.id;
+          el.addEventListener('click', function () { dismiss(it.id, el); });
+          var pic = el.querySelector('.pic');
+          pic.onerror = function () { pic.style.display = 'none'; };
+        }
+        delete existing[it.id];
+        fillCard(el, it);
+        if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+      });
+      Object.keys(existing).forEach(function (id) { existing[id].remove(); });
+    }
+    if ($('picker').classList.contains('open')) renderApps();
+  }
+
+  function fillCard(el, it) {
+    var color = colorFor(it.app);
+    var pic = el.querySelector('.pic'), ini = el.querySelector('.ini'), badge = el.querySelector('.app');
+    var src = senderPic(it);
+    if (src) {
+      if (pic.getAttribute('src') !== src) { pic.style.display = ''; pic.setAttribute('src', src); }
+      ini.style.display = 'none';
+      badge.hidden = false;
+    } else {
+      pic.style.display = 'none';
+      pic.removeAttribute('src');
+      ini.style.display = '';
+      badge.hidden = false;
+    }
+    // big circle: sender initial on the app's color; small corner badge: the app
+    ini.style.background = color;
+    ini.textContent = initial(it.title);
+    badge.style.background = color;
+    badge.textContent = initial(it.appName);
+    el.querySelector('.name').textContent = it.appName;
+    el.querySelector('.time').textContent = ago(it.ts);
+    el.querySelector('.title').textContent = it.title;
+    var subj = it.subject || '', prev = it.preview != null ? it.preview : (it.body || '');
+    el.querySelector('.subj').textContent = subj;
+    el.querySelector('.text').textContent = prev;
+    el.classList.toggle('has-subj', !!subj);
+    el.classList.toggle('new', Date.now() - it.ts < NEW_MS);
+  }
+
+  function dismiss(id, el) {
+    hidden[id] = true;
+    el.classList.add('gone');
+    send({ action: 'dismiss', id: id });
+    setTimeout(render, 180);
+  }
+
+  function resetClear() {
+    clearTimeout(clearTimer);
+    var b = $('btn-clear');
+    b.classList.remove('confirm');
+    b.querySelector('span').textContent = 'Clear';
+  }
+  $('btn-clear').addEventListener('click', function () {
+    var b = $('btn-clear');
+    if (!b.classList.contains('confirm')) {
+      b.classList.add('confirm');
+      b.querySelector('span').textContent = 'Sure?';
+      clearTimer = setTimeout(resetClear, 3000);
+      return;
+    }
+    resetClear();
+    visibleItems().forEach(function (it) { hidden[it.id] = true; });
+    send({ action: 'clearAll' });
+    render();
+  });
+
+  // ---------- app picker ----------
+  function renderApps() {
+    var box = $('apps');
+    var apps = (state && state.apps ? state.apps : []).slice().sort(function (a, b) {
+      var oa = a.id in pickerOrder ? pickerOrder[a.id] : 1e6, ob = b.id in pickerOrder ? pickerOrder[b.id] : 1e6;
+      return oa - ob;
+    });
+    var on = apps.filter(function (a) { return a.enabled; }).length;
+    $('picker-count').textContent = on + ' of ' + apps.length;
+    var existing = {};
+    Array.prototype.forEach.call(box.children, function (el) { existing[el.dataset.id] = el; });
+    apps.forEach(function (a, i) {
+      var el = existing[a.id];
+      if (!el) {
+        el = document.createElement('button');
+        el.className = 'app-row';
+        el.dataset.id = a.id;
+        el.innerHTML = '<span class="badge"></span><span class="nm"></span><span class="check">' + CHECK + '</span>';
+        el.addEventListener('click', function () {
+          var nowOn = !el.classList.contains('on');
+          el.classList.toggle('on', nowOn);
+          send({ action: 'setApp', id: el.dataset.id, enabled: nowOn });
+        });
+      }
+      delete existing[a.id];
+      var b = el.querySelector('.badge');
+      b.style.background = colorFor(a.id);
+      b.textContent = initial(a.name);
+      var nm = el.querySelector('.nm');
+      nm.textContent = a.name;
+      if (a.count) { var s = document.createElement('small'); s.textContent = a.count + ' in Windows now'; nm.appendChild(s); }
+      el.classList.toggle('on', a.enabled);
+      if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null);
+    });
+    Object.keys(existing).forEach(function (id) { existing[id].remove(); });
+  }
+  // Order is fixed when the picker opens (ticked apps first) so rows don't jump while you tap.
+  var pickerOrder = {};
+  $('btn-apps').addEventListener('click', function () {
+    pickerOrder = {};
+    var apps = state && state.apps ? state.apps : [];
+    apps.filter(function (a) { return a.enabled; }).concat(apps.filter(function (a) { return !a.enabled; }))
+      .forEach(function (a, i) { pickerOrder[a.id] = i; });
+    $('apps').innerHTML = '';
+    $('apps').scrollTop = 0;
+    renderApps();
+    $('picker').classList.add('open');
+  });
+  $('btn-done').addEventListener('click', function () { $('picker').classList.remove('open'); });
+
+  setInterval(function () { if (state && state.status === 'ready') render(); }, 30000);
+
+  applySettings();
+  render();
+  connect();
+})();
+</script>
+</body>
+</html>

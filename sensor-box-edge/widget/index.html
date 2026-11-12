@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Sensor Box'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-widget-preview" content="resources/preview.png" />
+<meta name="x-icue-property" content="gpuTempSensor" data-label="tr('GPU temperature')" data-type="sensors-combobox" data-default="plugins.Sensorsdataprovider.getDefaultSensorIdBlock('temperature', 'gpu-temp')" />
+<meta name="x-icue-property" content="gpuLoadSensor" data-label="tr('GPU usage')" data-type="sensors-combobox" data-default="plugins.Sensorsdataprovider.getDefaultSensorIdBlock('load', 'gpu-load')" />
+<meta name="x-icue-property" content="gpuMemSensor" data-label="tr('GPU memory')" data-type="sensors-combobox" data-default="plugins.Sensorsdataprovider.getDefaultSensorIdBlock('load', 'frame-buffer-load')" />
+<meta name="x-icue-property" content="cpuLoadSensor" data-label="tr('CPU usage')" data-type="sensors-combobox" data-default="plugins.Sensorsdataprovider.getDefaultSensorIdBlock('load', 'package')" />
+<meta name="x-icue-property" content="cpuTempSensor" data-label="tr('CPU temperature')" data-type="sensors-combobox" data-default="plugins.Sensorsdataprovider.getDefaultSensorIdBlock('temperature', 'cpu-temp')" />
+<meta name="x-icue-property" content="warnTemp" data-label="tr('Warning temp')" data-type="slider" data-default="75" data-min="50" data-max="100" data-step="1" data-unit-label="' C'" />
+<meta name="x-icue-property" content="showFps" data-label="tr('Show FPS in games')" data-type="switch" data-default="true" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('GPU')", "properties": ["gpuTempSensor", "gpuLoadSensor", "gpuMemSensor"] },
+  { "title": "tr('CPU')", "properties": ["cpuLoadSensor", "cpuTempSensor"] },
+  { "title": "tr('Thresholds')", "properties": ["warnTemp"], "info": "tr('Temperatures turn yellow 10 degrees below this and red at or above it.')" },
+  { "title": "tr('Extras')", "properties": ["showFps"], "info": "tr('System memory comes from the Edge helper. FPS appears next to GPU while a game is in focus.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #232428; --track: #2b2d31; --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a;
+    --ok: #23a55a; --warn: #f0b232; --hot: #f23f42; --gpu: #5865F2; --cpu: #00a8fc; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "gg sans", "Segoe UI", "Noto Sans", sans-serif; user-select: none; }
+  #app { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6vh; width: 100%; height: 100%; padding: 3vh; }
+  .group { display: flex; flex-direction: column; gap: 1.8vh; min-width: 0; min-height: 0; }
+
+  /* section header: colored chip + optional FPS badge */
+  .head { flex: 0 0 auto; height: 8vh; display: flex; align-items: center; gap: 1.6vh; }
+  .chip { display: inline-flex; align-items: center; gap: 1.2vh; height: 7vh; padding: 0 2.4vh; border-radius: 3.5vh;
+    font-size: 4.6vh; font-weight: 800; letter-spacing: .14em; }
+  .chip i { width: 1.6vh; height: 1.6vh; border-radius: 50%; background: currentColor; box-shadow: 0 0 1.4vh currentColor; }
+  .gpu .chip { color: var(--gpu); background: color-mix(in srgb, var(--gpu) 16%, transparent); }
+  .cpu .chip { color: var(--cpu); background: color-mix(in srgb, var(--cpu) 16%, transparent); }
+  .fps { margin-left: auto; display: none; align-items: baseline; gap: .8vh; height: 7vh; padding: 0 2.2vh; border-radius: 3.5vh;
+    background: var(--panel2); line-height: 7vh; font-variant-numeric: tabular-nums; }
+  .fps.on { display: inline-flex; }
+  .fps b { font-size: 5vh; font-weight: 800; }
+  .fps span { font-size: 3vh; font-weight: 700; color: var(--muted); letter-spacing: .08em; }
+
+  /* metric cards */
+  .row { flex: 1 1 0; min-height: 0; position: relative; overflow: hidden; background: var(--panel); border-radius: 2.4vh;
+    padding: 0 2.8vh; display: flex; flex-direction: column; justify-content: center; gap: 1.4vh; }
+  .row::before { content: ''; position: absolute; left: 0; top: 18%; bottom: 18%; width: .7vh; border-radius: 0 .7vh .7vh 0; background: var(--state, var(--ok)); opacity: .9; }
+  .line { display: flex; align-items: baseline; justify-content: space-between; gap: 2vh; min-width: 0; }
+  .label { color: var(--muted); font-size: 4vh; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label em { font-style: normal; color: var(--dim); font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: 1vh; }
+  .value { font-size: 8.5vh; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1; }
+  .value small { font-size: 4.4vh; color: var(--muted); font-weight: 700; margin-left: .4vh; }
+  .bar { height: 1.6vh; background: var(--track); border-radius: 1vh; overflow: hidden; }
+  .bar b { display: block; height: 100%; width: 0%; border-radius: 1vh; background: var(--state, var(--ok));
+    box-shadow: 0 0 1.6vh color-mix(in srgb, var(--state, var(--ok)) 55%, transparent); transition: width .6s ease, background .3s ease; }
+  .row.na .value { color: var(--dim); }
+  .row.na::before { background: var(--track); }
+  #dbg { position: fixed; right: 2vh; bottom: 1vh; font-size: 3vh; color: #5c5f66; }
+
+  /* tall widget sizes: stack GPU over CPU */
+  @media (max-aspect-ratio: 13/10) {
+    #app { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 2vh; }
+    .head { height: 6vh; } .chip { height: 5.5vh; font-size: 3.4vh; } .fps { height: 5.5vh; line-height: 5.5vh; } .fps b { font-size: 3.8vh; } .fps span { font-size: 2.4vh; }
+    .label { font-size: 3vh; } .value { font-size: 5.6vh; } .value small { font-size: 3vh; } .bar { height: 1.2vh; }
+    .row { gap: .8vh; }
+  }
+</style>
+
+<div id="dbg"></div>
+<div id="app">
+  <section class="group gpu">
+    <div class="head"><span class="chip"><i></i>GPU</span><span class="fps" id="fps"><b id="fps-val">0</b><span>FPS</span></span></div>
+    <div class="row" data-key="gpuTempSensor" data-kind="temp"><div class="line"><span class="label">Temp</span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+    <div class="row" data-key="gpuLoadSensor" data-kind="load"><div class="line"><span class="label">Usage</span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+    <div class="row" data-key="gpuMemSensor" data-kind="load"><div class="line"><span class="label">VRAM</span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+  </section>
+  <section class="group cpu">
+    <div class="head"><span class="chip"><i></i>CPU</span></div>
+    <div class="row" data-key="cpuTempSensor" data-kind="temp"><div class="line"><span class="label">Temp</span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+    <div class="row" data-key="cpuLoadSensor" data-kind="load"><div class="line"><span class="label">Usage</span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+    <div class="row" id="mem-row" data-kind="mem"><div class="line"><span class="label">Memory<em id="mem-gb"></em></span><span class="value">--</span></div><div class="bar"><b></b></div></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.row[data-key]'));
+  var P = null, nextReq = 1, pending = {}, units = {}, started = false;
+
+  // iCUE properties may be declared as top-level let/const, which don't live on window.
+  var getters = {};
+  // iCUE delivers changed settings in onDataUpdated's payload (payload.settings); globals only hold
+  // the values from load time, so payload values win.
+  var icueSettings = {};
+  function mergeSettings(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    var s = payload.settings && typeof payload.settings === 'object' ? payload.settings : payload;
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) icueSettings[k] = s[k];
+  }
+  function setting(key) {
+    if (Object.prototype.hasOwnProperty.call(icueSettings, key) && icueSettings[key] != null) return icueSettings[key];
+    try {
+      if (!getters[key]) getters[key] = new Function('return typeof ' + key + " !== 'undefined' ? " + key + " : (window." + key + ")");
+      return getters[key]();
+    } catch (e) { return undefined; }
+  }
+  function sensorId(key) { var v = setting(key); return v == null ? '' : String(v); }
+  var dbg = function (msg) { var el = document.getElementById('dbg'); if (el) el.textContent = msg; };
+  function warn() { var w = Number(setting('warnTemp')); return isFinite(w) && w > 0 ? w : 75; }
+  function fpsWanted() { var v = setting('showFps'); return !(v === false || v === 'false'); }
+
+  function request(method, id, cb) {
+    var r = nextReq++;
+    pending[r] = cb;
+    try { P[method](r, id); } catch (e) { delete pending[r]; }
+  }
+
+  function stateColor(kind, n) {
+    if (kind === 'temp') return n >= warn() ? 'var(--hot)' : n >= warn() - 10 ? 'var(--warn)' : 'var(--ok)';
+    return n >= 90 ? 'var(--hot)' : n >= 75 ? 'var(--warn)' : 'var(--ok)';
+  }
+
+  function paint(row, n, valueHtml, pct, kind) {
+    var valEl = row.querySelector('.value'), bar = row.querySelector('.bar b');
+    if (!isFinite(n)) { row.classList.add('na'); valEl.textContent = '--'; bar.style.width = '0%'; return; }
+    row.classList.remove('na');
+    valEl.innerHTML = valueHtml;
+    bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    row.style.setProperty('--state', stateColor(kind, pct));
+  }
+
+  function show(row, raw) {
+    var key = row.dataset.key, kind = row.dataset.kind;
+    var n = parseFloat(raw);
+    var u = units[key];
+    if (u == null) u = kind === 'temp' ? 'C' : '%';
+    var unitText = /^(c|°c)$/i.test(u) ? '°C' : /^(f|°f)$/i.test(u) ? '°F' : u;
+    var pct = kind === 'temp' ? (/f/i.test(unitText) ? (n - 32) / 1.8 : n) : n; // bar: 0-100 °C or 0-100 %
+    paint(row, n, Math.round(n) + '<small>' + unitText + '</small>', pct, kind);
+  }
+
+  var gotValue = false;
+  function refreshAll() {
+    if (!P) return;
+    var missing = 0;
+    rows.forEach(function (row) {
+      var id = sensorId(row.dataset.key);
+      if (!id) { missing++; show(row, NaN); return; }
+      request('getSensorUnits', id, function (u) { units[row.dataset.key] = u; });
+      request('getSensorValue', id, function (v) { if (v !== undefined && v !== null && v !== '') { gotValue = true; dbg(''); } show(row, v); });
+    });
+    dbg(missing === rows.length ? 'no sensors selected' : gotValue ? '' : 'waiting for readings');
+  }
+
+  function start() {
+    if (started) return;
+    P = window.plugins && window.plugins.Sensorsdataprovider;
+    if (!P) { dbg('waiting for sensor plugin'); return; }
+    started = true;
+    P.asyncResponse.connect(function (r, value) {
+      var cb = pending[r];
+      if (cb) { delete pending[r]; cb(value); }
+    });
+    P.sensorValueChanged.connect(function (id, value) {
+      rows.forEach(function (row) { if (sensorId(row.dataset.key) === id) show(row, value); });
+    });
+    if (P.sensorUnitsChanged) P.sensorUnitsChanged.connect(function (id, u) {
+      rows.forEach(function (row) { if (sensorId(row.dataset.key) === id) units[row.dataset.key] = u; });
+    });
+    refreshAll();
+    setInterval(refreshAll, 2000); // safety net in case change signals are sparse
+  }
+
+  // ---------- system memory (from the Edge helper, http://localhost:6792) ----------
+  var memRow = document.getElementById('mem-row');
+  function pollMemory() {
+    if (!window.fetch) return;
+    fetch('http://localhost:6792/', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var m = d && d.memory; if (!m) throw new Error('no data');
+        paint(memRow, m.usedPct, Math.round(m.usedPct) + '<small>%</small>', m.usedPct, 'mem');
+        document.getElementById('mem-gb').textContent = m.usedGB.toFixed(1) + ' / ' + Math.round(m.totalGB) + ' GB';
+      })
+      .catch(function () { paint(memRow, NaN); document.getElementById('mem-gb').textContent = 'helper offline'; });
+  }
+  pollMemory();
+  setInterval(pollMemory, 2000);
+
+  // ---------- FPS (iCUE's FPS plugin; shows only while a game/GPU app is in focus) ----------
+  var F = null, fpsStarted = false, fpsAvailable = false, fpsPending = {}, fpsReq = 1, lastFpsAt = 0;
+  function fpsRequest(method, cb) {
+    var r = fpsReq++; fpsPending[r] = cb;
+    try { F[method](r); } catch (e) { delete fpsPending[r]; }
+  }
+  function renderFps(v) {
+    var el = document.getElementById('fps');
+    var n = Math.round(Number(v));
+    var on = fpsWanted() && fpsAvailable && isFinite(n) && n > 0 && Date.now() - lastFpsAt < 5000;
+    el.classList.toggle('on', on);
+    if (!on) return;
+    var b = document.getElementById('fps-val');
+    b.textContent = n;
+    b.style.color = n < 30 ? 'var(--hot)' : n < 60 ? 'var(--warn)' : 'var(--ok)';
+  }
+  var lastFps = 0;
+  function onFps(v) { lastFps = v; lastFpsAt = Date.now(); renderFps(v); }
+  function startFps() {
+    if (fpsStarted) return;
+    F = window.plugins && window.plugins.Fpsdataprovider;
+    if (!F) return;
+    fpsStarted = true;
+    if (F.asyncResponse) F.asyncResponse.connect(function (r, value) { var cb = fpsPending[r]; if (cb) { delete fpsPending[r]; cb(value); } });
+    if (F.fpsUpdated) F.fpsUpdated.connect(onFps);
+    if (F.fpsAvailabilityChanged) F.fpsAvailabilityChanged.connect(function (a) { fpsAvailable = !!a; renderFps(lastFps); });
+    fpsRequest('getFpsAvailable', function (a) { fpsAvailable = !!a; renderFps(lastFps); });
+    setInterval(function () {
+      fpsRequest('getCurrentFps', function (v) { if (v != null) onFps(v); });
+      renderFps(lastFps);
+    }, 1000);
+  }
+
+  window.pluginSensorsdataproviderEvents = { onInitialized: start };
+  window.pluginFpsdataproviderEvents = { onInitialized: startFps };
+  window.icueEvents = { onICUEInitialized: function () { start(); startFps(); },
+    onDataUpdated: function (payload) { mergeSettings(payload); units = {}; refreshAll(); renderFps(lastFps); } };
+  // iCUE calls the global bindings (it may declare them itself), not the window properties,
+  // so assign the bindings directly the way Corsair's widgets do.
+  try { icueEvents = window.icueEvents; } catch (e) { /* no such binding */ }
+  try { pluginSensorsdataproviderEvents = window.pluginSensorsdataproviderEvents; } catch (e) { /* no such binding */ }
+  try { pluginFpsdataproviderEvents = window.pluginFpsdataproviderEvents; } catch (e) { /* no such binding */ }
+
+  if (window.plugins && window.plugins.Sensorsdataprovider) start();
+  if (window.plugins && window.plugins.Fpsdataprovider) startFps();
+  var tries = 0;
+  var t = setInterval(function () {
+    if ((started && fpsStarted) || ++tries > 40) return clearInterval(t);
+    if (!started) start();
+    if (!fpsStarted) startFps();
+  }, 500);
+  if (!started) dbg('waiting for sensor plugin');
+})();
+</script>
+</body>
+</html>

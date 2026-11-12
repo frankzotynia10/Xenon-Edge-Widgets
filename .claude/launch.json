@@ -1,0 +1,68 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "apple-music-widget",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('apple-music-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5177,'127.0.0.1')"
+      ],
+      "port": 5177
+    },
+    {
+      "name": "notifications-widget",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('notifications-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5178,'127.0.0.1')"
+      ],
+      "port": 5178
+    },
+    {
+      "name": "discord-widget",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('discord-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5179,'127.0.0.1')"
+      ],
+      "port": 5179
+    },
+    {
+      "name": "sensor-box",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('sensor-box-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5180,'127.0.0.1')"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "teams-widget",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('teams-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5181,'127.0.0.1')"
+      ],
+      "port": 5181
+    },
+    {
+      "name": "launcher-widget",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('launcher-edge/widget');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'index.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream'});s.end(d)})}).listen(5182,'127.0.0.1')"
+      ],
+      "port": 5182
+    },
+    {
+      "name": "wow-icons",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('wow-streamdeck');h.createServer((q,s)=>{const fp=p.join(r,decodeURIComponent(q.url.split('?')[0])==='/'?'preview.html':decodeURIComponent(q.url.split('?')[0]));if(!fp.startsWith(r))return s.end();f.readFile(fp,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':fp.endsWith('.html')?'text/html':fp.endsWith('.png')?'image/png':'application/octet-stream','cache-control':'no-store'});s.end(d)})}).listen(5183,'127.0.0.1')"
+      ],
+      "port": 5183
+    }
+  ]
+}

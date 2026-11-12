@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg28" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FA5252" stop-opacity=".30"/><stop offset="1" stop-color="#FA5252" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg28)"/>
+<defs><linearGradient id="g25" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8787"/><stop offset="1" stop-color="#E03131"/></linearGradient>
+  <linearGradient id="s26" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f27" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(20 20) scale(1.04)">
+  <path d="M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z" fill="#FA5252" opacity=".55" filter="url(#f27)"/>
+  <path d="M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z" fill="none" stroke="#0b0c0f" stroke-width="8.653846153846153" stroke-linejoin="round"/>
+  <path d="M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z" fill="url(#g25)" stroke="#E03131" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z" fill="url(#s26)"/></g>
+
+</svg>

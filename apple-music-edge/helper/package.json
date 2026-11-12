@@ -1,0 +1,10 @@
+{
+  "name": "apple-music-edge-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Apple Music bridge for the Xeneon Edge Apple Music widget",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}

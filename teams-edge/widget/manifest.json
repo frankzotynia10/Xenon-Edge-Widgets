@@ -1,0 +1,14 @@
+{
+  "author": "Frank",
+  "id": "com.frank.teams",
+  "name": "Teams",
+  "description": "Microsoft Teams meeting controls on the Edge: mute, camera, raise hand, reactions, blur, share, chat and leave, with live meeting state, plus your Outlook calendar with one-tap Join on the L and XL sizes. Needs the Edge helper running.",
+  "version": "1.2.0",
+  "preview_icon": "resources/icon.png",
+  "min_app_version": "5.44",
+  "min_framework_version": "1.0.0",
+  "os": [{ "platform": "windows" }],
+  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "interactive": true,
+  "permissions": [{ "type": "url", "domain": "localhost", "port": 6793 }]
+}

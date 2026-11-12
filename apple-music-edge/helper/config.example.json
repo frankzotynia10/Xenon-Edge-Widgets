@@ -1,0 +1,7 @@
+{
+  "port": 6790,
+  "appMatch": "AppleMusic|iTunes",
+  "bars": 48,
+  "artworkLookup": true,
+  "allowAnyOrigin": false
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg12" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#CC5DE8" stop-opacity=".30"/><stop offset="1" stop-color="#CC5DE8" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg12)"/>
+<defs><linearGradient id="g9" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E599F7"/><stop offset="1" stop-color="#9C36B5"/></linearGradient>
+  <linearGradient id="s10" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f11" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(20 20) scale(1.04)">
+  <path d="M50 3L88 50L50 97L12 50Z" fill="#CC5DE8" opacity=".55" filter="url(#f11)"/>
+  <path d="M50 3L88 50L50 97L12 50Z" fill="none" stroke="#0b0c0f" stroke-width="8.653846153846153" stroke-linejoin="round"/>
+  <path d="M50 3L88 50L50 97L12 50Z" fill="url(#g9)" stroke="#9C36B5" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M50 3L88 50L50 97L12 50Z" fill="url(#s10)"/></g>
+
+</svg>

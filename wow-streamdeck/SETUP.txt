@@ -1,0 +1,99 @@
+WOW + XENEON EDGE STREAM DECK SETUP
+===================================
+All binds use Ctrl+Alt+Shift (written CAS below) so nothing collides with normal binds.
+Totals: 21 BindPad macros + 8 native binds = 29 keybinds. ~36 Stream Deck tiles.
+
+
+1. PREREQS
+----------
+- iCUE 5.48.58+, Xeneon Edge firmware 5.48.1+, Stream Deck 7.5.0+
+- iCUE > Xeneon Edge > Screen Setup > iCUE Widgets > Widgets > "+" > Stream Deck widget > pair ("Trust")
+- Size the widget for at least 15 keys per page
+- Run WoW in Windowed Fullscreen (exclusive fullscreen can minimize when you touch the Edge)
+
+
+2. WOW SETUP (ONE TIME)
+-----------------------
+- Install BindPad (CurseForge)
+- /bindpad > click empty slot > "New BindPad Macro" > paste macro > right-click slot to bind key
+- BindPad macros don't use WoW's macro slots
+- Target markers use native binds: Esc > Keybindings > Targeting > "Set Raid Target Icon: ..."
+
+
+3. KEYBINDS
+-----------
+
+PAGE 1 - TARGET MARKERS (on current target)
+  CAS+F1   Skull                       (native bind)
+  CAS+F2   Cross                       (native bind)
+  CAS+F3   Moon                        (native bind)
+  CAS+9    Square                      (native bind - NOT F4: CAS+F4 = Alt+F4, closes WoW)
+  CAS+F5   Triangle                    (native bind)
+  CAS+F6   Diamond                     (native bind)
+  CAS+F7   Circle                      (native bind)
+  CAS+F8   Star                        (native bind)
+  CAS+F9   Clear ALL target markers (BindPad macro):
+             /tm [@player] 1
+             /tm [@player] 2
+             /tm [@player] 3
+             /tm [@player] 4
+             /tm [@player] 5
+             /tm [@player] 6
+             /tm [@player] 7
+             /tm [@player] 8
+             /tm [@player] 0
+           (each icon can only be on one unit, so this moves them all to you, then clears yours)
+  CAS+F10  /readycheck
+  CAS+F11  /countdown 10
+  CAS+F12  /cwm all                    (clear world markers)
+
+  Target markers = icons on units (work solo). World markers = rings on the ground (need a group).
+
+PAGE 2 - WORLD MARKERS (at your feet)
+  CAS+1    /wm [@player] 1             (blue square)
+  CAS+2    /wm [@player] 2             (green triangle)
+  CAS+3    /wm [@player] 3             (purple diamond)
+  CAS+4    /wm [@player] 4             (red X)
+  CAS+5    /wm [@player] 5             (yellow star)
+  CAS+6    /wm [@player] 6             (orange circle)
+  CAS+7    /wm [@player] 7             (silver moon)
+  CAS+8    /wm [@player] 8             (skull)
+  Note: use @player, not @cursor - touching the Edge moves the mouse cursor.
+
+PAGE 3 - HERDING CATS
+  CAS+Q    /p Wait for the tank to pull.
+  CAS+W    /p Mana break, hang on.
+  CAS+E    /p Kill skull first, then X.
+  CAS+R    /p Get out of the bad stuff on the ground.
+  CAS+A    /followme
+  CAS+S    /wait
+  CAS+D    /facepalm
+  CAS+F    /charge
+  CAS+G    /cheer
+
+
+4. STREAM DECK SETUP
+--------------------
+- Device dropdown > select Xeneon Edge
+- Profiles > Manage Profiles > "+" > name it "WoW"
+- Profile settings > Application > Other > browse to:
+    World of Warcraft\_retail_\Wow.exe
+  (profile auto-loads when WoW is focused, reverts to Default when you alt-tab)
+- In the WoW profile, create 3 folders: Markers, World, Crew (each gets a Back key)
+- Each tile = Hotkey action set to the combo above
+- Grab a WoW raid marker icon pack from the Elgato Marketplace (or screenshot icons)
+- Put Discord mute/deafen (Discord plugin) on the root page
+- Keep non-WoW stuff in the Default profile
+
+
+5. TESTING CHECKLIST
+--------------------
+[ ] Tap a marker tile while targeting a training dummy - lands without alt-tab?
+[ ] Deck stays on WoW profile after a tap? (if it flips to Default, the Edge is stealing focus)
+[ ] World markers: test in a party (/wm doesn't work solo)
+[ ] Raids: markers + ready check need lead/assist; 5-mans anyone can use them
+
+
+6. RULES OF THE ROAD
+--------------------
+- One tap = one action. No multi-key timed sequences (ToS gray zone).

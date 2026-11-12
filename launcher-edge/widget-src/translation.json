@@ -1,0 +1,33 @@
+{
+ "en": {
+  "translation": {
+   "(empty)": "(empty)",
+   "Show app names": "Show app names",
+   "Running dot color": "Running dot color",
+   "Tile style": "Tile style",
+   "Tiles": "Tiles",
+   "Icons only": "Icons only",
+   "Apps 1-8": "Apps 1-8",
+   "Apps 9-16": "Apps 9-16",
+   "Appearance": "Appearance",
+   "Pick from the apps in your Start menu. Empty slots are skipped and the buttons resize to fit.": "Pick from the apps in your Start menu. Empty slots are skipped and the buttons resize to fit.",
+   "A dot under an app means it is open. Tapping an open app brings it to the front.": "A dot under an app means it is open. Tapping an open app brings it to the front.",
+   "Slot 1": "Slot 1",
+   "Slot 2": "Slot 2",
+   "Slot 3": "Slot 3",
+   "Slot 4": "Slot 4",
+   "Slot 5": "Slot 5",
+   "Slot 6": "Slot 6",
+   "Slot 7": "Slot 7",
+   "Slot 8": "Slot 8",
+   "Slot 9": "Slot 9",
+   "Slot 10": "Slot 10",
+   "Slot 11": "Slot 11",
+   "Slot 12": "Slot 12",
+   "Slot 13": "Slot 13",
+   "Slot 14": "Slot 14",
+   "Slot 15": "Slot 15",
+   "Slot 16": "Slot 16"
+  }
+ }
+}

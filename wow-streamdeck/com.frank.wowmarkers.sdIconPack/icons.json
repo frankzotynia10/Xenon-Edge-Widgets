@@ -1,0 +1,226 @@
+[
+  {
+    "path": "target-1-star.png",
+    "name": "Star (target)",
+    "tags": [
+      "target",
+      "marker",
+      "star"
+    ]
+  },
+  {
+    "path": "target-2-circle.png",
+    "name": "Circle (target)",
+    "tags": [
+      "target",
+      "marker",
+      "circle"
+    ]
+  },
+  {
+    "path": "target-3-diamond.png",
+    "name": "Diamond (target)",
+    "tags": [
+      "target",
+      "marker",
+      "diamond"
+    ]
+  },
+  {
+    "path": "target-4-triangle.png",
+    "name": "Triangle (target)",
+    "tags": [
+      "target",
+      "marker",
+      "triangle"
+    ]
+  },
+  {
+    "path": "target-5-moon.png",
+    "name": "Moon (target)",
+    "tags": [
+      "target",
+      "marker",
+      "moon"
+    ]
+  },
+  {
+    "path": "target-6-square.png",
+    "name": "Square (target)",
+    "tags": [
+      "target",
+      "marker",
+      "square"
+    ]
+  },
+  {
+    "path": "target-7-cross.png",
+    "name": "Cross (target)",
+    "tags": [
+      "target",
+      "marker",
+      "cross"
+    ]
+  },
+  {
+    "path": "target-8-skull.png",
+    "name": "Skull (target)",
+    "tags": [
+      "target",
+      "marker",
+      "skull"
+    ]
+  },
+  {
+    "path": "world-1-square.png",
+    "name": "Square (world 1)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "square"
+    ]
+  },
+  {
+    "path": "world-2-triangle.png",
+    "name": "Triangle (world 2)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "triangle"
+    ]
+  },
+  {
+    "path": "world-3-diamond.png",
+    "name": "Diamond (world 3)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "diamond"
+    ]
+  },
+  {
+    "path": "world-4-cross.png",
+    "name": "Cross (world 4)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "cross"
+    ]
+  },
+  {
+    "path": "world-5-star.png",
+    "name": "Star (world 5)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "star"
+    ]
+  },
+  {
+    "path": "world-6-circle.png",
+    "name": "Circle (world 6)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "circle"
+    ]
+  },
+  {
+    "path": "world-7-moon.png",
+    "name": "Moon (world 7)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "moon"
+    ]
+  },
+  {
+    "path": "world-8-skull.png",
+    "name": "Skull (world 8)",
+    "tags": [
+      "world",
+      "marker",
+      "flare",
+      "skull"
+    ]
+  },
+  {
+    "path": "target-clear.png",
+    "name": "Clear target marker",
+    "tags": [
+      "clear",
+      "target",
+      "marker"
+    ]
+  },
+  {
+    "path": "all-clear.png",
+    "name": "Clear all markers",
+    "tags": [
+      "clear",
+      "all",
+      "markers"
+    ]
+  },
+  {
+    "path": "hello.png",
+    "name": "Hello",
+    "tags": [
+      "emote",
+      "hello",
+      "wave"
+    ]
+  },
+  {
+    "path": "wait.png",
+    "name": "Wait",
+    "tags": [
+      "emote",
+      "wait",
+      "hourglass"
+    ]
+  },
+  {
+    "path": "pat.png",
+    "name": "Pat",
+    "tags": [
+      "emote",
+      "pat"
+    ]
+  },
+  {
+    "path": "ready-check.png",
+    "name": "Ready check",
+    "tags": [
+      "ready",
+      "check",
+      "raid"
+    ]
+  },
+  {
+    "path": "countdown-10.png",
+    "name": "Countdown 10",
+    "tags": [
+      "countdown",
+      "pull",
+      "timer",
+      "10"
+    ]
+  },
+  {
+    "path": "world-clear.png",
+    "name": "Clear world markers",
+    "tags": [
+      "clear",
+      "world",
+      "markers"
+    ]
+  }
+]

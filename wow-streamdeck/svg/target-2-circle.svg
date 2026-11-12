@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg8" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FF922B" stop-opacity=".30"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg8)"/>
+<defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E8590C"/></linearGradient>
+  <linearGradient id="s6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f7" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(20 20) scale(1.04)">
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="#FF922B" opacity=".55" filter="url(#f7)"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="none" stroke="#0b0c0f" stroke-width="8.653846153846153" stroke-linejoin="round"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#g5)" stroke="#E8590C" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#s6)"/></g>
+
+</svg>

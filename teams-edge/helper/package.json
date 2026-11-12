@@ -1,0 +1,8 @@
+{
+  "name": "teams-edge-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bridges Microsoft Teams' local meeting API to the Teams Edge widget",
+  "main": "index.js",
+  "dependencies": { "ws": "^8.18.0" }
+}

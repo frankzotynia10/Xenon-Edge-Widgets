@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg24" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#339AF0" stop-opacity=".30"/><stop offset="1" stop-color="#339AF0" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg24)"/>
+<defs><linearGradient id="g21" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74C0FC"/><stop offset="1" stop-color="#1971C2"/></linearGradient>
+  <linearGradient id="s22" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f23" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(20 20) scale(1.04)">
+  <path d="M12 12H88V88H12Z" fill="#339AF0" opacity=".55" filter="url(#f23)"/>
+  <path d="M12 12H88V88H12Z" fill="none" stroke="#0b0c0f" stroke-width="8.653846153846153" stroke-linejoin="round"/>
+  <path d="M12 12H88V88H12Z" fill="url(#g21)" stroke="#1971C2" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M12 12H88V88H12Z" fill="url(#s22)"/></g>
+
+</svg>

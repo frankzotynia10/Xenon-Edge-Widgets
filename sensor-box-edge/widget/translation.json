@@ -1,0 +1,19 @@
+{
+  "en": {
+    "translation": {
+      "GPU": "GPU",
+      "CPU": "CPU",
+      "GPU temperature": "GPU temperature",
+      "GPU usage": "GPU usage",
+      "GPU memory": "GPU memory",
+      "CPU usage": "CPU usage",
+      "CPU temperature": "CPU temperature",
+      "Warning temp": "Warning temp",
+      "Thresholds": "Thresholds",
+      "Temperatures turn yellow 10 degrees below this and red at or above it.": "Temperatures turn yellow 10 degrees below this and red at or above it.",
+      "Show FPS in games": "Show FPS in games",
+      "Extras": "Extras",
+      "System memory comes from the Edge helper. FPS appears next to GPU while a game is in focus.": "System memory comes from the Edge helper. FPS appears next to GPU while a game is in focus."
+    }
+  }
+}

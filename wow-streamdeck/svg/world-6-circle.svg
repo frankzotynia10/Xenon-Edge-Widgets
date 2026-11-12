@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg74" cx=".5" cy="0.6" r=".7"><stop offset="0" stop-color="#FF922B" stop-opacity=".30"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg74)"/>
+<defs><linearGradient id="beam68" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF922B" stop-opacity=".55"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></linearGradient>
+  <radialGradient id="fl69"><stop offset="0" stop-color="#FF922B" stop-opacity=".55"/><stop offset=".7" stop-color="#FF922B" stop-opacity=".18"/><stop offset="1" stop-color="#FF922B" stop-opacity="0"/></radialGradient><filter id="f70" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter></defs>
+  <path d="M32 108L42 10H102L112 108Z" fill="url(#beam68)" filter="url(#f70)"/>
+  <ellipse cx="72" cy="108" rx="62" ry="20" fill="url(#fl69)"/>
+  <ellipse cx="72" cy="108" rx="50" ry="14" fill="none" stroke="#FF922B" stroke-width="3.5" filter="url(#f70)"/>
+  <ellipse cx="72" cy="108" rx="50" ry="14" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="1.6"/>
+  <ellipse cx="72" cy="108" rx="30" ry="8" fill="none" stroke="#FF922B" stroke-opacity=".8" stroke-width="2"/><defs><linearGradient id="g71" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E8590C"/></linearGradient>
+  <linearGradient id="s72" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f73" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(40 28) scale(0.64)">
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="#FF922B" opacity=".55" filter="url(#f73)"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="none" stroke="#0b0c0f" stroke-width="14.0625" stroke-linejoin="round"/>
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#g71)" stroke="#E8590C" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M8 50a42 42 0 1 0 84 0a42 42 0 1 0 -84 0Z" fill="url(#s72)"/></g><text x="12" y="24" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" fill="#e9ecef" fill-opacity=".55">6</text>
+
+</svg>

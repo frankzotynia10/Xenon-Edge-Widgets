@@ -1,0 +1,6 @@
+{
+  "port": 6791,
+  "pollMs": 1500,
+  "maxItems": 30,
+  "allowAnyOrigin": false
+}

@@ -1,0 +1,10 @@
+{
+  "name": "notifications-edge-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Windows notifications bridge for the Xeneon Edge Notifications widget",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "engines": { "node": ">=22.13" },
+  "dependencies": { "ws": "^8.18.0" }
+}

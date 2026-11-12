@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg104" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#74C0FC" stop-opacity=".30"/><stop offset="1" stop-color="#74C0FC" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg104)"/>
+<defs><linearGradient id="wd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B07A"/><stop offset="1" stop-color="#9C6239"/></linearGradient></defs><defs><linearGradient id="ws" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#F08C00"/></linearGradient></defs><defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D0EBFF" stop-opacity=".35"/><stop offset="1" stop-color="#74C0FC" stop-opacity=".12"/></linearGradient><filter id="wf" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+     <path d="M46 22H98C98 46 80 52 77 60C80 68 98 74 98 98H46C46 74 64 68 67 60C64 52 46 46 46 22Z" fill="#74C0FC" opacity=".35" filter="url(#wf)"/>
+     <path d="M46 22H98C98 46 80 52 77 60C80 68 98 74 98 98H46C46 74 64 68 67 60C64 52 46 46 46 22Z" fill="url(#wg)" stroke="#0b0c0f" stroke-width="8" stroke-linejoin="round"/>
+     <path d="M46 22H98C98 46 80 52 77 60C80 68 98 74 98 98H46C46 74 64 68 67 60C64 52 46 46 46 22Z" fill="none" stroke="#E7F5FF" stroke-width="2.5" stroke-linejoin="round"/>
+     <path d="M55 32H89C87 43 77 50 72 57C67 50 57 43 55 32Z" fill="url(#ws)"/><path d="M72 57V88" stroke="#FFD43B" stroke-width="3"/>
+     <path d="M53 96C57 84 65 79 72 77C79 79 87 84 91 96Z" fill="url(#ws)"/>
+     <path d="M54 30C54 42 60 48 64 52" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+     <rect x="36" y="11" width="72" height="14" rx="5" fill="url(#wd)" stroke="#0b0c0f" stroke-width="5"/><rect x="36" y="95" width="72" height="14" rx="5" fill="url(#wd)" stroke="#0b0c0f" stroke-width="5"/>
+     <path d="M42 15H102M42 99H102" stroke="#fff" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">WAIT</text>
+</svg>

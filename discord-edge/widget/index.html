@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Discord Voice'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-widget-preview" content="resources/preview.png" />
+<meta name="x-icue-property" content="accentColor" data-label="tr('Accent color')" data-type="color" data-default="'#5865F2'" />
+<meta name="x-icue-property" content="showNames" data-label="tr('Show names')" data-type="switch" data-default="true" />
+<meta name="x-icue-property" content="alertPopups" data-label="tr('Mention pop-ups')" data-type="switch" data-default="true" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Appearance')", "properties": ["accentColor", "showNames", "alertPopups"] }
+]
+</script>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #111214; --panel: #1e1f22; --panel2: #2b2d31; --panel3: #35373c;
+    --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a;
+    --green: #23a55a; --red: #f23f42; --yellow: #f0b232; --accent: #5865F2;
+    --av: 120px; --gap: 2.2vh; --r: 2.6vh;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "gg sans", "Segoe UI", "Noto Sans", sans-serif; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+  svg { display: block; }
+  .panel { background: var(--panel); border-radius: var(--r); min-width: 0; min-height: 0; }
+  #app { display: flex; width: 100%; height: 100%; gap: var(--gap); padding: 3vh; }
+
+  /* ---------- info ---------- */
+  #info { display: flex; flex-direction: column; justify-content: center; gap: 1.2vh; padding: 3vh; }
+  #guild { color: var(--muted); font-size: 4vh; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #channel { font-size: 6.5vh; font-weight: 700; line-height: 1.1; display: flex; align-items: center; gap: 1.2vh; min-width: 0; }
+  #channel span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #channel svg { flex: 0 0 auto; width: 6vh; height: 6vh; color: var(--muted); }
+  #count { color: var(--muted); font-size: 4vh; white-space: nowrap; }
+  #status-dot { display: inline-block; width: 1.8vh; height: 1.8vh; border-radius: 50%; background: var(--green); margin-right: .8vh; vertical-align: middle; }
+
+  /* ---------- members ---------- */
+  #members { flex: 1 1 auto; position: relative; display: flex; flex-wrap: wrap; align-content: center; justify-content: center;
+    gap: calc(var(--av) * 0.18); padding: 2.5vh; overflow: hidden; }
+  .member { display: flex; flex-direction: column; align-items: center; gap: calc(var(--av) * 0.08); width: calc(var(--av) * 1.25); cursor: pointer; }
+  .avatar-wrap { position: relative; width: var(--av); height: var(--av); border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: calc(var(--av) * 0.42); font-weight: 700; }
+  .avatar-wrap .avatar { position: absolute; inset: 0; }
+  .avatar { width: 100%; height: 100%; border-radius: 50%; background: var(--panel2); object-fit: cover; display: block; transition: box-shadow .12s ease; }
+  .speaking .avatar { box-shadow: 0 0 0 calc(var(--av) * 0.045) var(--green), 0 0 calc(var(--av) * 0.25) rgba(35,165,90,.55); }
+  .badge { position: absolute; z-index: 2; right: -2%; bottom: -2%; width: 36%; height: 36%; border-radius: 50%; background: var(--red);
+    border: calc(var(--av) * 0.035) solid var(--panel); display: flex; align-items: center; justify-content: center; }
+  .badge[hidden] { display: none; }
+  .badge svg { width: 62%; height: 62%; color: #fff; }
+  .vol-tag { position: absolute; z-index: 2; left: -4%; top: -4%; padding: 0 calc(var(--av) * 0.07); border-radius: calc(var(--av) * 0.12);
+    background: var(--panel3); color: var(--text); font-size: calc(var(--av) * 0.15); font-weight: 700; line-height: 1.5; }
+  .vol-tag.muted { background: var(--red); }
+  .vol-tag[hidden] { display: none; }
+  .name { font-size: calc(var(--av) * 0.17); font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .speaking .name { color: var(--text); }
+  .hide-names .name { display: none; }
+  #empty { color: var(--muted); font-size: 5.5vh; text-align: center; line-height: 1.3; padding: 0 3vh; }
+  #empty small { display: block; font-size: 3.8vh; margin-top: 1.2vh; opacity: .8; }
+  #members-title { display: none; }
+
+  /* per-user popover */
+  #pop { position: absolute; z-index: 20; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(17,18,20,.72); }
+  #pop.on { display: flex; }
+  #pop-card { background: var(--panel2); border-radius: var(--r); padding: 3vh 3.5vh; width: min(92%, 80vh); display: flex; flex-direction: column; gap: 2.2vh;
+    box-shadow: 0 2vh 5vh rgba(0,0,0,.5); }
+  #pop-head { display: flex; align-items: center; gap: 2vh; }
+  #pop-av { width: 9vh; height: 9vh; border-radius: 50%; object-fit: cover; background: var(--panel3); }
+  #pop-name { font-size: 5vh; font-weight: 700; flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #pop-close { width: 8vh; height: 8vh; border-radius: 50%; background: var(--panel3); flex: 0 0 auto; }
+  #pop-close svg { width: 4vh; height: 4vh; margin: auto; }
+  .row-label { display: flex; justify-content: space-between; color: var(--muted); font-size: 3.6vh; font-weight: 600; }
+  #pop-vol { width: 100%; height: 7vh; -webkit-appearance: none; appearance: none; background: transparent; }
+  #pop-vol::-webkit-slider-runnable-track { height: 1.6vh; border-radius: 1vh; background: linear-gradient(90deg, var(--accent) var(--pct, 50%), var(--panel3) var(--pct, 50%)); }
+  #pop-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 5vh; height: 5vh; margin-top: -1.7vh; border-radius: 50%; background: #fff; box-shadow: 0 .4vh 1.2vh rgba(0,0,0,.4); }
+  #pop-mute { height: 9vh; border-radius: 2vh; background: var(--panel3); font-size: 4vh; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 1.5vh; }
+  #pop-mute.on { background: var(--red); }
+  #pop-mute svg { width: 4.5vh; height: 4.5vh; }
+  #pop-note { color: var(--dim); font-size: 3vh; text-align: center; }
+
+  /* ---------- controls ---------- */
+  #controls { flex: 0 0 auto; display: flex; gap: var(--gap); }
+  .btn { width: 22vh; height: 100%; border-radius: var(--r); background: var(--panel2); color: var(--text);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6vh;
+    font-size: 4.2vh; font-weight: 600; transition: transform .08s ease, background .12s ease; }
+  .btn svg { width: 10vh; height: 10vh; }
+  .btn:active { transform: scale(.95); }
+  .btn.on { background: var(--red); }
+  .btn.live.on-live { background: var(--green); box-shadow: 0 0 3vh rgba(35,165,90,.6); }
+  .btn.leave { background: #3a1d20; color: var(--red); }
+  .btn.leave.confirm { background: var(--red); color: #fff; animation: arm .7s ease-in-out infinite alternate; }
+  @keyframes arm { from { box-shadow: 0 0 0 0 rgba(242,63,66,.7); } to { box-shadow: 0 0 0 1.6vh rgba(242,63,66,0); } }
+  .btn:disabled { opacity: .35; pointer-events: none; }
+
+  /* ---------- favorites (pinned voice channels) ---------- */
+  #favs { display: none; gap: var(--gap); }
+  .fav { flex: 1 1 0; min-width: 0; border-radius: var(--r); background: var(--panel2); padding: 1.6vh 2vh; text-align: left;
+    display: flex; flex-direction: column; justify-content: center; gap: .6vh; transition: transform .08s ease; }
+  .fav:active { transform: scale(.97); }
+  .fav.here { background: color-mix(in srgb, var(--green) 30%, var(--panel2)); box-shadow: inset 0 0 0 .4vh var(--green); }
+  .fav .f-name { font-size: 3.8vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 1vh; }
+  .fav .f-name svg { width: 3.6vh; height: 3.6vh; color: var(--muted); flex: 0 0 auto; }
+  .fav .f-sub { font-size: 2.9vh; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .8vh; }
+  .fav.add { align-items: center; justify-content: center; color: var(--muted); border: .35vh dashed var(--panel3); background: transparent; flex: 0 0 auto; padding: 1.6vh 3vh; }
+  .fav.add svg { width: 5vh; height: 5vh; }
+  .stack { display: inline-flex; }
+  .stack img { width: 3.2vh; height: 3.2vh; border-radius: 50%; border: .3vh solid var(--panel2); margin-left: -1vh; background: var(--panel3); object-fit: cover; }
+  .stack img:first-child { margin-left: 0; }
+
+  /* ---------- side panel: channels / feed / alerts ---------- */
+  #side, #side2 { display: none; flex-direction: column; overflow: hidden; }
+  .tabs { display: flex; gap: 1vh; padding: 1.6vh 1.6vh 0; flex: 0 0 auto; }
+  .tab { flex: 1 1 0; height: 7.5vh; border-radius: 1.8vh; font-size: 3.6vh; font-weight: 700; color: var(--muted); position: relative; }
+  .tab.on { background: var(--panel2); color: var(--text); }
+  .tab .count { position: absolute; top: .6vh; right: 1.2vh; min-width: 3.4vh; height: 3.4vh; border-radius: 1.7vh; background: var(--red);
+    color: #fff; font-size: 2.3vh; line-height: 3.4vh; padding: 0 .8vh; }
+  .tab .count:empty { display: none; }
+  .pane { flex: 1 1 auto; min-height: 0; display: none; flex-direction: column; }
+  .pane.on { display: flex; }
+  .pane-head { flex: 0 0 auto; display: flex; align-items: center; gap: 1.4vh; padding: 1.6vh 2vh 1vh; min-height: 8vh; }
+  .pane-head .t { font-size: 3.9vh; font-weight: 700; flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { width: 7vh; height: 7vh; border-radius: 50%; background: var(--panel2); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+  .icon-btn svg { width: 3.8vh; height: 3.8vh; }
+  .icon-btn[hidden] { display: none; }
+  .pill { height: 6.5vh; padding: 0 2.4vh; border-radius: 3.3vh; background: var(--panel2); font-size: 3.2vh; font-weight: 700; color: var(--muted); flex: 0 0 auto; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 1.4vh 1.6vh; touch-action: pan-y; scrollbar-width: thin; }
+  .scroll::-webkit-scrollbar { width: .8vh; } .scroll::-webkit-scrollbar-thumb { background: var(--panel3); border-radius: 1vh; }
+  .sect { color: var(--dim); font-size: 2.8vh; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 1.6vh 1vh .8vh; }
+  .item { display: flex; align-items: center; gap: 1.6vh; padding: 1.3vh 1.2vh; border-radius: 1.8vh; cursor: pointer; min-height: 8.5vh; }
+  .item:active { background: var(--panel2); }
+  .item.here { background: color-mix(in srgb, var(--green) 22%, transparent); }
+  .item .ic { width: 6vh; height: 6vh; border-radius: 1.6vh; background: var(--panel2); flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    font-size: 2.8vh; font-weight: 700; color: var(--muted); overflow: hidden; }
+  .item .ic img { width: 100%; height: 100%; object-fit: cover; }
+  .item .ic svg { width: 3.4vh; height: 3.4vh; }
+  .item .main { flex: 1 1 auto; min-width: 0; }
+  .item .nm { font-size: 3.6vh; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item .sb { font-size: 2.8vh; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .3vh; display: flex; align-items: center; gap: .8vh; }
+  .item .act { width: 7vh; height: 7vh; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: var(--dim); }
+  .item .act svg { width: 4vh; height: 4vh; }
+  .item .act.on { color: var(--yellow); }
+  .item .act.join { background: var(--green); color: #fff; }
+  .note { color: var(--muted); font-size: 3.4vh; text-align: center; padding: 4vh 2vh; line-height: 1.35; }
+  .note small { display: block; color: var(--dim); font-size: 2.8vh; margin-top: 1vh; }
+
+  /* message filters */
+  .feed-tabs { display: flex; gap: 1vh; padding: 0 1.6vh; overflow-x: auto; flex: 0 0 auto; scrollbar-width: none; }
+  .feed-tabs::-webkit-scrollbar { display: none; }
+  .msg { display: flex; gap: 1.6vh; padding: 1.2vh 1vh; }
+  .msg img { width: 6vh; height: 6vh; border-radius: 50%; flex: 0 0 auto; background: var(--panel2); object-fit: cover; }
+  .msg .who { font-size: 3.1vh; font-weight: 700; }
+  .msg .when { font-size: 2.5vh; color: var(--dim); font-weight: 500; margin-left: 1vh; }
+  .msg .txt { font-size: 3.2vh; color: #dbdee1; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .msg .txt .extra { color: var(--muted); font-style: italic; }
+
+  /* alerts */
+  .alert { display: flex; gap: 1.6vh; padding: 1.3vh 1.2vh; border-radius: 1.8vh; cursor: pointer; }
+  .alert:active { background: var(--panel2); }
+  .alert img { width: 6vh; height: 6vh; border-radius: 50%; flex: 0 0 auto; background: var(--panel2); object-fit: cover; }
+  .alert .at { font-size: 3.2vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert .ab { font-size: 3vh; color: #dbdee1; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .alert .aw { font-size: 2.5vh; color: var(--dim); margin-top: .3vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert.mention { box-shadow: inset .5vh 0 0 var(--yellow); }
+  .alert .x { width: 6vh; height: 6vh; border-radius: 50%; flex: 0 0 auto; color: var(--dim); display: flex; align-items: center; justify-content: center; align-self: center; }
+  .alert .x svg { width: 3.2vh; height: 3.2vh; }
+  .alert .ab { -webkit-line-clamp: 3; }
+
+  /* pop-up banner for new mentions */
+  #banner { position: absolute; z-index: 30; left: 50%; top: 2.5vh; transform: translate(-50%, -150%); width: min(70vh, 92%);
+    display: flex; gap: 1.8vh; align-items: center; background: var(--panel2); border-radius: var(--r); padding: 1.6vh 2.2vh;
+    box-shadow: 0 1.6vh 4vh rgba(0,0,0,.55), inset 0 0 0 .3vh var(--accent); transition: transform .3s ease; }
+  #banner.on { transform: translate(-50%, 0); }
+  #banner img { width: 7vh; height: 7vh; border-radius: 50%; object-fit: cover; flex: 0 0 auto; background: var(--panel3); }
+  #banner .bt { font-size: 3.4vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner .bb { font-size: 3vh; color: #dbdee1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner > div { min-width: 0; }
+
+  /* toast */
+  #toast { position: absolute; z-index: 31; left: 50%; bottom: 3vh; transform: translate(-50%, 2vh); background: var(--panel3); color: var(--text);
+    padding: 1.6vh 3vh; border-radius: 3vh; font-size: 3.4vh; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; white-space: nowrap; }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { background: #5a1820; }
+
+  /* =========================================================
+     Sizes (set from JS by the widget's real pixel size):
+       S  ~840x344  : people + icon-only controls
+       M  ~840x704  : header / people / favorites / controls, stacked
+       L  ~1688x704 : info+controls | people | channels-feed-alerts tabs
+       XL ~2544x704 : info+controls | people | channels | feed+alerts
+     ========================================================= */
+
+  /* S */
+  .size-s #info { display: none; }
+  .size-s #members-title { display: block; position: absolute; left: 2.6vh; top: 2vh; right: 2.6vh; font-size: 4.6vh; font-weight: 700; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+  .size-s #members { padding-top: 8vh; }
+  .size-s .btn { width: 20vh; font-size: 0; gap: 0; }
+  .size-s .btn span { display: none; }
+  .size-s .btn svg { width: 11vh; height: 11vh; }
+  .size-s .vol-tag { display: none; }
+  .size-s #toast { font-size: 6vh; padding: 2.4vh 5vh; bottom: 4vh; border-radius: 5vh; background: var(--red); font-weight: 700; }
+
+  /* M */
+  .size-m #app { flex-direction: column; }
+  .size-m #info { flex: 0 0 auto; padding: 2.2vh 2.8vh; gap: .6vh; }
+  .size-m #guild { font-size: 2.8vh; } .size-m #channel { font-size: 5vh; } .size-m #channel svg { width: 4.5vh; height: 4.5vh; }
+  .size-m #count { font-size: 2.9vh; }
+  .size-m #members { flex: 1 1 auto; }
+  .size-m #favs { display: flex; flex: 0 0 13vh; }
+  .size-m #controls { flex: 0 0 15vh; }
+  .size-m .btn { flex: 1 1 0; width: auto; flex-direction: row; font-size: 3.4vh; gap: 1vh; }
+  .size-m .btn svg { width: 6vh; height: 6vh; }
+  .size-m .vol-tag { display: none; }
+
+  /* L and XL share the left column */
+  .size-l #app, .size-xl #app { display: grid; }
+  .size-l #app { grid-template-columns: 24% 1fr 34%; grid-template-rows: auto 1fr; }
+  .size-xl #app { grid-template-columns: 17% 1fr 24% 25%; grid-template-rows: auto 1fr; }
+  .size-l #info, .size-xl #info { grid-column: 1; grid-row: 1; padding: 2.6vh 3vh; }
+  .size-l #controls, .size-xl #controls { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .size-l .btn, .size-xl .btn { width: auto; height: auto; font-size: 3.6vh; }
+  .size-l .btn svg, .size-xl .btn svg { width: 8vh; height: 8vh; }
+  .size-l #members, .size-xl #members { grid-column: 2; grid-row: 1 / 3; }
+  .size-l #side, .size-xl #side { display: flex; grid-column: 3; grid-row: 1 / 3; }
+  .size-xl #side2 { display: flex; grid-column: 4; grid-row: 1 / 3; }
+  .size-xl #tab-msgs { display: none; }
+  .size-xl #side .tabs { display: none; }
+</style>
+
+<div id="app">
+  <section id="info" class="panel">
+    <div id="guild">&nbsp;</div>
+    <div id="channel">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 0 0-1.7-.7L6.6 6H4a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h2.6l3.7 3.7A1 1 0 0 0 12 21V3Zm3.1 5.3a1 1 0 0 1 1.4 0 5 5 0 0 1 0 7.4 1 1 0 1 1-1.4-1.4 3 3 0 0 0 0-4.6 1 1 0 0 1 0-1.4Zm2.8-2.8a1 1 0 0 1 1.4 0 9 9 0 0 1 0 13 1 1 0 1 1-1.4-1.4 7 7 0 0 0 0-10.2 1 1 0 0 1 0-1.4Z"/></svg>
+      <span id="channel-name">Discord</span>
+    </div>
+    <div id="count"><span id="status-dot"></span><span id="count-text">Connecting…</span></div>
+  </section>
+
+  <section id="members" class="panel">
+    <div id="members-title"></div>
+    <div id="empty">Connecting to helper…</div>
+    <div id="pop">
+      <div id="pop-card">
+        <div id="pop-head"><img id="pop-av" alt="" /><div id="pop-name"></div>
+          <button id="pop-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="row-label"><span>Volume (just for you)</span><span id="pop-pct">100%</span></div>
+        <input id="pop-vol" type="range" min="0" max="200" step="5" value="100" />
+        <button id="pop-mute"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 0 0-1.7-.7L6.6 6H4a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h2.6l3.7 3.7A1 1 0 0 0 12 21V3Z"/><path d="M15.3 9.3a1 1 0 0 1 1.4 0L18.5 11l1.8-1.7a1 1 0 1 1 1.4 1.4L20 12.5l1.7 1.8a1 1 0 0 1-1.4 1.4L18.5 14l-1.8 1.7a1 1 0 0 1-1.4-1.4l1.8-1.8-1.8-1.7a1 1 0 0 1 0-1.5Z"/></svg><span>Mute for me</span></button>
+        <div id="pop-note">Only changes what you hear. They won't know.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="favs"></section>
+
+  <section id="controls">
+    <button class="btn" id="btn-mute" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Zm-7 9a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.9V20h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.1A7 7 0 0 1 5 11Z"/><path class="slash" d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" style="display:none"/></svg>
+      <span>Mute</span>
+    </button>
+    <button class="btn" id="btn-deaf" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0-9 9v5a3 3 0 0 0 3 3h1a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a7 7 0 0 1 14 0h-2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1a3 3 0 0 0 3-3v-5a9 9 0 0 0-9-9Z"/><path class="slash" d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" style="display:none"/></svg>
+      <span>Deafen</span>
+    </button>
+    <button class="btn live" id="btn-live" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h7v2H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2h7a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4Zm8 3.6 4.2 3.6a1 1 0 0 1 0 1.5L12 14.4V12H8a1 1 0 1 1 0-2h4V6.6Z"/></svg>
+      <span>Go Live</span>
+    </button>
+    <button class="btn leave" id="btn-leave" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 13.4c.4-.4.4-1 0-1.4C19 9.2 15.6 8 12 8s-7 1.2-9.7 4c-.4.4-.4 1 0 1.4l2 2c.4.4 1 .4 1.4.1l2.4-1.8c.3-.2.4-.5.4-.8V11a10 10 0 0 1 7 0v1.9c0 .3.1.6.4.8l2.4 1.8c.4.3 1 .3 1.4-.1l2-2Z"/></svg>
+      <span>Leave</span>
+    </button>
+  </section>
+
+  <!-- L: tabs for channels / messages.  XL: channels here, messages in #side2 -->
+  <section id="side" class="panel">
+    <div class="tabs">
+      <button class="tab on" data-tab="channels">Channels</button>
+      <button class="tab" id="tab-msgs" data-tab="msgs">Messages<span class="count" id="alert-count"></span></button>
+    </div>
+    <div class="pane on" id="pane-channels">
+      <div class="pane-head">
+        <button class="icon-btn" id="ch-back" hidden aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="t" id="ch-title">Channels</div>
+        <button class="icon-btn" id="ch-refresh" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg></button>
+      </div>
+      <div class="scroll" id="ch-list"></div>
+    </div>
+    <div class="pane" id="pane-msgs"></div>
+  </section>
+  <section id="side2" class="panel">
+    <div class="pane on" id="pane-msgs2"></div>
+  </section>
+</div>
+
+<div id="banner"><img alt="" /><div><div class="bt"></div><div class="bb"></div></div></div>
+<div id="toast"></div>
+
+<template id="tpl-member">
+  <div class="member">
+    <div class="avatar-wrap">
+      <span class="initial"></span>
+      <img class="avatar" alt="" />
+      <div class="badge" hidden><svg viewBox="0 0 24 24" fill="currentColor"></svg></div>
+      <div class="vol-tag" hidden></div>
+    </div>
+    <div class="name"></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  'use strict';
+  var WS_URL = 'ws://localhost:6789';
+  var MIC_OFF = '<path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Zm-7 9a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.9V20h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.1A7 7 0 0 1 5 11Z"/><path d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" stroke="#f23f42" stroke-width="1.5"/>';
+  var HEADSET_OFF = '<path d="M12 3a9 9 0 0 0-9 9v5a3 3 0 0 0 3 3h1a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a7 7 0 0 1 14 0h-2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1a3 3 0 0 0 3-3v-5a9 9 0 0 0-9-9Z"/><path d="M3.3 2.3a1 1 0 0 1 1.4 0l17 17a1 1 0 0 1-1.4 1.4l-17-17a1 1 0 0 1 0-1.4Z" stroke="#f23f42" stroke-width="1.5"/>';
+  var I = {
+    speaker: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 0 0-1.7-.7L6.6 6H4a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h2.6l3.7 3.7A1 1 0 0 0 12 21V3Zm3.1 5.3a1 1 0 0 1 1.4 0 5 5 0 0 1 0 7.4 1 1 0 1 1-1.4-1.4 3 3 0 0 0 0-4.6 1 1 0 0 1 0-1.4Z"/></svg>',
+    hash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 3 7 21M17 3l-2 18M4 8h17M3 16h17"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z"/></svg>',
+    starOn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+    bellOn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9Zm4.3 13a1.9 1.9 0 0 0 3.4 0Z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    join: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var ws = null, state = null, leaveTimer = null, size = '';
+
+  // ---------- iCUE settings ----------
+  // iCUE delivers changed settings in the event payload (payload.settings); the globals only hold
+  // the values from when the widget loaded. Payload values win, globals are the fallback.
+  var icueSettings = {};
+  function prop(name, fallback) {
+    var v;
+    if (Object.prototype.hasOwnProperty.call(icueSettings, name)) v = icueSettings[name];
+    else {
+      try { v = new Function('return typeof ' + name + " !== 'undefined' ? " + name + ' : undefined')(); } catch (e) { v = undefined; }
+    }
+    if (v === undefined || v === null) return fallback;
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    return v;
+  }
+  function mergeSettings(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    var s = payload.settings && typeof payload.settings === 'object' ? payload.settings : payload;
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) icueSettings[k] = s[k];
+  }
+  function applySettings(payload) {
+    mergeSettings(payload);
+    document.documentElement.style.setProperty('--accent', prop('accentColor', '#5865F2') || '#5865F2');
+    $('members').classList.toggle('hide-names', prop('showNames', true) === false);
+  }
+  window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+  // iCUE calls the global `icueEvents` binding (it may declare it itself), not window.icueEvents,
+  // so assign the binding directly the way Corsair's widgets do.
+  try { icueEvents = window.icueEvents; } catch (e) { /* no such binding: window.icueEvents is it */ }
+  try { if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) setTimeout(applySettings, 0); } catch (e) {}
+
+  // ---------- size class from the real widget size ----------
+  function pickSize() {
+    var w = window.innerWidth, h = window.innerHeight, r = w / h, s;
+    var forced = /[?&]size=(s|m|l|xl)\b/.exec(location.search || ''); // preview/testing only
+    if (forced) s = forced[1];
+    else if (r < 1.6) s = 'm';
+    else if (h < 520) s = 's';
+    else if (r >= 3) s = 'xl';
+    else s = 'l';
+    if (s !== size) {
+      document.body.classList.remove('size-' + size);
+      document.body.classList.add('size-' + s);
+      size = s;
+      render();
+      if ((s === 'l' || s === 'xl') && !browse.loaded) loadGuilds();
+    }
+  }
+
+  // ---------- connection ----------
+  var rid = 0, waiting = {};
+  function connect() {
+    try { ws = new WebSocket(WS_URL); } catch (e) { return retry(); }
+    ws.onopen = function () { if ((size === 'l' || size === 'xl')) loadGuilds(); };
+    ws.onmessage = function (ev) {
+      var msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.type === 'state') { var prev = state; state = msg.state; checkNewAlert(prev); render(); }
+      else if (msg.type === 'reply' && waiting[msg.rid]) { var cb = waiting[msg.rid]; delete waiting[msg.rid]; cb(msg); }
+    };
+    ws.onclose = function () { state = null; browse.loaded = false; render(); retry(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function retry() { setTimeout(connect, 2000); }
+  function send(action, extra) {
+    if (!ws || ws.readyState !== 1) return false;
+    var o = extra || {}; o.action = action; ws.send(JSON.stringify(o)); return true;
+  }
+  function ask(action, extra, cb) {
+    var o = extra || {}; o.rid = ++rid;
+    waiting[o.rid] = cb || function () {};
+    if (!send(action, o)) { delete waiting[o.rid]; (cb || function () {})({ ok: false, error: 'Helper not running' }); }
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function ago(ts) {
+    var s = Math.max(0, (Date.now() - ts) / 1000);
+    if (s < 60) return 'now'; if (s < 3600) return Math.floor(s / 60) + 'm';
+    if (s < 86400) return Math.floor(s / 3600) + 'h'; return Math.floor(s / 86400) + 'd';
+  }
+  var toastTimer = null;
+  function toast(text, err) {
+    var t = $('toast'); t.textContent = text; t.classList.toggle('err', !!err); t.classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('on'); }, err ? 3500 : 2000);
+  }
+  function hideToast() { clearTimeout(toastTimer); $('toast').classList.remove('on'); }
+  function stackHtml(members, max) {
+    if (!members || !members.length) return '';
+    return '<span class="stack">' + members.slice(0, max || 4).map(function (m) { return '<img src="' + esc(m.avatar) + '" alt="" />'; }).join('') + '</span>';
+  }
+
+  // ---------- main render ----------
+  function setEmpty(main, sub) {
+    var m = $('members');
+    Array.prototype.forEach.call(m.querySelectorAll('.member'), function (el) { el.remove(); });
+    var d = $('empty');
+    if (!d) { d = document.createElement('div'); d.id = 'empty'; m.appendChild(d); }
+    d.textContent = main;
+    if (sub) { var s = document.createElement('small'); s.textContent = sub; d.appendChild(s); }
+  }
+
+  function sizeAvatars(n) {
+    var area = $('members');
+    var w = area.clientWidth - 40, h = area.clientHeight - 40 - (size === 's' ? area.clientHeight * 0.06 : 0);
+    if (!w || !h || !n) return;
+    var best = 40;
+    for (var rows = 1; rows <= n; rows++) {
+      var cols = Math.ceil(n / rows);
+      var byW = w / (cols * 1.25 + (cols - 1) * 0.18);
+      var byH = h / (rows * 1.45 + (rows - 1) * 0.18);
+      best = Math.max(best, Math.min(byW, byH));
+    }
+    document.documentElement.style.setProperty('--av', Math.min(best, h * 0.68) + 'px');
+  }
+
+  function render() {
+    if (!size) return;
+    var ready = !!(state && state.status === 'ready');
+    var inChannel = ready && !!state.channel;
+
+    $('guild').textContent = inChannel ? (state.channel.guild || 'Direct call') : ' ';
+    $('channel-name').textContent = inChannel ? state.channel.name : 'Discord';
+    $('members-title').textContent = inChannel ? state.channel.name : '';
+    $('status-dot').style.background = ready ? 'var(--green)' : 'var(--red)';
+    $('count-text').textContent = !state ? 'Helper offline'
+      : !ready ? (state.status === 'authorizing' ? 'Authorizing' : 'Not connected')
+      : inChannel ? state.members.length + (state.members.length === 1 ? ' member' : ' members')
+      : 'Not in voice';
+
+    var mute = ready && state.self.mute, deaf = ready && state.self.deaf;
+    $('btn-mute').disabled = !ready;
+    $('btn-deaf').disabled = !ready;
+    $('btn-leave').disabled = !inChannel;
+    $('btn-live').disabled = !inChannel;
+    var live = !!(inChannel && state.self.live);
+    $('btn-live').classList.toggle('on-live', live);
+    $('btn-live').querySelector('span').textContent = live ? 'Live' : 'Go Live';
+    $('btn-mute').classList.toggle('on', !!(mute || deaf));
+    $('btn-deaf').classList.toggle('on', !!deaf);
+    $('btn-mute').querySelector('span').textContent = (mute || deaf) ? 'Unmute' : 'Mute';
+    $('btn-deaf').querySelector('span').textContent = deaf ? 'Undeafen' : 'Deafen';
+    $('btn-mute').querySelector('.slash').style.display = (mute || deaf) ? '' : 'none';
+    $('btn-deaf').querySelector('.slash').style.display = deaf ? '' : 'none';
+    if (!inChannel) { resetLeave(); closePop(); }
+
+    renderFavs();
+    renderSide();
+
+    if (!state) return setEmpty('Helper not running', 'Start the Edge helper on this PC');
+    if (state.status === 'authorizing') return setEmpty('Check Discord', 'Approve the authorization prompt');
+    if (!ready) return setEmpty('Discord not connected', state.message || '');
+    if (!inChannel) return setEmpty('Not in a voice channel', size === 'm' ? 'Tap a favorite below to join' : size === 's' ? 'Join one in Discord' : 'Pick one from Channels to join');
+
+    var area = $('members');
+    var existing = {};
+    Array.prototype.forEach.call(area.querySelectorAll('.member'), function (el) { existing[el.dataset.id] = el; });
+    var empty = $('empty'); if (empty) empty.remove();
+    var firstFixed = area.querySelector('.member') ? null : null;
+
+    state.members.forEach(function (m, i) {
+      var el = existing[m.id];
+      if (!el) {
+        el = $('tpl-member').content.firstElementChild.cloneNode(true);
+        el.dataset.id = m.id;
+        var img = el.querySelector('.avatar');
+        img.onerror = function () { img.style.visibility = 'hidden'; };
+        el.addEventListener('click', function () { openPop(el.dataset.id); });
+      }
+      delete existing[m.id];
+      var isSelf = m.id === state.self.id;
+      var mDeaf = isSelf ? deaf : m.deaf;
+      var mMute = isSelf ? (mute || deaf) : (m.mute || m.deaf);
+      var img2 = el.querySelector('.avatar');
+      if (img2.getAttribute('src') !== m.avatar) img2.setAttribute('src', m.avatar);
+      el.querySelector('.name').textContent = m.name;
+      el.querySelector('.initial').textContent = (m.name || '?').charAt(0).toUpperCase();
+      el.classList.toggle('speaking', !!m.speaking && !mMute && !m.localMute);
+      var badge = el.querySelector('.badge');
+      badge.hidden = !(mMute || mDeaf);
+      var icon = mDeaf ? HEADSET_OFF : MIC_OFF;
+      if (badge.dataset.icon !== icon) { badge.querySelector('svg').innerHTML = icon; badge.dataset.icon = icon; }
+      var tag = el.querySelector('.vol-tag');
+      var custom = !isSelf && (m.localMute || (typeof m.volume === 'number' && m.volume !== 100));
+      tag.hidden = !custom;
+      if (custom) { tag.textContent = m.localMute ? 'Muted' : m.volume + '%'; tag.classList.toggle('muted', !!m.localMute); }
+      var members = area.querySelectorAll('.member');
+      if (members[i] !== el) area.insertBefore(el, members[i] || $('pop'));
+    });
+    Object.keys(existing).forEach(function (id) { existing[id].remove(); });
+    sizeAvatars(state.members.length);
+    if (popId) fillPop();
+  }
+
+  // ---------- favorites row (M) ----------
+  function renderFavs() {
+    if (size !== 'm') return;
+    var box = $('favs');
+    var ready = !!(state && state.status === 'ready');
+    var voice = ready ? (state.pins || []).filter(function (p) { return p.type === 'voice'; }).slice(0, 3) : [];
+    var here = ready && state.channel ? state.channel.id : null;
+    var html = voice.map(function (p) {
+      var n = (p.members || []).length;
+      return '<button class="fav' + (p.id === here ? ' here' : '') + '" data-join="' + esc(p.id) + '">' +
+        '<div class="f-name">' + I.speaker + '<span>' + esc(p.name) + '</span></div>' +
+        '<div class="f-sub">' + (p.missing ? 'Unavailable' : n ? stackHtml(p.members, 4) + ' ' + n + ' in voice' : esc(p.guild || 'Empty')) + '</div></button>';
+    }).join('');
+    if (ready && voice.length < 3) html += '<button class="fav add" data-picker="1" aria-label="Pin a voice channel">' + I.plus + '</button>';
+    if (!ready) html = '';
+    if (box.dataset.html !== html) { box.innerHTML = html; box.dataset.html = html; }
+  }
+  $('favs').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-join],[data-picker]');
+    if (!b) return;
+    if (b.hasAttribute('data-picker')) return openPicker();
+    joinChannel(b.getAttribute('data-join'), b.querySelector('.f-name span') && b.querySelector('.f-name span').textContent);
+  });
+
+  function joinChannel(id, name) {
+    if (state && state.channel && state.channel.id === id) return toast('Already in ' + (name || 'that channel'));
+    toast('Joining ' + (name || 'channel') + '…');
+    ask('join', { channelId: id }, function (r) { if (!r.ok) toast(r.error || 'Could not join', true); });
+  }
+
+  // ---------- per-user volume popover ----------
+  var popId = null, volTimer = null;
+  function openPop(id) {
+    if (size === 's' || !state || id === state.self.id) return;
+    popId = id; fillPop(); $('pop').classList.add('on');
+  }
+  function closePop() { popId = null; $('pop').classList.remove('on'); }
+  function fillPop() {
+    var m = state && state.members.filter(function (x) { return x.id === popId; })[0];
+    if (!m) return closePop();
+    $('pop-av').src = m.avatar; $('pop-name').textContent = m.name;
+    if (document.activeElement !== $('pop-vol')) $('pop-vol').value = m.volume;
+    setPct($('pop-vol').value);
+    $('pop-mute').classList.toggle('on', !!m.localMute);
+    $('pop-mute').querySelector('span').textContent = m.localMute ? 'Unmute for me' : 'Mute for me';
+  }
+  function setPct(v) { $('pop-pct').textContent = v + '%'; $('pop-vol').style.setProperty('--pct', (v / 2) + '%'); }
+  $('pop-vol').addEventListener('input', function () {
+    var v = Number(this.value); setPct(v);
+    clearTimeout(volTimer); var id = popId;
+    volTimer = setTimeout(function () { send('userVolume', { userId: id, volume: v }); }, 80);
+  });
+  $('pop-mute').addEventListener('click', function () {
+    var m = state && state.members.filter(function (x) { return x.id === popId; })[0];
+    if (m) send('userMute', { userId: popId, mute: !m.localMute });
+  });
+  $('pop-close').addEventListener('click', closePop);
+  $('pop').addEventListener('click', function (ev) { if (ev.target === $('pop')) closePop(); });
+
+  // ---------- side panel: channels browser ----------
+  var browse = { loaded: false, guilds: [], guild: null, channels: [], loading: false, error: null };
+  var tab = 'channels';
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+    t.addEventListener('click', function () { tab = t.getAttribute('data-tab'); renderSide(); });
+  });
+  function loadGuilds() {
+    if (!state || state.status !== 'ready') { browse.loaded = false; return; }
+    browse.loading = true; renderChannels();
+    ask('guilds', {}, function (r) {
+      browse.loading = false;
+      if (r.ok) { browse.guilds = r.data || []; browse.loaded = true; browse.error = null; } else browse.error = r.error;
+      renderChannels();
+    });
+  }
+  function openGuild(g) {
+    browse.guild = g; browse.channels = []; browse.loading = true; renderChannels();
+    ask('channels', { guildId: g.id }, function (r) {
+      browse.loading = false;
+      if (browse.guild !== g) return;
+      if (r.ok) { browse.channels = r.data || []; browse.error = null; } else browse.error = r.error;
+      renderChannels();
+    });
+  }
+  $('ch-back').addEventListener('click', function () { browse.guild = null; renderChannels(); });
+  $('ch-refresh').addEventListener('click', function () { if (browse.guild) openGuild(browse.guild); else { loadGuilds(); send('refreshPins'); } });
+
+  function pinned(id) { return !!(state && (state.pins || []).some(function (p) { return p.id === id; })); }
+
+  function renderChannels() {
+    var list = $('ch-list');
+    var ready = !!(state && state.status === 'ready');
+    var here = ready && state.channel ? state.channel.id : null;
+    $('ch-back').hidden = !browse.guild;
+    $('ch-title').textContent = browse.guild ? browse.guild.name : 'Channels';
+    var html = '';
+    if (!ready) html = '<div class="note">Discord isn\'t connected</div>';
+    else if (!browse.guild) {
+      var favs = (state.pins || []).filter(function (p) { return p.type === 'voice'; });
+      if (favs.length) {
+        html += '<div class="sect">Favorites</div>';
+        html += favs.map(function (p) {
+          var n = (p.members || []).length;
+          return '<div class="item' + (p.id === here ? ' here' : '') + '" data-join="' + esc(p.id) + '" data-name="' + esc(p.name) + '">' +
+            '<div class="ic">' + I.speaker + '</div><div class="main"><div class="nm">' + esc(p.name) + '</div>' +
+            '<div class="sb">' + (n ? stackHtml(p.members, 5) + ' ' + n + ' in voice' : esc(p.guild || '')) + '</div></div>' +
+            '<button class="act on" data-pin="' + esc(p.id) + '" aria-label="Unpin">' + I.starOn + '</button></div>';
+        }).join('');
+      }
+      html += '<div class="sect">Servers</div>';
+      if (browse.loading && !browse.guilds.length) html += '<div class="note">Loading…</div>';
+      else if (browse.error) html += '<div class="note">' + esc(browse.error) + '</div>';
+      html += browse.guilds.map(function (g, i) {
+        return '<div class="item" data-guild="' + i + '"><div class="ic">' + (g.icon ? '<img src="' + esc(g.icon) + '" alt="" />' : esc(g.name.slice(0, 2))) +
+          '</div><div class="main"><div class="nm">' + esc(g.name) + '</div></div></div>';
+      }).join('');
+    } else {
+      if (browse.loading) html = '<div class="note">Loading channels…</div>';
+      else if (browse.error) html = '<div class="note">' + esc(browse.error) + '</div>';
+      else {
+        var voice = browse.channels.filter(function (c) { return c.type === 'voice'; });
+        if (voice.length) html += '<div class="sect">Voice · tap to join · ★ favorite</div>';
+        html += voice.map(function (c) {
+          var n = (c.members || []).length;
+          return '<div class="item' + (c.id === here ? ' here' : '') + '" data-join="' + esc(c.id) + '" data-name="' + esc(c.name) + '">' +
+            '<div class="ic">' + I.speaker + '</div><div class="main"><div class="nm">' + esc(c.name) + '</div>' +
+            '<div class="sb">' + (n ? stackHtml(c.members, 6) + ' ' + n + ' in voice' : 'Empty') + '</div></div>' +
+            '<button class="act' + (pinned(c.id) ? ' on' : '') + '" data-pin="' + esc(c.id) + '" aria-label="Favorite">' + (pinned(c.id) ? I.starOn : I.star) + '</button></div>';
+        }).join('');
+        if (!voice.length) html = '<div class="note">No voice channels here</div>';
+      }
+    }
+    if (list.dataset.html !== html) { var st = list.scrollTop; list.innerHTML = html; list.dataset.html = html; list.scrollTop = browse.lastGuild === browse.guild ? st : 0; browse.lastGuild = browse.guild; }
+  }
+  $('ch-list').addEventListener('click', function (ev) {
+    var pin = ev.target.closest('[data-pin]');
+    if (pin) {
+      ev.stopPropagation();
+      var id = pin.getAttribute('data-pin'), on = !pinned(id);
+      ask('pin', { channelId: id, on: on }, function (r) {
+        if (!r.ok) return toast(r.error || 'Could not save', true);
+        toast(on ? 'Pinned' : 'Unpinned');
+        if (browse.guild) browse.channels.forEach(function (c) { if (c.id === id) c.pinned = on; });
+      });
+      return;
+    }
+    var j = ev.target.closest('[data-join]');
+    if (j) return joinChannel(j.getAttribute('data-join'), j.getAttribute('data-name'));
+    var g = ev.target.closest('[data-guild]');
+    if (g) openGuild(browse.guilds[+g.getAttribute('data-guild')]);
+  });
+
+  // ---------- messages (Discord's notifications: mentions, DMs, and channels set to All Messages) ----------
+  var msgFilter = 'all';
+  var X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  function messagesHtml() {
+    var ready = !!(state && state.status === 'ready');
+    var alerts = (state && state.alerts) || [];
+    var head = '<div class="pane-head"><div class="t">Messages</div>' + (alerts.length ? '<button class="pill" data-clear="1">Clear</button>' : '') + '</div>';
+    if (!ready) return head + '<div class="note">Discord isn\'t connected</div>';
+    if (!state.alertsEnabled) return head + '<div class="note">Messages are off<small>Approve the permission prompt in Discord</small></div>';
+    // filter pills: All, Mentions, then the busiest channels
+    var counts = {}, order = [];
+    alerts.forEach(function (a) { var k = a.channelId || ''; if (!k) return; if (!counts[k]) { counts[k] = { n: 0, label: a.dm ? a.title : '#' + (a.channel || 'channel') }; order.push(k); } counts[k].n++; });
+    order.sort(function (x, y) { return counts[y].n - counts[x].n; });
+    if (msgFilter !== 'all' && msgFilter !== 'mentions' && !counts[msgFilter]) msgFilter = 'all';
+    var pills = [['all', 'All'], ['mentions', 'Mentions & DMs']].concat(order.slice(0, 4).map(function (k) { return [k, counts[k].label]; }));
+    var bar = alerts.length ? '<div class="feed-tabs">' + pills.map(function (p) {
+      return '<button class="pill"' + (p[0] === msgFilter ? ' style="background:var(--accent);color:#fff"' : '') + ' data-filter="' + esc(p[0]) + '">' + esc(p[1]) + '</button>';
+    }).join('') + '</div>' : '';
+    var shown = alerts.filter(function (a) {
+      return msgFilter === 'all' ? true : msgFilter === 'mentions' ? a.mention : a.channelId === msgFilter;
+    });
+    if (!alerts.length) return head + '<div class="note">No messages yet<small>Mentions and DMs show up here. To see every message in a channel, set that channel\'s notifications to "All Messages" in Discord.</small></div>';
+    return head + bar + '<div class="scroll">' + (shown.length ? shown.map(function (a) {
+      var where = a.dm ? 'Direct message' : [a.channel ? '#' + a.channel : '', a.guild].filter(Boolean).join(' · ');
+      return '<div class="alert' + (a.mention ? ' mention' : '') + '" data-open="' + esc(a.channelId || '') + '"><img src="' + esc(a.icon || '') + '" alt="" /><div style="min-width:0;flex:1 1 auto">' +
+        '<div class="at">' + esc(a.author || a.title) + '</div><div class="ab">' + esc(a.body) + '</div><div class="aw">' + esc(where) + (where ? ' · ' : '') + ago(a.ts) + '</div></div>' +
+        '<button class="x" data-dismiss="' + esc(a.id) + '" aria-label="Dismiss">' + X_ICON + '</button></div>';
+    }).join('') : '<div class="note">Nothing here</div>') + '</div>';
+  }
+  function setPane(el, html) {
+    if (el.dataset.html === html) return;
+    var sc = el.querySelector('.scroll'), st = sc ? sc.scrollTop : 0;
+    el.innerHTML = html; el.dataset.html = html;
+    var sc2 = el.querySelector('.scroll'); if (sc2) sc2.scrollTop = st;
+  }
+  function renderSide() {
+    if (size !== 'l' && size !== 'xl') return;
+    var unread = (state && state.alerts && state.alerts.filter(function (a) { return a.mention; }).length) || 0;
+    $('alert-count').textContent = unread ? String(unread) : '';
+    if (size === 'l') {
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.getAttribute('data-tab') === tab); });
+      $('pane-channels').classList.toggle('on', tab === 'channels');
+      $('pane-msgs').classList.toggle('on', tab === 'msgs');
+      if (tab === 'msgs') setPane($('pane-msgs'), messagesHtml());
+    } else {
+      $('pane-channels').classList.add('on');
+      setPane($('pane-msgs2'), messagesHtml());
+    }
+    renderChannels();
+    if (state && state.status === 'ready' && !browse.loaded && !browse.loading) loadGuilds();
+  }
+  function sideClicks(ev) {
+    var f = ev.target.closest('[data-filter]');
+    if (f) { msgFilter = f.getAttribute('data-filter'); return renderSide(); }
+    if (ev.target.closest('[data-clear]')) return send('clearAlerts');
+    var x = ev.target.closest('[data-dismiss]');
+    if (x) { ev.stopPropagation(); return send('dismissAlert', { id: x.getAttribute('data-dismiss') }); }
+    var o = ev.target.closest('[data-open]');
+    if (o && o.getAttribute('data-open')) { send('openChannel', { channelId: o.getAttribute('data-open') }); toast('Opened in Discord'); }
+  }
+  $('side').addEventListener('click', sideClicks);
+  $('side2').addEventListener('click', sideClicks);
+  setInterval(function () { if (size === 'l' || size === 'xl') { $('pane-msgs').dataset.html = ''; $('pane-msgs2').dataset.html = ''; renderSide(); } }, 60000);
+
+  // ---------- picker for favorites on M (reuses the channel browser in a full-widget overlay) ----------
+  function openPicker() {
+    document.body.classList.add('picking');
+    $('side').style.cssText = 'display:flex;position:absolute;inset:3vh;z-index:25;box-shadow:0 0 0 100vmax rgba(0,0,0,.6)';
+    document.querySelector('#side .tabs').style.display = 'none';
+    var head = $('pane-channels').querySelector('.pane-head');
+    if (!$('picker-done')) {
+      var done = document.createElement('button'); done.id = 'picker-done'; done.className = 'pill'; done.textContent = 'Done';
+      done.style.cssText = 'background:var(--accent);color:#fff';
+      done.addEventListener('click', closePicker);
+      head.appendChild(done);
+    }
+    $('picker-done').style.display = '';
+    $('pane-channels').classList.add('on');
+    browse.guild = null;
+    if (!browse.loaded) loadGuilds(); else renderChannels();
+  }
+  function closePicker() {
+    document.body.classList.remove('picking');
+    $('side').style.cssText = '';
+    document.querySelector('#side .tabs').style.display = '';
+    if ($('picker-done')) $('picker-done').style.display = 'none';
+  }
+  // on M the picker's join taps should also close it
+  $('ch-list').addEventListener('click', function (ev) {
+    if (document.body.classList.contains('picking') && ev.target.closest('[data-join]') && !ev.target.closest('[data-pin]')) closePicker();
+  });
+
+  // ---------- mention banner ----------
+  var bannerTimer = null;
+  function checkNewAlert(prev) {
+    if (!state || !state.alerts || !state.alerts.length || !prev) return;
+    var newest = state.alerts[0], seen = (prev.alerts || []).some(function (a) { return a.id === newest.id; });
+    if (seen || !newest.mention || prop('alertPopups', true) === false) return;
+    var b = $('banner');
+    b.querySelector('img').src = newest.icon || '';
+    b.querySelector('.bt').textContent = newest.author || newest.title;
+    b.querySelector('.bb').textContent = newest.body;
+    b.classList.add('on');
+    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.classList.remove('on'); }, 6000);
+  }
+  $('banner').addEventListener('click', function () { $('banner').classList.remove('on'); });
+
+  // ---------- controls ----------
+  function resetLeave() {
+    clearTimeout(leaveTimer);
+    var b = $('btn-leave');
+    b.classList.remove('confirm');
+    b.querySelector('span').textContent = 'Leave';
+  }
+  $('btn-mute').addEventListener('click', function () { send('toggleMute'); });
+  $('btn-deaf').addEventListener('click', function () { send('toggleDeaf'); });
+  $('btn-live').addEventListener('click', function () { send('goLive'); });
+  // Two taps to hang up (no accidental leaves). The first tap arms it visibly at every size,
+  // including S where buttons have no labels: the button pulses red and a prompt appears.
+  $('btn-leave').addEventListener('click', function () {
+    var b = $('btn-leave');
+    if (b.classList.contains('confirm')) { resetLeave(); hideToast(); send('disconnect'); return; }
+    b.classList.add('confirm');
+    b.querySelector('span').textContent = 'Tap again';
+    toast('Tap again to leave');
+    clearTimeout(leaveTimer); leaveTimer = setTimeout(resetLeave, 4000);
+  });
+  window.addEventListener('resize', function () { pickSize(); if (state && state.channel) sizeAvatars(state.members.length); });
+
+  applySettings();
+  pickSize();
+  render();
+  connect();
+})();
+</script>
+</body>
+</html>

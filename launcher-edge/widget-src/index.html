@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'App Launcher'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-widget-preview" content="resources/preview.png" />
+<!--APP_SLOTS-->
+<meta name="x-icue-property" content="showLabels" data-label="tr('Show app names')" data-type="switch" data-default="true" />
+<meta name="x-icue-property" content="accentColor" data-label="tr('Running dot color')" data-type="color" data-default="'#4CC2FF'" />
+<meta name="x-icue-property" content="tileStyle" data-label="tr('Tile style')" data-type="combobox" data-values="[{'key':'tiles','value':tr('Tiles')},{'key':'icons','value':tr('Icons only')}]" data-default="'tiles'" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Apps 1-8')", "properties": ["app1", "app2", "app3", "app4", "app5", "app6", "app7", "app8"], "info": "tr('Pick from the apps in your Start menu. Empty slots are skipped and the buttons resize to fit.')" },
+  { "title": "tr('Apps 9-16')", "properties": ["app9", "app10", "app11", "app12", "app13", "app14", "app15", "app16"] },
+  { "title": "tr('Appearance')", "properties": ["showLabels", "tileStyle", "accentColor"], "info": "tr('A dot under an app means it is open. Tapping an open app brings it to the front.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #26272b; --text: #f2f3f5; --muted: #949ba4; --accent: #4CC2FF; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", sans-serif; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+  #grid { position: absolute; inset: 0; padding: var(--pad); display: grid; gap: var(--gap); justify-content: center; align-content: center; }
+  .tile { width: var(--t); height: var(--t); border-radius: calc(var(--t) * .18); background: var(--panel); position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--t) * .05);
+    transition: transform .08s ease, background .15s ease; }
+  .icons .tile { background: transparent; }
+  .tile:active { transform: scale(.93); background: var(--panel2); }
+  .tile img, .tile .ph { width: calc(var(--t) * var(--icon)); height: calc(var(--t) * var(--icon)); object-fit: contain; pointer-events: none; }
+  .tile .ph { border-radius: 22%; background: var(--panel2); display: flex; align-items: center; justify-content: center; font-size: calc(var(--t) * .26); font-weight: 700; color: var(--muted); }
+  .tile .name { max-width: 90%; font-size: calc(var(--t) * .11); font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
+  .labels .tile .name { display: block; }
+  .tile .dot { position: absolute; left: 50%; bottom: calc(var(--t) * .045); width: calc(var(--t) * .07); height: calc(var(--t) * .07); margin-left: calc(var(--t) * -.035);
+    border-radius: 50%; background: var(--accent); box-shadow: 0 0 calc(var(--t) * .05) var(--accent); opacity: 0; transition: opacity .2s; }
+  .tile.running .dot { opacity: 1; }
+  .labels .tile .dot { width: calc(var(--t) * .2); height: calc(var(--t) * .03); margin-left: calc(var(--t) * -.1); border-radius: 99px; bottom: calc(var(--t) * .035); }
+  .tile.missing { opacity: .45; }
+  .tile.go { animation: go .7s ease-out; }
+  @keyframes go { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 calc(var(--t) * .12) transparent; } }
+  #msg { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.6vh; text-align: center; padding: 6vh; }
+  #msg.on { display: flex; }
+  #msg h2 { font-size: 6vh; } #msg p { font-size: 3.6vh; color: var(--muted); max-width: 80vw; line-height: 1.35; }
+</style>
+
+<div id="grid"></div>
+<div id="msg"></div>
+
+<script>
+(function () {
+  'use strict';
+  var BASE = 'localhost:6794';
+  var $ = function (id) { return document.getElementById(id); };
+  var ws = null, state = null, ids = [];
+
+  // ---------- iCUE settings (payload.settings wins over load-time globals) ----------
+  var icueSettings = {};
+  function prop(name, fallback) {
+    var v;
+    if (Object.prototype.hasOwnProperty.call(icueSettings, name)) v = icueSettings[name];
+    else { try { v = new Function('return typeof ' + name + " !== 'undefined' ? " + name + ' : undefined')(); } catch (e) { v = undefined; } }
+    if (v === undefined || v === null) return fallback;
+    if (v === 'true') return true; if (v === 'false') return false;
+    return v;
+  }
+  function applySettings(payload) {
+    if (payload && typeof payload === 'object') {
+      var s = payload.settings && typeof payload.settings === 'object' ? payload.settings : payload;
+      for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) icueSettings[k] = s[k];
+    }
+    document.documentElement.style.setProperty('--accent', prop('accentColor', '#4CC2FF') || '#4CC2FF');
+    document.body.classList.toggle('labels', prop('showLabels', true) !== false);
+    document.body.classList.toggle('icons', prop('tileStyle', 'tiles') === 'icons');
+    var next = [];
+    var forced = /[?&]apps=([^&]+)/.exec(location.search || '');   // preview: ?apps=id1|id2
+    if (forced) next = decodeURIComponent(forced[1]).split('|');
+    else for (var i = 1; i <= 16; i++) { var v = prop('app' + i, ''); if (typeof v === 'string' && v) next.push(v); }
+    if (next.join('\n') !== ids.join('\n')) { ids = next; sendConfig(); }
+    render();
+  }
+  window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+  try { icueEvents = window.icueEvents; } catch (e) { /* no such binding */ }
+  try { if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) setTimeout(applySettings, 0); } catch (e) {}
+
+  // ---------- connection ----------
+  function connect() {
+    try { ws = new WebSocket('ws://' + BASE); } catch (e) { return setTimeout(connect, 2000); }
+    ws.onopen = sendConfig;
+    ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } if (m.type === 'state') { state = m.state; render(); } };
+    ws.onclose = function () { state = null; render(); setTimeout(connect, 2000); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function sendConfig() { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ action: 'config', ids: ids })); }
+
+  // ---------- layout: biggest square tiles that fit n apps ----------
+  function fit(n) {
+    var W = innerWidth, H = innerHeight, pad = Math.round(H * .04), gap = Math.round(H * .035), opts = [], top = 0;
+    for (var c = 1; c <= n; c++) {
+      var r = Math.ceil(n / c);
+      var tt = Math.min((W - 2 * pad - (c - 1) * gap) / c, (H - 2 * pad - (r - 1) * gap) / r, H * .62);
+      opts.push({ t: tt, c: c, r: r }); top = Math.max(top, tt);
+    }
+    // nearly-as-big tiles in fewer rows reads better on the wide slots (e.g. XL: 8 in a row, not 4x2)
+    var best = opts.filter(function (o) { return o.t >= top * .88; }).sort(function (a, b) { return a.r - b.r || b.t - a.t; })[0];
+    var t = Math.floor(best.t);
+    var g = $('grid');
+    g.style.setProperty('--t', t + 'px'); g.style.setProperty('--gap', gap + 'px'); g.style.setProperty('--pad', pad + 'px');
+    g.style.setProperty('--icon', document.body.classList.contains('labels') && t > 110 ? '.52' : '.62');
+    g.style.gridTemplateColumns = 'repeat(' + best.c + ', var(--t))';
+    document.body.classList.toggle('tiny', t <= 110);
+  }
+
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var sig = '';
+  function render() {
+    var msg = '';
+    if (!ids.length) msg = '<h2>No apps yet</h2><p>Open this widget\'s settings in iCUE and pick apps for the slots.</p>';
+    else if (!state) msg = '<h2>Helper offline</h2><p>Start the Edge helper on this PC.</p>';
+    $('msg').innerHTML = msg; $('msg').classList.toggle('on', !!msg);
+    if (msg) { $('grid').innerHTML = ''; sig = ''; return; }
+    var apps = (state && state.apps) || {};
+    var html = ids.map(function (id, i) {
+      var a = apps[id] || {}, name = a.missing ? 'Not installed' : (a.name || '');
+      var icon = a.icon ? '<img src="http://' + BASE + a.icon + '" alt="">' : '<span class="ph">' + esc((name || '?').charAt(0)) + '</span>';
+      return '<button class="tile' + (a.running ? ' running' : '') + (a.missing ? ' missing' : '') + '" data-i="' + i + '">' + icon +
+        '<span class="name">' + esc(name) + '</span><span class="dot"></span></button>';
+    }).join('');
+    if (html !== sig) { $('grid').innerHTML = html; sig = html; }
+    fit(ids.length);
+  }
+
+  $('grid').addEventListener('click', function (ev) {
+    var t = ev.target.closest('.tile'); if (!t || t.classList.contains('missing')) return;
+    var id = ids[+t.getAttribute('data-i')]; if (!id || !ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ action: 'launch', id: id }));
+    t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
+  });
+  window.addEventListener('resize', function () { fit(ids.length || 1); });
+
+  applySettings(); connect();
+})();
+</script>
+</body>
+</html>

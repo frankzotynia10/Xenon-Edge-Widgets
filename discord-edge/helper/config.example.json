@@ -1,0 +1,7 @@
+{
+  "clientId": "PUT_YOUR_DISCORD_APP_CLIENT_ID_HERE",
+  "clientSecret": "PUT_YOUR_DISCORD_APP_CLIENT_SECRET_HERE",
+  "redirectUri": "http://localhost",
+  "allowAnyOrigin": false,
+  "goLiveKeys": ["ctrl", "alt", "shift", "p"]
+}

@@ -1,0 +1,14 @@
+{
+  "author": "Frank",
+  "id": "com.frank.launcher",
+  "name": "App Launcher",
+  "description": "One-tap buttons for your apps and games, with their real icons. A dot shows which ones are open, and tapping an open app brings it to the front. Needs the Edge helper running.",
+  "version": "1.0.0",
+  "preview_icon": "resources/icon.png",
+  "min_app_version": "5.44",
+  "min_framework_version": "1.0.0",
+  "os": [{ "platform": "windows" }],
+  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "interactive": true,
+  "permissions": [{ "type": "url", "domain": "localhost", "port": 6794 }]
+}

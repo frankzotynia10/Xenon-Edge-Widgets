@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Secrets and per-machine settings (each helper ships a config.example.json instead)
+**/helper/config.json
+**/helper/token.json
+**/helper/settings.json
+**/helper/graph.json
+**/helper/graph-accounts.json
+edge-helper/sleep.json
+
+# Runtime files
+*.log
+*.log.old
+*.pid
+apple-music-edge/helper/art-cache/
+launcher-edge/helper/icons/
+
+# App Launcher build output (contains this PC's installed app list); build with launcher-edge/build.js
+launcher-edge/widget/
+launcher-edge/app-launcher.icuewidget
+
+# Local only
+archive/
+reference/
+.claude/settings.local.json

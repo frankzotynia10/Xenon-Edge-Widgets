@@ -1,0 +1,31 @@
+{
+  "author": "Frank",
+  "id": "com.frank.sensorbox",
+  "name": "Sensor Box",
+  "description": "GPU temp, usage and VRAM; CPU temp, usage and system memory; plus a small FPS readout while you are in a game.",
+  "version": "1.2.0",
+  "preview_icon": "resources/icon.png",
+  "min_app_version": "5.44",
+  "min_framework_version": "1.0.0",
+  "os": [
+    {
+      "platform": "windows"
+    }
+  ],
+  "supported_devices": [
+    {
+      "type": "dashboard_lcd"
+    }
+  ],
+  "required_plugins": [
+    "widgetbuilder.sensorsdataprovider:Sensors:1.0",
+    "widgetbuilder.fpsdataprovider:Fps:1.0"
+  ],
+  "permissions": [
+    {
+      "type": "url",
+      "domain": "localhost",
+      "port": 6792
+    }
+  ]
+}
