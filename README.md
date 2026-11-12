@@ -1,36 +1,70 @@
-# Xeneon Edge widgets & Stream Deck setup
+# Xeneon Edge widgets
 
-Custom iCUE widgets for the Corsair Xeneon Edge, the helper that powers them, and Stream Deck icons for WoW.
+Custom iCUE widgets for the Corsair Xeneon Edge, the background helper that powers them, and a set of World of Warcraft raid marker icons for Stream Deck.
 
-## Widgets
-Each widget folder has a `README.md` and a ready-to-import `.icuewidget` package.
+| Widget | What it does | Folder |
+|---|---|---|
+| **Discord voice** | Mute, deafen, Go Live and leave. Shows who's in your voice channel and who's speaking. | `discord-edge/` |
+| **Apple Music** | Now playing with album art, playback controls, an audio visualizer and library browsing. | `apple-music-edge/` |
+| **Notifications** | Your recent Windows notifications (Outlook, Teams, Discord and more). | `notifications-edge/` |
+| **Sensor Box** | GPU and CPU temperature and load, VRAM, system memory, and FPS while you're in a game. | `sensor-box-edge/` |
+| **Teams** | Meeting controls (mute, camera, hand, leave), with an optional calendar on the L and XL sizes. | `teams-edge/` |
+| **App Launcher** | One-tap buttons for your apps with their real icons. A dot shows which ones are open. | `launcher-edge/` |
 
-| Folder | Widget | Package to import | Helper port |
-|---|---|---|---|
-| `discord-edge/` | Discord voice | `discord-voice.icuewidget` | 6789 |
-| `apple-music-edge/` | Apple Music | `apple-music.icuewidget` | 6790 |
-| `notifications-edge/` | Notifications | `notifications.icuewidget` | 6791 |
-| `sensor-box-edge/` | Sensor Box (GPU/CPU/memory/FPS) | `sensor-box.icuewidget` | 6792 (memory only) |
-| `teams-edge/` | Teams (meeting controls, calendar) | `teams.icuewidget` | 6793 |
-| `launcher-edge/` | App Launcher | `app-launcher.icuewidget` | 6794 |
+Each folder has its own README with details and settings.
 
-**Folder layout:** most widgets have `widget/` for the source and `helper/` for that widget's part of the helper.
+## Requirements
+- **Windows 10 or 11** with a **Corsair Xeneon Edge**.
+- **iCUE 5.44 or newer.**
+- **[Node.js](https://nodejs.org) 18 or newer**, used by the helper. Sensor Box works without it, except for system memory.
 
-**App Launcher:** `widget-src/` is the source. `build.js` writes `widget/` and the package from it.
+## Setup
+1. **Install the helper's dependencies.** In each of these folders, run `npm install`:
+   - `discord-edge/helper`
+   - `apple-music-edge/helper`
+   - `notifications-edge/helper`
+   - `teams-edge/helper`
+2. **Discord only:** copy `discord-edge/helper/config.example.json` to `config.json`. Then add the client ID and secret of your own Discord app (steps in [discord-edge/README.md](discord-edge/README.md)).
+3. **Start the helper at login.** This registers a scheduled task that runs as you, with no admin needed:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File edge-helper\install-watchdog.ps1
+   ```
+4. **Import the widgets.** In iCUE, import the `.icuewidget` file from each widget folder.
+   - **App Launcher:** first run `node build.js` in `launcher-edge/`. It fills the app dropdowns from your Start menu and creates `app-launcher.icuewidget`.
 
-## Helper
-`edge-helper/` holds the following (see its README):
-- **The combined helper:** one Node process that runs every widget's helper.
-- **The watchdog:** the "Edge Widget Helpers" scheduled task, which starts the helper at login and restarts it if needed.
-- **The Edge sleep cover.**
+## How it fits together
+A widget can't start programs or read other apps on its own. So one Node process, the **Edge helper** (`edge-helper/`), runs in the background, and the widgets talk to it over `localhost` WebSockets:
 
-## Stream Deck
-`wow-streamdeck/` has the following:
-- the WoW raid marker and emote key icons, as PNGs and as an icon pack
-- `SETUP.txt`: the WoW + Xeneon Edge Stream Deck keybind plan
+| Widget | Helper port |
+|---|---|
+| Discord | 6789 |
+| Apple Music | 6790 |
+| Notifications | 6791 |
+| System (Sensor Box memory, sleep cover) | 6792 |
+| Teams | 6793 |
+| App Launcher | 6794 |
 
-## Other folders
-- `reference/icue-widgets/`: Corsair's built-in widgets, kept as examples of the iCUE widget API. Not used at runtime.
-- `archive/`: old copies kept just in case (the first Discord widget zip, an old Discord helper backup). Safe to delete.
-- `BACKLOG.md`: widget ideas and what's done.
-- `.claude/launch.json`: local preview servers for each widget (used by Claude Code).
+- **Watchdog:** a scheduled task restarts the helper if it stops answering.
+- **Sleep cover:** the helper also provides an Edge "sleep cover", a dimmed wallpaper you toggle from a hotkey or Stream Deck. See [edge-helper/README.md](edge-helper/README.md).
+
+Folder layout: `widget/` is the iCUE widget source (HTML, manifest, translations) and `helper/` is that widget's part of the helper. Rebuild a package with `icuewidget package widget` in the widget's folder. For the App Launcher, edit `widget-src/` and run `node build.js`.
+
+## Stream Deck: WoW raid markers
+`wow-streamdeck/` has 24 original key icons:
+- the 8 target markers and the 8 world markers
+- clear buttons
+- Hello, Wait and Pat emotes
+- ready check
+- a 10-second countdown
+
+The icons come as PNGs and as a Stream Deck icon pack. `SETUP.txt` is a keybind plan for WoW with the Xeneon Edge and Stream Deck. See [wow-streamdeck/README.md](wow-streamdeck/README.md).
+
+## Privacy
+Everything stays on your PC.
+- **Network:** the helpers only listen on `localhost`. They only reach the internet for these features:
+  - Discord sign-in
+  - Apple Music album art lookups (can be turned off)
+  - the optional Microsoft calendar
+- **Local only:** secrets, sign-in tokens and per-PC settings are git-ignored and never leave your machine.
+
+This is a personal project, not affiliated with Corsair, Discord, Apple, Microsoft, Elgato or Blizzard.
