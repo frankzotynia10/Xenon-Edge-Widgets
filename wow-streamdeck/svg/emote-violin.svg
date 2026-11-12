@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg147" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#E8A15C" stop-opacity=".30"/><stop offset="1" stop-color="#E8A15C" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg147)"/>
+<defs><linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8A15C"/><stop offset="1" stop-color="#8B4513"/></linearGradient></defs><g transform="rotate(-28 72 64)">
+     <path d="M72 48C58 48 52 57 56 65C49 68 45 76 47 86C50 100 61 107 72 107C83 107 94 100 97 86C99 76 95 68 88 65C92 57 86 48 72 48Z" fill="none" stroke="#0b0c0f" stroke-width="7" stroke-linejoin="round"/><path d="M72 48C58 48 52 57 56 65C49 68 45 76 47 86C50 100 61 107 72 107C83 107 94 100 97 86C99 76 95 68 88 65C92 57 86 48 72 48Z" fill="url(#wood)"/>
+     <path d="M63 72q-3 8 0 16" fill="none" stroke="#0b0c0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M81 72q3 8 0 16" fill="none" stroke="#0b0c0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="68" y="92" width="8" height="11" rx="2" fill="#212529"/>
+     <path d="M68.5 10H75.5V60H68.5Z" fill="none" stroke="#0b0c0f" stroke-width="4" stroke-linejoin="round"/><path d="M68.5 10H75.5V60H68.5Z" fill="#212529"/><circle cx="72" cy="9" r="5.5" fill="#495057" stroke="#0b0c0f" stroke-width="3"/>
+     <path d="M70.5 12V94M73.5 12V94" fill="none" stroke="#dee2e6" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="62" cy="56" rx="6" ry="3" fill="#fff" opacity=".35"/></g><path d="M22 104L124 30" fill="none" stroke="#0b0c0f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 104L124 30" fill="none" stroke="#dee2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">VIOLIN</text>
+</svg>

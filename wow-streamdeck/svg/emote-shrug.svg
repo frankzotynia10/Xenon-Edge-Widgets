@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg136" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#adb5bd" stop-opacity=".30"/><stop offset="1" stop-color="#adb5bd" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg136)"/>
+<path d="M16 28H128Q136 28 136 36V86Q136 94 128 94H60L42 110L45 94H16Q8 94 8 86V36Q8 28 16 28Z" fill="#26272b" stroke="#ced4da" stroke-width="4" stroke-linejoin="round"/>
+     <text x="72" y="70" text-anchor="middle" font-family="Segoe UI, Yu Gothic UI, sans-serif" font-weight="700" font-size="25" fill="#fff">&#xAF;\_(&#x30C4;)_/&#xAF;</text>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">SHRUG</text>
+</svg>

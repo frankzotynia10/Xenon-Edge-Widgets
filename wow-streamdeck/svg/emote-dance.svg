@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg120" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#CC5DE8" stop-opacity=".30"/><stop offset="1" stop-color="#CC5DE8" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg120)"/>
+<defs><radialGradient id="ball" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#868e96"/></radialGradient><clipPath id="bc"><circle cx="72" cy="68" r="36"/></clipPath></defs>
+     <path d="M72 6V32" fill="none" stroke="#adb5bd" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="72" cy="68" r="36" fill="#0b0c0f" stroke="#0b0c0f" stroke-width="8"/><circle cx="72" cy="68" r="36" fill="url(#ball)"/>
+     <g clip-path="url(#bc)" fill="none" stroke="#495057" stroke-width="1.6"><path d="M30 50H114M30 59H114M30 68H114M30 77H114M30 86H114M30 95H114M30 41H114"/>
+     <ellipse cx="72" cy="68" rx="12" ry="36"/><ellipse cx="72" cy="68" rx="25" ry="36"/><path d="M72 30V106"/>
+     <rect x="50" y="42" width="11" height="8" fill="#fff"/><rect x="85" y="60" width="11" height="8" fill="#E599F7"/><rect x="61" y="78" width="11" height="8" fill="#74C0FC"/><rect x="85" y="87" width="11" height="8" fill="#FFD43B"/></g>
+     <text x="16" y="56" font-family="Segoe UI Symbol, Segoe UI" font-size="30" fill="#E599F7">&#x266A;</text><text x="110" y="112" font-family="Segoe UI Symbol, Segoe UI" font-size="28" fill="#74C0FC">&#x266B;</text>
+     <path d="M118 25l2.6999999999999997 6.3 6.3 2.6999999999999997 -6.3 2.6999999999999997 -2.6999999999999997 6.3 -2.6999999999999997 -6.3 -6.3 -2.6999999999999997 6.3 -2.6999999999999997Z" fill="#FFE066"/><path d="M28 89l2.1 4.8999999999999995 4.8999999999999995 2.1 -4.8999999999999995 2.1 -2.1 4.8999999999999995 -2.1 -4.8999999999999995 -4.8999999999999995 -2.1 4.8999999999999995 -2.1Z" fill="#74C0FC"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">DANCE</text>
+</svg>

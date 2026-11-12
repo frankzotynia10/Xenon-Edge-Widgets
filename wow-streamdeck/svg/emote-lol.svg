@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg122" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FFD43B" stop-opacity=".30"/><stop offset="1" stop-color="#FFD43B" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg122)"/>
+<defs><linearGradient id="fc121" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#F08C00"/></linearGradient></defs>
+  <circle cx="72" cy="62" r="40" fill="#0b0c0f" stroke="#0b0c0f" stroke-width="8"/><circle cx="72" cy="62" r="40" fill="url(#fc121)"/>
+  <ellipse cx="58" cy="40" rx="12" ry="6" fill="#fff" opacity=".4" transform="rotate(-25 58 40)"/><path d="M52 54q7 -9 14 0" fill="none" stroke="#0b0c0f" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M78 54q7 -9 14 0" fill="none" stroke="#0b0c0f" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 70H94Q92 98 72 98Q52 98 50 70Z" fill="#0b0c0f"/><path d="M54 72H90V77Q72 80 54 77Z" fill="#fff"/><path d="M60 92Q72 84 84 92Q72 99 60 92Z" fill="#ff6b6b"/><path d="M36 48C43 57 43 66 36 66C29 66 29 57 36 48Z" fill="#74C0FC" stroke="#0b0c0f" stroke-width="2.5"/><path d="M108 48C115 57 115 66 108 66C101 66 101 57 108 48Z" fill="#74C0FC" stroke="#0b0c0f" stroke-width="2.5"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">LOL</text>
+</svg>

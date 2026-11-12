@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg142" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#FFD43B" stop-opacity=".30"/><stop offset="1" stop-color="#FFD43B" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg142)"/>
+<defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#E67700"/></linearGradient></defs><path d="M48 8H68L80 48H60Z" fill="none" stroke="#0b0c0f" stroke-width="5" stroke-linejoin="round"/><path d="M48 8H68L80 48H60Z" fill="#339AF0"/><path d="M96 8H76L64 48H84Z" fill="none" stroke="#0b0c0f" stroke-width="5" stroke-linejoin="round"/><path d="M96 8H76L64 48H84Z" fill="#FA5252"/><circle cx="72" cy="78" r="32" fill="#0b0c0f" stroke="#0b0c0f" stroke-width="7"/><circle cx="72" cy="78" r="32" fill="url(#gold)"/><circle cx="72" cy="78" r="24" fill="none" stroke="#F08C00" stroke-width="3"/>
+     <g transform="translate(52 58) scale(.4)"><path d="M50.00 5.00L61.76 37.82L96.60 38.86L69.02 60.18L78.80 93.64L50.00 74.00L21.20 93.64L30.98 60.18L3.40 38.86L38.24 37.82Z" fill="#FFF3BF" stroke="#0b0c0f" stroke-width="8" stroke-linejoin="round"/></g>
+     <ellipse cx="60" cy="62" rx="10" ry="5" fill="#fff" opacity=".45" transform="rotate(-30 60 62)"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">SALUTE</text>
+</svg>

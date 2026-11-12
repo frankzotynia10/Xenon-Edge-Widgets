@@ -71,6 +71,11 @@ PAGE 3 - HERDING CATS
   CAS+F    /thank                      (icon: thank-you.png)
   CAS+G    /cheer                      (icon: cheer.png)
 
+  More emote icons (no keys yet - pick free CAS combos and add a BindPad macro for each):
+    /dance /lol /cry /roar /facepalm /hug /kiss /shrug /sleep /flex /salute
+    /applaud /charge /followme /train /violin /oom /healme /yes /no
+    Icons: png/emote-<name>.png
+
 
 4. STREAM DECK SETUP
 --------------------

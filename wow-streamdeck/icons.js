@@ -23,6 +23,7 @@ const SHAPES = {
   square: 'M12 12H88V88H12Z',
   cross: 'M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z',
   heart: 'M50 90C22 70 6 54 6 33C6 18 17 8 30 8C39 8 46 13 50 21C54 13 61 8 70 8C83 8 94 18 94 33C94 54 78 70 50 90Z',
+  plus: 'M36 6H64V36H94V64H64V94H36V64H6V36H36Z',
   skull: 'M50 5C75 5 91 21 91 43C91 57 85 66 77 70V81Q77 90 68 90H32Q23 90 23 81V70C15 66 9 57 9 43C9 21 25 5 50 5Z',
 };
 const SKULL_DETAIL = `<ellipse cx="34" cy="45" rx="11" ry="12" fill="${INK}"/><ellipse cx="66" cy="45" rx="11" ry="12" fill="${INK}"/>
@@ -37,6 +38,7 @@ const MARKERS = {
   square: { name: 'Square', hi: '#74C0FC', lo: '#1971C2', glow: '#339AF0' },
   cross: { name: 'Cross', hi: '#FF8787', lo: '#E03131', glow: '#FA5252' },
   heart: { name: 'Heart', hi: '#FF8FAB', lo: '#D6336C', glow: '#F06595' },
+  plus: { name: 'Plus', hi: '#8CE99A', lo: '#2B8A3E', glow: '#51CF66' },
   skull: { name: 'Skull', hi: '#FFFFFF', lo: '#C9CFD6', glow: '#F1F3F5' },
 };
 const TARGET_ORDER = ['star', 'circle', 'diamond', 'triangle', 'moon', 'square', 'cross', 'skull'];   // /tm 1-8
@@ -178,6 +180,121 @@ const EXTRAS = {
     floor('#adb5bd', 72, 96) + slash(42, 104, 102, 30), '#FA5252', { label: 'CLEAR WM', labelSize: 15, glowY: .55 }) },
 };
 
+
+// ---------- More emotes ----------
+const ln = (d, w = 4.5, c = INK) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const drop = (x, y, c = '#74C0FC') => `<path d="M${x} ${y - 10}C${x + 7} ${y - 1} ${x + 7} ${y + 8} ${x} ${y + 8}C${x - 7} ${y + 8} ${x - 7} ${y - 1} ${x} ${y - 10}Z" fill="${c}" stroke="${INK}" stroke-width="2.5"/>`;
+const blush = `<circle cx="50" cy="74" r="5" fill="#ff6b6b" opacity=".5"/><circle cx="94" cy="74" r="5" fill="#ff6b6b" opacity=".5"/>`;
+const spark = (x, y, r, c = '#FFE066') => `<path d="M${x} ${y - r}l${r * .3} ${r * .7} ${r * .7} ${r * .3} -${r * .7} ${r * .3} -${r * .3} ${r * .7} -${r * .3} -${r * .7} -${r * .7} -${r * .3} ${r * .7} -${r * .3}Z" fill="${c}"/>`;
+const outlined = (d, fill, w = 7) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linejoin="round"/><path d="${d}" fill="${fill}"/>`;
+
+// glossy round face, centre 72,62, radius 40
+function face(inner, hi = '#FFE066', lo = '#F08C00', cx = 72, cy = 62, r = 40) {
+  const g = id('fc');
+  return `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hi}"/><stop offset="1" stop-color="${lo}"/></linearGradient></defs>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="${INK}" stroke="${INK}" stroke-width="8"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${g})"/>
+  <ellipse cx="${cx - r * .35}" cy="${cy - r * .55}" rx="${r * .3}" ry="${r * .15}" fill="#fff" opacity=".4" transform="rotate(-25 ${cx - r * .35} ${cy - r * .55})"/>${inner}`;
+}
+
+// thumbs up, upright around 72,64
+function thumb(gid) {
+  const fist = 'M44 70Q44 58 56 58H82Q92 58 92 70V96Q92 106 82 106H56Q44 106 44 96Z';
+  const fingers = [60, 71, 82, 93].map(y => `<rect x="76" y="${y}" width="24" height="11" rx="5.5"/>`).join('');
+  return grad(gid, '#FFE066', '#F08C00') + grad(gid + 's', '#74C0FC', '#1971C2') +
+    outlined('M30 62H46V106H30Z', `url(#${gid}s)`, 6) +
+    ln('M57 64L60 24', 28) + `<path d="${fist}" fill="${INK}" stroke="${INK}" stroke-width="7"/>` +
+    ln('M57 64L60 24', 20, `url(#${gid})`) + `<path d="${fist}" fill="url(#${gid})"/>` +
+    `<g stroke="${INK}" stroke-width="6">${fingers}</g><g fill="url(#${gid})">${fingers}</g>` +
+    ln('M52 58L54 30', 3, 'rgba(255,255,255,.5)');
+}
+
+function sword() {
+  return `<g transform="translate(72 66) scale(1.08) translate(-72 -66)">
+    ${outlined('M64 26L72 8L80 26V86H64Z', 'url(#blade)', 6)}${ln('M72 14V84', 1.5, 'rgba(255,255,255,.6)')}
+    ${outlined('M54 84H90Q93 84 93 88Q93 92 90 92H54Q51 92 51 88Q51 84 54 84Z', 'url(#gold)', 6)}
+    ${outlined('M67 92H77V112H67Z', '#8B5A2B', 6)}<circle cx="72" cy="117" r="6" fill="url(#gold)" stroke="${INK}" stroke-width="3"/></g>`;
+}
+
+const EMOTES = {
+  dance: { name: 'Dance', tags: ['emote', 'dance', 'disco'], svg: () => tile(
+    `<defs><radialGradient id="ball" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#868e96"/></radialGradient><clipPath id="bc"><circle cx="72" cy="68" r="36"/></clipPath></defs>
+     ${ln('M72 6V32', 3, '#adb5bd')}<circle cx="72" cy="68" r="36" fill="${INK}" stroke="${INK}" stroke-width="8"/><circle cx="72" cy="68" r="36" fill="url(#ball)"/>
+     <g clip-path="url(#bc)" fill="none" stroke="#495057" stroke-width="1.6"><path d="M30 50H114M30 59H114M30 68H114M30 77H114M30 86H114M30 95H114M30 41H114"/>
+     <ellipse cx="72" cy="68" rx="12" ry="36"/><ellipse cx="72" cy="68" rx="25" ry="36"/><path d="M72 30V106"/>
+     <rect x="50" y="42" width="11" height="8" fill="#fff"/><rect x="85" y="60" width="11" height="8" fill="#E599F7"/><rect x="61" y="78" width="11" height="8" fill="#74C0FC"/><rect x="85" y="87" width="11" height="8" fill="#FFD43B"/></g>
+     <text x="16" y="56" font-family="Segoe UI Symbol, Segoe UI" font-size="30" fill="#E599F7">&#x266A;</text><text x="110" y="112" font-family="Segoe UI Symbol, Segoe UI" font-size="28" fill="#74C0FC">&#x266B;</text>
+     ${spark(118, 34, 9)}${spark(28, 96, 7, '#74C0FC')}`, '#CC5DE8', { label: 'DANCE' }) },
+  lol: { name: 'LOL', tags: ['emote', 'lol', 'laugh'], svg: () => tile(face(
+    ln('M52 54q7 -9 14 0') + ln('M78 54q7 -9 14 0') +
+    `<path d="M50 70H94Q92 98 72 98Q52 98 50 70Z" fill="${INK}"/><path d="M54 72H90V77Q72 80 54 77Z" fill="#fff"/><path d="M60 92Q72 84 84 92Q72 99 60 92Z" fill="#ff6b6b"/>` +
+    drop(36, 58) + drop(108, 58)), '#FFD43B', { label: 'LOL' }) },
+  cry: { name: 'Cry', tags: ['emote', 'cry', 'sad'], svg: () => tile(face(
+    ln('M50 44l14 -6') + ln('M94 44l-14 -6') + ln('M52 56q7 6 14 0') + ln('M78 56q7 6 14 0') + ln('M58 90q14 -12 28 0') +
+    ln('M59 64V100', 7, '#74C0FC') + ln('M85 64V100', 7, '#74C0FC') + drop(59, 110) + drop(85, 110), '#FFE066', '#E8A15C'), '#74C0FC', { label: 'CRY' }) },
+  roar: { name: 'Roar', tags: ['emote', 'roar', 'angry'], svg: () => tile(face(
+    ln('M50 40l14 8', 5) + ln('M94 40l-14 8', 5) + `<circle cx="58" cy="54" r="4.5" fill="${INK}"/><circle cx="86" cy="54" r="4.5" fill="${INK}"/>` +
+    `<path d="M48 66H96Q94 104 72 104Q50 104 48 66Z" fill="${INK}"/><path d="M53 67L59 81L65 67ZM79 67L85 81L91 67Z" fill="#fff"/><path d="M60 102L65 93L70 102ZM74 102L79 93L84 102Z" fill="#fff"/>`,
+    '#FFC078', '#E8590C') + ln('M20 38l-10 -6M16 62H4M20 86l-10 6M124 38l10 -6M128 62h12M124 86l10 6', 5, '#FF922B'), '#FA5252', { label: 'ROAR' }) },
+  facepalm: { name: 'Facepalm', tags: ['emote', 'facepalm'], svg: () => tile(face(ln('M62 90h20')) +
+    `<g transform="translate(74 50) rotate(-12) scale(.62) translate(-72 -66)">${hand2('fp', '#FFE3C2', '#E8A15C')}</g>`, '#FFD43B', { label: 'FACEPALM', labelSize: 15 }) },
+  hug: { name: 'Hug', tags: ['emote', 'hug'], svg: () => tile(face(ln('M52 54q7 -9 14 0') + ln('M78 54q7 -9 14 0') + ln('M58 76q14 12 28 0') + blush) +
+    `<g transform="translate(38 96) rotate(35) scale(.42) translate(-72 -66)">${hand2('hg1', '#FFE066', '#F08C00')}</g>` +
+    `<g transform="translate(106 96) scale(-1 1) rotate(35) scale(.42) translate(-72 -66)">${hand2('hg2', '#FFE066', '#F08C00')}</g>`, '#FFA94D', { label: 'HUG' }) },
+  kiss: { name: 'Kiss', tags: ['emote', 'kiss'], svg: () => tile(face(ln('M52 56q7 -7 14 0') + `<circle cx="86" cy="54" r="5" fill="${INK}"/>` +
+    ln('M70 74q9 1 5 7q9 1 0 8', 4.5) + blush) + symbol('heart', 112, 30, 30, { glow: false }), '#F06595', { label: 'KISS' }) },
+  shrug: { name: 'Shrug', tags: ['emote', 'shrug'], svg: () => tile(
+    `<path d="M16 28H128Q136 28 136 36V86Q136 94 128 94H60L42 110L45 94H16Q8 94 8 86V36Q8 28 16 28Z" fill="#26272b" stroke="#ced4da" stroke-width="4" stroke-linejoin="round"/>
+     <text x="72" y="70" text-anchor="middle" font-family="Segoe UI, Yu Gothic UI, sans-serif" font-weight="700" font-size="25" fill="#fff">&#xAF;\\_(&#x30C4;)_/&#xAF;</text>`,
+    '#adb5bd', { label: 'SHRUG' }) },
+  sleep: { name: 'Sleep', tags: ['emote', 'sleep', 'zzz'], svg: () => tile(symbol('moon', 58, 68, 78) +
+    `<g font-family="Segoe UI, sans-serif" font-weight="800" fill="#D0E4FF"><text x="96" y="52" font-size="28">Z</text><text x="114" y="32" font-size="20">z</text><text x="126" y="17" font-size="14">z</text></g>`,
+    '#748FFC', { label: 'SLEEP' }) },
+  flex: { name: 'Flex', tags: ['emote', 'flex', 'strong'], svg: () => tile(grad('plate', '#FF8787', '#C92A2A') + grad('bar', '#F1F3F5', '#868E96') +
+    `<g transform="rotate(-14 72 62)">${outlined('M30 58H114V66H30Z', 'url(#bar)', 6)}
+     ${outlined('M42 34H54Q57 34 57 37V87Q57 90 54 90H42Q39 90 39 87V37Q39 34 42 34Z', 'url(#plate)', 6)}${outlined('M27 44H36Q39 44 39 47V77Q39 80 36 80H27Q24 80 24 77V47Q24 44 27 44Z', 'url(#plate)', 6)}
+     ${outlined('M90 34H102Q105 34 105 37V87Q105 90 102 90H90Q87 90 87 87V37Q87 34 90 34Z', 'url(#plate)', 6)}${outlined('M108 44H117Q120 44 120 47V77Q120 80 117 80H108Q105 80 105 77V47Q105 44 108 44Z', 'url(#plate)', 6)}
+     ${ln('M44 40V60M92 40V60', 2.5, 'rgba(255,255,255,.5)')}</g>` + ln('M60 22l-4 -10M72 20V8M84 22l4 -10', 4, '#FFD43B'), '#FA5252', { label: 'FLEX' }) },
+  salute: { name: 'Salute', tags: ['emote', 'salute', 'respect'], svg: () => tile(grad('gold', '#FFE066', '#E67700') +
+    outlined('M48 8H68L80 48H60Z', '#339AF0', 5) + outlined('M96 8H76L64 48H84Z', '#FA5252', 5) +
+    `<circle cx="72" cy="78" r="32" fill="${INK}" stroke="${INK}" stroke-width="7"/><circle cx="72" cy="78" r="32" fill="url(#gold)"/><circle cx="72" cy="78" r="24" fill="none" stroke="#F08C00" stroke-width="3"/>
+     <g transform="translate(52 58) scale(.4)"><path d="${SHAPES.star}" fill="#FFF3BF" stroke="${INK}" stroke-width="8" stroke-linejoin="round"/></g>
+     <ellipse cx="60" cy="62" rx="10" ry="5" fill="#fff" opacity=".45" transform="rotate(-30 60 62)"/>`, '#FFD43B', { label: 'SALUTE' }) },
+  applaud: { name: 'Applaud', tags: ['emote', 'applaud', 'clap'], svg: () => tile(
+    `<g transform="translate(54 70) rotate(24) scale(.62) translate(-72 -66)">${hand2('ap1', '#FFE066', '#F08C00')}</g>` +
+    `<g transform="translate(90 70) scale(-1 1) rotate(24) scale(.62) translate(-72 -66)">${hand2('ap2', '#FFE066', '#F08C00')}</g>` +
+    ln('M72 18V6M58 22l-7 -9M86 22l7 -9', 4.5, '#FFD43B'), '#FFD43B', { label: 'APPLAUD' }) },
+  charge: { name: 'Charge', tags: ['emote', 'charge', 'attack'], svg: () => tile(grad('blade', '#F8F9FA', '#868E96') + grad('gold', '#FFE066', '#E67700') +
+    `<g transform="rotate(40 72 66)">${sword()}</g><g transform="rotate(-40 72 66)">${sword()}</g>`, '#FA5252', { label: 'CHARGE' }) },
+  followme: { name: 'Follow me', tags: ['emote', 'follow', 'followme'], svg: () => tile(grad('arrow', '#8CE99A', '#2F9E44') +
+    outlined('M16 48H72V26L124 62L72 98V76H16Z', 'url(#arrow)', 8) + ln('M22 54H76V40', 3, 'rgba(255,255,255,.5)'),
+    '#51CF66', { label: 'FOLLOW ME', labelSize: 15 }) },
+  train: { name: 'Train', tags: ['emote', 'train', 'choo'], svg: () => tile(grad('loco', '#FF8787', '#C92A2A') +
+    `<circle cx="44" cy="16" r="8" fill="#dee2e6"/><circle cx="30" cy="9" r="6" fill="#dee2e6" opacity=".8"/><circle cx="18" cy="6" r="4" fill="#dee2e6" opacity=".6"/>` +
+    outlined('M38 26H60V32H56V50H42V32H38Z', '#343a40', 6) + outlined('M30 62Q30 50 42 50H92V88H30Z', 'url(#loco)', 7) +
+    outlined('M88 30H122V88H88Z', '#A61E4D', 7) + `<rect x="96" y="38" width="18" height="16" rx="2" fill="#D0EBFF" stroke="${INK}" stroke-width="3"/>` +
+    outlined('M30 88L16 100H40Z', '#495057', 5) + `<circle cx="30" cy="64" r="5" fill="#FFE066" stroke="${INK}" stroke-width="2.5"/>` +
+    [[48, 98, 10], [74, 98, 10], [104, 96, 13]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#343a40" stroke="${INK}" stroke-width="5"/><circle cx="${x}" cy="${y}" r="3" fill="#adb5bd"/>`).join('') +
+    ln('M36 58H86', 2.5, 'rgba(255,255,255,.45)'), '#FF6B6B', { label: 'TRAIN' }) },
+  violin: { name: 'Violin', tags: ['emote', 'violin', 'sad'], svg: () => tile(grad('wood', '#E8A15C', '#8B4513') +
+    `<g transform="rotate(-28 72 64)">
+     ${outlined('M72 48C58 48 52 57 56 65C49 68 45 76 47 86C50 100 61 107 72 107C83 107 94 100 97 86C99 76 95 68 88 65C92 57 86 48 72 48Z', 'url(#wood)', 7)}
+     ${ln('M63 72q-3 8 0 16', 2.5)}${ln('M81 72q3 8 0 16', 2.5)}<rect x="68" y="92" width="8" height="11" rx="2" fill="#212529"/>
+     ${outlined('M68.5 10H75.5V60H68.5Z', '#212529', 4)}<circle cx="72" cy="9" r="5.5" fill="#495057" stroke="${INK}" stroke-width="3"/>
+     ${ln('M70.5 12V94M73.5 12V94', .9, '#dee2e6')}<ellipse cx="62" cy="56" rx="6" ry="3" fill="#fff" opacity=".35"/></g>` +
+    ln('M22 104L124 30', 6) + ln('M22 104L124 30', 2.5, '#dee2e6'), '#E8A15C', { label: 'VIOLIN' }) },
+  oom: { name: 'Out of mana', tags: ['emote', 'oom', 'mana'], svg: () => tile(
+    `<defs><clipPath id="fl"><path d="M62 18H82V46A32 32 0 1 1 62 46Z"/></clipPath></defs>
+     <path d="M62 18H82V46A32 32 0 1 1 62 46Z" fill="#a5d8ff" fill-opacity=".14" stroke="${INK}" stroke-width="8" stroke-linejoin="round"/>
+     <g clip-path="url(#fl)"><rect x="30" y="98" width="84" height="20" fill="#339AF0"/><path d="M30 98q10 -4 21 0t21 0t21 0t21 0" fill="#74C0FC"/></g>
+     <path d="M62 18H82V46A32 32 0 1 1 62 46Z" fill="none" stroke="#E7F5FF" stroke-width="2.5" stroke-linejoin="round"/>
+     ${ln('M50 62q-6 12 0 26', 3, 'rgba(255,255,255,.55)')}${outlined('M58 9H86Q88 9 88 11V19Q88 21 86 21H58Q56 21 56 19V11Q56 9 58 9Z', '#C08552', 5)}
+     <circle cx="80" cy="90" r="3" fill="none" stroke="#a5d8ff" stroke-width="1.5"/>`, '#339AF0', { label: 'OOM' }) },
+  healme: { name: 'Heal me', tags: ['emote', 'heal', 'healme'], svg: () => tile(symbol('plus', 72, 62, 88) + spark(118, 26, 10, '#B2F2BB') + spark(26, 98, 8, '#B2F2BB'),
+    '#40C057', { label: 'HEAL ME', labelSize: 15 }) },
+  yes: { name: 'Yes', tags: ['emote', 'yes', 'thumbs up'], svg: () => tile(thumb('ty'), '#40C057', { label: 'YES' }) },
+  no: { name: 'No', tags: ['emote', 'no', 'thumbs down'], svg: () => tile(`<g transform="rotate(180 72 64)">${thumb('td')}</g>`, '#FA5252', { label: 'NO' }) },
+};
+
 function all() {
   const out = [];
   TARGET_ORDER.forEach((k, i) => out.push({ file: `target-${i + 1}-${k}`, name: `${MARKERS[k].name} (target)`, tags: ['target', 'marker', k],
@@ -187,6 +304,7 @@ function all() {
       `<text x="12" y="24" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" fill="${TEXT}" fill-opacity=".55">${i + 1}</text>`,
       MARKERS[k].glow, { glowY: .6 }) }));
   for (const [k, e] of Object.entries(EXTRAS)) out.push({ file: k, name: e.name, tags: e.tags, svg: e.svg() });
+  for (const [k, e] of Object.entries(EMOTES)) out.push({ file: 'emote-' + k, name: e.name, tags: e.tags, svg: e.svg() });
   return out;
 }
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg145" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#51CF66" stop-opacity=".30"/><stop offset="1" stop-color="#51CF66" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg145)"/>
+<defs><linearGradient id="arrow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CE99A"/><stop offset="1" stop-color="#2F9E44"/></linearGradient></defs><path d="M16 48H72V26L124 62L72 98V76H16Z" fill="none" stroke="#0b0c0f" stroke-width="8" stroke-linejoin="round"/><path d="M16 48H72V26L124 62L72 98V76H16Z" fill="url(#arrow)"/><path d="M22 54H76V40" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="15" letter-spacing="1" fill="#e9ecef">FOLLOW ME</text>
+</svg>

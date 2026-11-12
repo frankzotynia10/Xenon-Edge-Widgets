@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg140" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#748FFC" stop-opacity=".30"/><stop offset="1" stop-color="#748FFC" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg140)"/>
+<defs><linearGradient id="g137" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8F9FA"/><stop offset="1" stop-color="#A5B4C4"/></linearGradient>
+  <linearGradient id="s138" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f139" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(19 29) scale(0.78)">
+  <path d="M48 8A42 42 0 1 0 88 68A36 36 0 0 1 48 8Z" fill="#D0E4FF" opacity=".55" filter="url(#f139)"/>
+  <path d="M48 8A42 42 0 1 0 88 68A36 36 0 0 1 48 8Z" fill="none" stroke="#0b0c0f" stroke-width="11.538461538461538" stroke-linejoin="round"/>
+  <path d="M48 8A42 42 0 1 0 88 68A36 36 0 0 1 48 8Z" fill="url(#g137)" stroke="#A5B4C4" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M48 8A42 42 0 1 0 88 68A36 36 0 0 1 48 8Z" fill="url(#s138)"/></g><g font-family="Segoe UI, sans-serif" font-weight="800" fill="#D0E4FF"><text x="96" y="52" font-size="28">Z</text><text x="114" y="32" font-size="20">z</text><text x="126" y="17" font-size="14">z</text></g>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="17" letter-spacing="1" fill="#e9ecef">SLEEP</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 144 144">
+<defs><radialGradient id="bg152" cx=".5" cy="0.45" r=".7"><stop offset="0" stop-color="#40C057" stop-opacity=".30"/><stop offset="1" stop-color="#40C057" stop-opacity="0"/></radialGradient></defs>
+<rect width="144" height="144" fill="#121316"/><rect width="144" height="144" fill="url(#bg152)"/>
+<defs><linearGradient id="g149" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CE99A"/><stop offset="1" stop-color="#2B8A3E"/></linearGradient>
+  <linearGradient id="s150" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f151" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+  <g transform="translate(28 18) scale(0.88)">
+  <path d="M36 6H64V36H94V64H64V94H36V64H6V36H36Z" fill="#51CF66" opacity=".55" filter="url(#f151)"/>
+  <path d="M36 6H64V36H94V64H64V94H36V64H6V36H36Z" fill="none" stroke="#0b0c0f" stroke-width="10.227272727272727" stroke-linejoin="round"/>
+  <path d="M36 6H64V36H94V64H64V94H36V64H6V36H36Z" fill="url(#g149)" stroke="#2B8A3E" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <path d="M36 6H64V36H94V64H64V94H36V64H6V36H36Z" fill="url(#s150)"/></g><path d="M118 16l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3Z" fill="#B2F2BB"/><path d="M26 90l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4Z" fill="#B2F2BB"/>
+<text x="72" y="134" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="800" font-size="15" letter-spacing="1" fill="#e9ecef">HEAL ME</text>
+</svg>

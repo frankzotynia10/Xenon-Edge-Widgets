@@ -242,5 +242,181 @@
       "world",
       "markers"
     ]
+  },
+  {
+    "path": "emote-dance.png",
+    "name": "Dance",
+    "tags": [
+      "emote",
+      "dance",
+      "disco"
+    ]
+  },
+  {
+    "path": "emote-lol.png",
+    "name": "LOL",
+    "tags": [
+      "emote",
+      "lol",
+      "laugh"
+    ]
+  },
+  {
+    "path": "emote-cry.png",
+    "name": "Cry",
+    "tags": [
+      "emote",
+      "cry",
+      "sad"
+    ]
+  },
+  {
+    "path": "emote-roar.png",
+    "name": "Roar",
+    "tags": [
+      "emote",
+      "roar",
+      "angry"
+    ]
+  },
+  {
+    "path": "emote-facepalm.png",
+    "name": "Facepalm",
+    "tags": [
+      "emote",
+      "facepalm"
+    ]
+  },
+  {
+    "path": "emote-hug.png",
+    "name": "Hug",
+    "tags": [
+      "emote",
+      "hug"
+    ]
+  },
+  {
+    "path": "emote-kiss.png",
+    "name": "Kiss",
+    "tags": [
+      "emote",
+      "kiss"
+    ]
+  },
+  {
+    "path": "emote-shrug.png",
+    "name": "Shrug",
+    "tags": [
+      "emote",
+      "shrug"
+    ]
+  },
+  {
+    "path": "emote-sleep.png",
+    "name": "Sleep",
+    "tags": [
+      "emote",
+      "sleep",
+      "zzz"
+    ]
+  },
+  {
+    "path": "emote-flex.png",
+    "name": "Flex",
+    "tags": [
+      "emote",
+      "flex",
+      "strong"
+    ]
+  },
+  {
+    "path": "emote-salute.png",
+    "name": "Salute",
+    "tags": [
+      "emote",
+      "salute",
+      "respect"
+    ]
+  },
+  {
+    "path": "emote-applaud.png",
+    "name": "Applaud",
+    "tags": [
+      "emote",
+      "applaud",
+      "clap"
+    ]
+  },
+  {
+    "path": "emote-charge.png",
+    "name": "Charge",
+    "tags": [
+      "emote",
+      "charge",
+      "attack"
+    ]
+  },
+  {
+    "path": "emote-followme.png",
+    "name": "Follow me",
+    "tags": [
+      "emote",
+      "follow",
+      "followme"
+    ]
+  },
+  {
+    "path": "emote-train.png",
+    "name": "Train",
+    "tags": [
+      "emote",
+      "train",
+      "choo"
+    ]
+  },
+  {
+    "path": "emote-violin.png",
+    "name": "Violin",
+    "tags": [
+      "emote",
+      "violin",
+      "sad"
+    ]
+  },
+  {
+    "path": "emote-oom.png",
+    "name": "Out of mana",
+    "tags": [
+      "emote",
+      "oom",
+      "mana"
+    ]
+  },
+  {
+    "path": "emote-healme.png",
+    "name": "Heal me",
+    "tags": [
+      "emote",
+      "heal",
+      "healme"
+    ]
+  },
+  {
+    "path": "emote-yes.png",
+    "name": "Yes",
+    "tags": [
+      "emote",
+      "yes",
+      "thumbs up"
+    ]
+  },
+  {
+    "path": "emote-no.png",
+    "name": "No",
+    "tags": [
+      "emote",
+      "no",
+      "thumbs down"
+    ]
   }
 ]
