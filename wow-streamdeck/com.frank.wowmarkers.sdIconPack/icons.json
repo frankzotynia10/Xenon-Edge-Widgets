@@ -196,6 +196,16 @@
     ]
   },
   {
+    "path": "thank-you.png",
+    "name": "Thank you",
+    "tags": [
+      "emote",
+      "thank",
+      "thanks",
+      "ty"
+    ]
+  },
+  {
     "path": "ready-check.png",
     "name": "Ready check",
     "tags": [

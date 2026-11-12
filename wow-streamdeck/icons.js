@@ -22,6 +22,7 @@ const SHAPES = {
   moon: 'M48 8A42 42 0 1 0 88 68A36 36 0 0 1 48 8Z',
   square: 'M12 12H88V88H12Z',
   cross: 'M20 7L50 37L80 7L93 20L63 50L93 80L80 93L50 63L20 93L7 80L37 50L7 20Z',
+  heart: 'M50 90C22 70 6 54 6 33C6 18 17 8 30 8C39 8 46 13 50 21C54 13 61 8 70 8C83 8 94 18 94 33C94 54 78 70 50 90Z',
   skull: 'M50 5C75 5 91 21 91 43C91 57 85 66 77 70V81Q77 90 68 90H32Q23 90 23 81V70C15 66 9 57 9 43C9 21 25 5 50 5Z',
 };
 const SKULL_DETAIL = `<ellipse cx="34" cy="45" rx="11" ry="12" fill="${INK}"/><ellipse cx="66" cy="45" rx="11" ry="12" fill="${INK}"/>
@@ -35,6 +36,7 @@ const MARKERS = {
   moon: { name: 'Moon', hi: '#F8F9FA', lo: '#A5B4C4', glow: '#D0E4FF' },
   square: { name: 'Square', hi: '#74C0FC', lo: '#1971C2', glow: '#339AF0' },
   cross: { name: 'Cross', hi: '#FF8787', lo: '#E03131', glow: '#FA5252' },
+  heart: { name: 'Heart', hi: '#FF8FAB', lo: '#D6336C', glow: '#F06595' },
   skull: { name: 'Skull', hi: '#FFFFFF', lo: '#C9CFD6', glow: '#F1F3F5' },
 };
 const TARGET_ORDER = ['star', 'circle', 'diamond', 'triangle', 'moon', 'square', 'cross', 'skull'];   // /tm 1-8
@@ -139,6 +141,10 @@ const EXTRAS = {
     `<g transform="translate(72 48) rotate(90) scale(.6) translate(-72 -66)">${hand2('pg', '#FFE3C2', '#E8A15C')}</g>` +
     `<g fill="none" stroke="#FFD8A8" stroke-width="4" stroke-linecap="round"><path d="M44 30q-6 -4 -8 -12M100 30q6 -4 8 -12"/></g>`,
     '#FFA94D', { label: 'PAT' }) },
+  'thank-you': { name: 'Thank you', tags: ['emote', 'thank', 'thanks', 'ty'], svg: () => tile(
+    symbol('heart', 72, 60, 86) +
+    `<g fill="#FFE066"><path d="M125 12l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3Z"/><path d="M30 18l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z"/><path d="M118 84l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2Z"/></g>`,
+    '#F06595', { label: 'THANK YOU', labelSize: 15 }) },
   'ready-check': { name: 'Ready check', tags: ['ready', 'check', 'raid'], svg: () => tile(
     symbol('circle', 72, 58, 78).replace(/#FFC078/g, '#8CE99A').replace(/#E8590C/g, '#2B8A3E').replace(/#FF922B/g, '#40C057') +
     `<path d="M53 59L67 73L92 45" fill="none" stroke="${INK}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
