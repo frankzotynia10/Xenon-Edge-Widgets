@@ -23,13 +23,21 @@ $REACT_NAMES = @{ like = 'Like'; love = 'Heart'; applause = 'Applause'; wow = 'S
 
 $script:win = $null; $script:btn = @{}; $script:lastScan = [DateTime]::MinValue
 
+$script:checked = @{}   # hwnd -> "title|time" of windows already searched with no hang-up button
 function Find-MeetingWindow {
   $ids = @((Get-Process ms-teams -ErrorAction SilentlyContinue).Id)
   if (-not $ids.Count) { return $null }
+  $now = [DateTime]::Now
   foreach ($w in $AE::RootElement.FindAll($TS::Children, [System.Windows.Automation.Condition]::TrueCondition)) {
     if ($ids -notcontains $w.Current.ProcessId) { continue }
+    # Searching a Teams window's whole tree is the expensive (and leaky) part, so only do it when
+    # the window is new, its title changed, or 30 s have passed since it was last searched.
+    $hwnd = $w.Current.NativeWindowHandle; $title = [string]$w.Current.Name
+    $seen = $script:checked[$hwnd]
+    if ($seen -and $seen.Title -eq $title -and ($now - $seen.At).TotalSeconds -lt 30) { continue }
     $h = $w.FindFirst($TS::Descendants, (Cond $AE::AutomationIdProperty 'hangup-button'))
-    if ($h) { return $w }
+    if ($h) { $script:checked.Remove($hwnd); return $w }
+    $script:checked[$hwnd] = @{ Title = $title; At = $now }
   }
   return $null
 }
@@ -106,7 +114,17 @@ $stdin = New-Object IO.StreamReader([Console]::OpenStandardInput(), [Text.Encodi
 $task = $stdin.ReadLineAsync()
 $last = ''
 Log 'Teams UI Automation bridge started'
+# The managed UI Automation client leaks native memory on repeated tree searches (it reached 13 GB
+# in two days). Collect regularly, and exit when it still grows; index.js restarts us in 3 s.
+$me = Get-Process -Id $PID
+$gcTimer = [Diagnostics.Stopwatch]::StartNew()
 while ($true) {
+  if ($gcTimer.Elapsed.TotalSeconds -ge 30) {
+    $gcTimer.Restart()
+    [GC]::Collect(); [GC]::WaitForPendingFinalizers(); [GC]::Collect()
+    $me.Refresh(); $mb = [math]::Round($me.PrivateMemorySize64 / 1MB)
+    if (($mb -gt 400 -and -not $script:win) -or $mb -gt 1500) { Log "recycling at $mb MB"; exit 0 }
+  }
   while ($task.IsCompleted) {
     $line = $task.Result
     if ($null -eq $line) { exit 0 }
