@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Edge dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  iframe { position: absolute; border: 0; border-radius: 12px; background: #000; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+'use strict';
+(async function () {
+  const layout = await (await fetch('/layout.json', { cache: 'no-store' })).json();
+  const stage = document.getElementById('stage');
+  const W = layout.screen.width, H = layout.screen.height;
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  document.body.style.background = layout.background || '#000';
+
+  for (const w of layout.widgets) {
+    const f = document.createElement('iframe');
+    f.src = `http://127.0.0.1:${w.port}/`;
+    f.title = w.id;
+    Object.assign(f.style, { left: w.x + 'px', top: w.y + 'px', width: w.w + 'px', height: w.h + 'px' });
+    stage.appendChild(f);
+  }
+
+  // Scale the 2560x720 stage to the window, so a smaller preview window shows the whole layout.
+  // The iframes keep their real CSS sizes, so the widgets' size media queries still match.
+  function fit() {
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    stage.style.transform = s === 1 ? '' : `scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+})();
+</script>
+</body>
+</html>

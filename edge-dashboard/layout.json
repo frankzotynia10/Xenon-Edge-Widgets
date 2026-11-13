@@ -1,0 +1,11 @@
+{
+  "screen": { "width": 2560, "height": 720 },
+  "background": "#000000",
+  "widgets": [
+    { "id": "discord",       "dir": "discord-edge/widget",       "port": 6801, "x": 64,   "y": 8,   "w": 840, "h": 344 },
+    { "id": "notifications", "dir": "notifications-edge/widget", "port": 6802, "x": 64,   "y": 368, "w": 840, "h": 344 },
+    { "id": "apple-music",   "dir": "apple-music-edge/widget",   "port": 6803, "x": 968,  "y": 8,   "w": 624, "h": 704 },
+    { "id": "teams",         "dir": "teams-edge/widget",         "port": 6804, "x": 1656, "y": 8,   "w": 840, "h": 344 },
+    { "id": "launcher",      "dir": "launcher-edge/widget",      "port": 6805, "x": 1656, "y": 368, "w": 840, "h": 344 }
+  ]
+}

@@ -56,6 +56,12 @@
       "port": 5182
     },
     {
+      "name": "edge-dashboard",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["edge-dashboard/server.js"],
+      "port": 6800
+    },
+    {
       "name": "wow-icons",
       "runtimeExecutable": "node",
       "runtimeArgs": [

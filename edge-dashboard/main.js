@@ -1,0 +1,49 @@
+// Edge dashboard: shows our widgets full-screen on the Xeneon Edge without iCUE.
+//   npx electron .          on the Edge (borderless, always on top, never takes focus)
+//   npx electron . --dev    a framed 1280x360 preview window on the main screen
+'use strict';
+const { app, BrowserWindow, screen } = require('electron');
+const server = require('./server');
+
+const DEV = process.argv.includes('--dev');
+const EDGE = { width: 2560, height: 720 };
+
+if (!app.requestSingleInstanceLock()) app.quit();
+
+// The Edge is the display whose physical resolution is 2560x720.
+function findEdge() {
+  return screen.getAllDisplays().find(d =>
+    Math.round(d.size.width * d.scaleFactor) === EDGE.width && Math.round(d.size.height * d.scaleFactor) === EDGE.height);
+}
+
+let win = null;
+function createWindow(url) {
+  const edge = DEV ? null : findEdge();
+  if (!DEV && !edge) { console.log('Xeneon Edge not found; retrying in 5 s'); return setTimeout(() => createWindow(url), 5000); }
+
+  win = new BrowserWindow(DEV
+    ? { width: 1280, height: 360, useContentSize: true, title: 'Edge dashboard (preview)', backgroundColor: '#000000' }
+    : { ...edge.bounds, frame: false, resizable: false, movable: false, alwaysOnTop: true, skipTaskbar: true,
+        focusable: false, fullscreenable: false, backgroundColor: '#000000', title: 'Edge dashboard' });
+  win.setMenuBarVisibility(false);
+  if (!DEV) { win.setAlwaysOnTop(true, 'screen-saver'); win.setBounds(edge.bounds); }
+  win.loadURL(url);
+  win.on('closed', () => { win = null; });
+}
+
+app.whenReady().then(async () => {
+  const { url } = await server.start();
+  createWindow(url);
+
+  // Re-pin after the Edge is unplugged/replugged or Windows rearranges displays.
+  const repin = () => {
+    if (DEV) return;
+    const edge = findEdge();
+    if (!edge) { if (win) win.hide(); return; }
+    if (!win) return createWindow(url);
+    win.setBounds(edge.bounds); win.showInactive();
+  };
+  screen.on('display-added', repin); screen.on('display-removed', repin); screen.on('display-metrics-changed', repin);
+});
+
+app.on('window-all-closed', () => app.quit());

@@ -8,6 +8,7 @@ node_modules/
 **/helper/graph.json
 **/helper/graph-accounts.json
 edge-helper/sleep.json
+edge-dashboard/settings.json
 
 # Runtime files
 *.log

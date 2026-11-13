@@ -1,0 +1,18 @@
+﻿{
+  "name": "edge-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shows the Xeneon Edge widgets full-screen on the Edge without iCUE.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "serve": "node server.js"
+  },
+  "devDependencies": {
+    "electron": "^45.3.2"
+  },
+  "allowScripts": {
+    "electron": true
+  }
+}
