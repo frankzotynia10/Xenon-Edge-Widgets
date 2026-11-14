@@ -6,8 +6,13 @@ What a button can do:
 - **Hotkey:** e.g. `Ctrl+Alt+Shift+F1` for a WoW raid marker. The keys go to the app in front. Tapping the Edge never takes focus from it.
 - **Type text:** emoji and symbols too, optionally followed by Enter.
 - **Start / switch to app:** one or more Start menu apps. Each one starts, or comes to the front if it's already open (so OBS never says "already running"). Uses the App Launcher part of the Edge helper, so no console window.
-- **Volume slider (PC):** a column covering 1 or more spots (pick "Rows"). Drag up or down to set the volume of your current speakers or headphones; tap the speaker to mute. It follows volume changes made anywhere else.
+- **Volume slider:** a column covering 1 or more spots (pick "Rows"). Drag up or down to set the volume; tap the speaker to mute. It follows volume changes made anywhere else. "Whose volume" picks:
+  - **the PC:** your current speakers or headphones
+  - **one app:** Discord, Apple Music or any other app by its process name. It shows "–" while that app has no sound open.
+  - **the app in front:** whatever you are in, e.g. your game
 - **Hue / Key Light brightness sliders:** the same kind of column for a Hue room (or zone) or a Key Light. Drag to dim; all the way down turns it off, and dragging up turns it on. Tap the bulb to turn it on or off. They follow changes made in the Hue app or Control Center within a few seconds.
+- **Turn screens off:** turns every screen off, the Edge too. Any mouse move, key or touch wakes them, and so does the mouse jiggler, so pause it first.
+- **Webhook:** calls a URL (POST with an optional body, or GET), for example an n8n or Home Assistant webhook. The button flashes red if it doesn't answer OK.
 - **Open:** a command line, like Stream Deck's Open (e.g. an SSH session).
 - **Pages, folders and Back.**
 - **Elgato Key Light:** on/off, brightness steps, warmer/cooler. The button shows the current brightness or color temperature.

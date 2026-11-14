@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k11bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f2a3a"/><stop offset="1" stop-color="#061219"/></linearGradient>
+<linearGradient id="k11sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k11glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k11soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k11clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k11clip)">
+<rect width="144" height="144" fill="url(#k11bg)"/>
+<circle cx="66" cy="50" r="22" fill="#4cc2ff" opacity="0.45" filter="url(#k11glow)"/>
+<path d="M36 42 H50 L66 28 V72 L50 58 H36 Z" fill="#e6f6ff"/>
+<path d="M78 40 A14 14 0 0 1 78 60 M86 32 A26 26 0 0 1 86 68" fill="none" stroke="#4cc2ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k11sh)"/>
+</g>
+</svg>

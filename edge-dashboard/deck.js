@@ -48,6 +48,7 @@ function load() {
 function save(cfg) {
   if (!cfg || !Array.isArray(cfg.profiles) || !cfg.profiles.length) throw new Error('needs at least one profile');
   fs.writeFileSync(DECK, JSON.stringify(cfg, null, 2) + '\n');
+  setTimeout(updateWatch, 0);
 }
 function findButton(cfg, profile, page, pos) {
   const pr = cfg.profiles.find(p => p.id === profile);
@@ -57,7 +58,7 @@ function findButton(cfg, profile, page, pos) {
 
 // ---------- the key sender ----------
 let helper = null, pending = [], log = () => {};
-const state = { fg: '', fullscreen: false, profile: null, volume: null };
+const state = { fg: '', fullscreen: false, profile: null, volume: null, appVol: {} };
 const listeners = new Set(), volListeners = new Set();
 // Windows UI that shouldn't switch the deck away from the app you were in: Alt+Tab, Task View, the taskbar, Start.
 const SHELL_CLASSES = /^(ForegroundStaging|MultitaskingViewFrame|XamlExplorerHostIslandWindow|TaskSwitcherWnd|Shell_TrayWnd|Shell_SecondaryTrayWnd|Windows\.UI\.Core\.CoreWindow|NotifyIconOverflowWindow|TopLevelWindowForOverflowXamlIsland)$/;
@@ -73,6 +74,7 @@ function startHelper() {
   if (helper) return helper;
   const p = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'deck-keys.ps1')], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
   helper = p;
+  lastWatch = null; setTimeout(updateWatch, 500);   // a new helper watches nothing yet
   let buf = '';
   p.stdout.on('data', d => {
     buf += d.toString('utf8');
@@ -85,10 +87,15 @@ function startHelper() {
         state.fg = proc; state.fullscreen = full === '1';
         const prof = profileFor(proc);
         if (prof !== state.profile) { state.profile = prof; for (const fn of listeners) fn({ profile: prof, fg: proc }); }
+        updateWatch();
       } else if (line.startsWith('vol ')) {
         const [, lvl, muted] = line.split(' ');
         state.volume = lvl === '-' ? null : { level: Number(lvl), muted: muted === '1' };
-        for (const fn of volListeners) fn(state.volume);
+        emitVolume();
+      } else if (line.startsWith('avol ')) {
+        const [, proc, lvl, muted] = line.split(' ');
+        state.appVol[proc.toLowerCase()] = lvl === '-' ? null : { level: Number(lvl), muted: muted === '1' };
+        emitVolume();
       } else if (line === 'ok' || line.startsWith('err')) {
         const cb = pending.shift();
         if (cb) cb(line === 'ok' ? null : new Error(line.slice(4)));
@@ -118,7 +125,12 @@ async function press(profile, page, pos, value) {
   const b = findButton(load(), profile, page, pos);
   if (!b || !b.action) throw new Error('no such button');
   const a = b.action;
-  if (a.type === 'volume') return value === 'mute' ? command('M') : setVolume(Number(value));
+  if (a.type === 'volume') {
+    const proc = a.app === 'front' ? state.fg : a.app;
+    if (a.app && !/^[\w.\- ]+$/.test(proc || '')) throw new Error('no app in front');
+    if (value === 'mute') return command(proc ? 'AM ' + proc : 'M');
+    return setVolume(Number(value), proc);
+  }
   if (a.type === 'hue-dim' || a.type === 'keylight-dim') return lights.setLevel(a, value === 'toggle' ? 'toggle' : Number(value));
   if (lights.isLight(a.type)) return lights.run(a);
   switch (a.type) {
@@ -132,6 +144,8 @@ async function press(profile, page, pos, value) {
       // /s with the whole line in quotes: cmd strips just those outer quotes and keeps the ones inside.
       spawn('cmd.exe', ['/d', '/s', '/c', `"start "" ${a.command}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
       return;
+    case 'screens-off': return command('S');
+    case 'webhook': return webhook(a);
     case 'app':
       // Start menu apps, through the App Launcher helper: starts each one, or brings it to the
       // front if it's already open (so OBS never shows "already running"). No console window.
@@ -152,18 +166,49 @@ async function press(profile, page, pos, value) {
 }
 
 // While dragging, the slider sends many values; only the newest one waiting gets sent.
-let volNext = null, volBusy = false;
-function setVolume(v) {
+// proc: an app's process name for its own volume, or none for the system volume.
+const volNext = {}, volBusy = {};
+function setVolume(v, proc) {
   if (!Number.isFinite(v)) return Promise.reject(new Error('bad volume'));
-  volNext = Math.round(Math.max(0, Math.min(100, v)));
-  if (volBusy) return Promise.resolve();
-  volBusy = true;
+  const k = proc || '';
+  volNext[k] = Math.round(Math.max(0, Math.min(100, v)));
+  if (volBusy[k]) return Promise.resolve();
+  volBusy[k] = true;
   const loop = () => {
-    if (volNext === null) { volBusy = false; return Promise.resolve(); }
-    const n = volNext; volNext = null;
-    return command('V ' + n).catch(e => log('Deck volume: ' + e.message)).then(loop);
+    if (volNext[k] === undefined) { volBusy[k] = false; return Promise.resolve(); }
+    const n = volNext[k]; delete volNext[k];
+    return command(proc ? `AV ${n} ${proc}` : 'V ' + n).catch(e => log('Deck volume: ' + e.message)).then(loop);
   };
   return loop();
+}
+// Tells deck-keys.ps1 which apps' volumes to report: the ones on app sliders, plus the app in front
+// when a slider follows it.
+let lastWatch = null;
+function updateWatch() {
+  const apps = new Set();
+  for (const pr of load().profiles) for (const pg of pr.pages) for (const b of Object.values(pg.buttons || {})) {
+    const a = b && b.action;
+    if (a && a.type === 'volume' && a.app) apps.add(a.app === 'front' ? state.fg : a.app);
+  }
+  const list = [...apps].filter(x => x && /^[\w.\- ]+$/.test(x)).join(',');
+  if (list === lastWatch) return;
+  lastWatch = list;
+  command('W ' + list).catch(() => {});
+}
+
+// Calls a URL saved on the button (an n8n or Home Assistant webhook, say). The button flashes red
+// if it doesn't answer with a 2xx within 15 s.
+async function webhook(a) {
+  let url;
+  try { url = new URL(String(a.url || '')); } catch { throw new Error('no valid URL'); }
+  if (!/^https?:$/.test(url.protocol)) throw new Error('only http(s) URLs');
+  const method = a.method === 'GET' ? 'GET' : 'POST';
+  const body = method === 'POST' && a.body ? String(a.body) : undefined;
+  let json = false; if (body) try { JSON.parse(body); json = true; } catch { /* plain text */ }
+  const r = await fetch(url, { method, body, signal: AbortSignal.timeout(15000),
+    headers: body ? { 'content-type': json ? 'application/json' : 'text/plain' } : {} });
+  if (!r.ok) throw new Error(`webhook answered ${r.status}`);
+  log(`Deck webhook: ${method} ${url.host} -> ${r.status}`);
 }
 
 function launchApps(ids) {
@@ -201,7 +246,9 @@ function init(opts = {}) {
   lights.init({ log });
 }
 const onChange = fn => listeners.add(fn);
-const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg, volume: state.volume });
+const volSnapshot = () => ({ system: state.volume, apps: state.appVol, fg: state.fg });
+function emitVolume() { const v = volSnapshot(); for (const fn of volListeners) fn(v); }
+const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg, volume: volSnapshot() });
 const onVolume = fn => volListeners.add(fn);
 const foreground = () => ({ app: state.fg, fullscreen: state.fullscreen });
 

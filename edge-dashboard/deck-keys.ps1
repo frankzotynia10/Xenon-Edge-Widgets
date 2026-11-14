@@ -4,8 +4,13 @@
 #   T <base64 utf-8>    type the text as Unicode characters
 #   V <0-100>           set the system volume (default playback device); above 0 also unmutes
 #   M                   mute / unmute the system volume
+#   AV <0-100> <proc>   set one app's volume (all its audio sessions); above 0 also unmutes
+#   AM <proc>           mute / unmute one app
+#   W <proc>,<proc>     the apps to report with "avol" lines
+#   S                   turn all screens off (any mouse move, key or touch wakes them)
 # stdout:
 #   vol <0-100|-> <0|1>               the system volume and whether it's muted, whenever it changes
+#   avol <proc> <0-100|-> <0|1>       a watched app's volume ("-" = no audio session right now)
 #   fg <process> <0|1> <window class>   whenever the foreground window (or whether it fills its screen) changes;
 #                                       1 = it covers the whole monitor, like a fullscreen game
 #   ok | err <message>            after each command
@@ -44,6 +49,7 @@ public static class DeckKeys {
   [DllImport("user32.dll")] static extern UIntPtr SetTimer(IntPtr h, UIntPtr id, uint ms, IntPtr fn);
   [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
   [DllImport("user32.dll")] static extern IntPtr GetDesktopWindow();
+  [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
 
   // True when the window covers its whole monitor (borderless or exclusive fullscreen).
   static bool FillsScreen(IntPtr h) {
@@ -78,6 +84,78 @@ public static class DeckKeys {
     int NotUsed_SetCh(uint c, float db, ref Guid ctx); int NotUsed_SetChS(uint c, float l, ref Guid ctx);
     int NotUsed_GetCh(uint c, out float db); int NotUsed_GetChS(uint c, out float l);
     int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid ctx); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+  }
+  // Per-app volume: each app's audio sessions on the default playback device.
+  [ComImport, Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IAudioSessionManager2 {
+    int NotUsed_GetAudioSessionControl(IntPtr guid, int flags, out IntPtr control);
+    int NotUsed_GetSimpleAudioVolume(IntPtr guid, int flags, out IntPtr volume);
+    int GetSessionEnumerator(out IAudioSessionEnumerator sessions);
+  }
+  [ComImport, Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IAudioSessionEnumerator { int GetCount(out int count); int GetSession(int index, out IAudioSessionControl2 session); }
+  [ComImport, Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IAudioSessionControl2 {
+    int GetState(out int state); int NotUsed_GetDisplayName(out IntPtr n); int NotUsed_SetDisplayName(IntPtr n, ref Guid c);
+    int NotUsed_GetIconPath(out IntPtr p); int NotUsed_SetIconPath(IntPtr p, ref Guid c); int NotUsed_GetGroupingParam(out Guid g);
+    int NotUsed_SetGroupingParam(ref Guid g, ref Guid c); int NotUsed_Register(IntPtr c); int NotUsed_Unregister(IntPtr c);
+    int NotUsed_GetSessionIdentifier(out IntPtr id); int NotUsed_GetSessionInstanceIdentifier(out IntPtr id); int GetProcessId(out uint pid);
+  }
+  [ComImport, Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface ISimpleAudioVolume {
+    int SetMasterVolume(float level, ref Guid ctx); int GetMasterVolume(out float level);
+    int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid ctx); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+  }
+  // The volume controls of every session that belongs to a process with this name (Discord has several).
+  static List<ISimpleAudioVolume> AppSessions(string proc) {
+    List<ISimpleAudioVolume> list = new List<ISimpleAudioVolume>();
+    if (devEnum == null) devEnum = (IMMDeviceEnumerator)new MMDeviceEnumeratorCo();
+    IMMDevice d; Marshal.ThrowExceptionForHR(devEnum.GetDefaultAudioEndpoint(0, 1, out d));
+    Guid iid = typeof(IAudioSessionManager2).GUID; object o;
+    Marshal.ThrowExceptionForHR(d.Activate(ref iid, 23, IntPtr.Zero, out o));
+    IAudioSessionEnumerator e; ((IAudioSessionManager2)o).GetSessionEnumerator(out e);
+    int n; e.GetCount(out n);
+    for (int i = 0; i < n; i++) {
+      IAudioSessionControl2 s; e.GetSession(i, out s);
+      uint pid; s.GetProcessId(out pid); if (pid == 0) continue;   // 0 = system sounds
+      string name; try { name = Process.GetProcessById((int)pid).ProcessName; } catch { continue; }
+      if (string.Equals(name, proc, StringComparison.OrdinalIgnoreCase)) list.Add((ISimpleAudioVolume)s);
+    }
+    return list;
+  }
+  public static void SetAppVolume(string proc, int pct) {
+    lock (volLock) {
+      foreach (ISimpleAudioVolume v in AppSessions(proc)) {
+        v.SetMasterVolume(Math.Max(0, Math.Min(100, pct)) / 100f, ref volCtx);
+        if (pct > 0) v.SetMute(false, ref volCtx);
+      }
+    }
+    ReportApps();
+  }
+  public static void ToggleAppMute(string proc) {
+    lock (volLock) {
+      List<ISimpleAudioVolume> l = AppSessions(proc); if (l.Count == 0) return;
+      bool m; l[0].GetMute(out m);
+      foreach (ISimpleAudioVolume v in l) v.SetMute(!m, ref volCtx);
+    }
+    ReportApps();
+  }
+  static string[] watchApps = new string[0];
+  static readonly Dictionary<string, string> lastApp = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+  // "avol <process> <0-100|-> <0|1>" for each watched app when it changes; "-" = it has no audio right now.
+  static void ReportApps() {
+    foreach (string a in watchApps) {
+      string val;
+      try {
+        lock (volLock) {
+          List<ISimpleAudioVolume> l = AppSessions(a);
+          if (l.Count == 0) val = "- 0";
+          else { float lv; bool m; l[0].GetMasterVolume(out lv); l[0].GetMute(out m); val = (int)Math.Round(lv * 100) + " " + (m ? "1" : "0"); }
+        }
+      } catch { val = "- 0"; }
+      string prev; if (lastApp.TryGetValue(a, out prev) && prev == val) continue;
+      lastApp[a] = val; Say("avol " + a + " " + val);
+    }
   }
   static readonly object volLock = new object();
   static IMMDeviceEnumerator devEnum;
@@ -167,6 +245,18 @@ public static class DeckKeys {
             SetVolume(int.Parse(line.Substring(2)));
           } else if (line == "M") {
             ToggleMute();
+          } else if (line == "S") {
+            // Screens off. Wait for the finger to lift first, or that touch wakes them straight back up.
+            Thread.Sleep(600);
+            PostMessage((IntPtr)0xFFFF /* HWND_BROADCAST */, 0x0112 /* WM_SYSCOMMAND */, (IntPtr)0xF170 /* SC_MONITORPOWER */, (IntPtr)2 /* off */);
+          } else if (line.StartsWith("AV ")) {        // AV <pct> <process>
+            string[] p = line.Substring(3).Split(new[] { ' ' }, 2);
+            SetAppVolume(p[1], int.Parse(p[0]));
+          } else if (line.StartsWith("AM ")) {        // AM <process>
+            ToggleAppMute(line.Substring(3));
+          } else if (line.StartsWith("W ")) {         // W <process>,<process>,...  apps to report
+            watchApps = line.Substring(2).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            lastApp.Clear(); ReportApps();
           } else continue;
           Say("ok");
         } catch (Exception e) { Say("err " + e.Message.Replace("\n", " ")); }
@@ -175,7 +265,7 @@ public static class DeckKeys {
     });
     reader.IsBackground = true; reader.Start();
     // Volume changed elsewhere (keyboard, Windows, an app): checked 4 times a second, sent only when it changes.
-    Thread vol = new Thread(() => { while (true) { ReportVolume(); Thread.Sleep(250); } });
+    Thread vol = new Thread(() => { int i = 0; while (true) { ReportVolume(); if (i++ % 2 == 0) ReportApps(); Thread.Sleep(250); } });
     vol.IsBackground = true; vol.Start();
 
     try { SetProcessDpiAwarenessContext((IntPtr)(-4)); } catch { }   // real pixels, for the fullscreen check

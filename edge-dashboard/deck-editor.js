@@ -4,7 +4,7 @@
 (() => {
   const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
-  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC)'], ['hue-dim', 'Hue brightness slider'], ['keylight-dim', 'Key Light brightness slider'], ['open', 'Open (command line)'],['page', 'Next / previous page'],
+  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC or an app)'], ['screens-off', 'Turn screens off'], ['webhook', 'Webhook (call a URL)'], ['hue-dim', 'Hue brightness slider'], ['keylight-dim', 'Key Light brightness slider'], ['open', 'Open (command line)'],['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
     ['obs', 'OBS Studio'], ['shadowplay', 'NVIDIA ShadowPlay'],
     ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['jiggler', 'Mouse jiggler: pause today / resume'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
@@ -301,8 +301,22 @@
       if (a.type === 'open') bbox.append(field('Command line', text(a.command, v => { a.command = v; changed(false); }, { placeholder: 'powershell.exe -NoExit -Command "ssh me@server"', class: 'wide' }), 'Started like Run (Win+R).'));
       if (a.type === 'app') bbox.append(field('Apps', text((a.apps || []).join(', '), v => { a.apps = v.split(',').map(s => s.trim()).filter(Boolean); changed(false); }, { placeholder: 'AppleInc.AppleMusicWin_nzyj5cx40ttqa!App', class: 'wide' }),
         'Start menu app IDs, comma-separated (PowerShell: Get-StartApps). Each one starts, or comes to the front if it\'s open.'));
+      if (a.type === 'webhook') {
+        bbox.append(field('URL', text(a.url, v => { a.url = v.trim(); changed(false); }, { placeholder: 'http://n8n.local:5678/webhook/lights-off', class: 'wide' })));
+        bbox.append(field('Method', select([['POST', 'POST'], ['GET', 'GET']], a.method || 'POST', v => { a.method = v; changed(); })));
+        if ((a.method || 'POST') === 'POST') bbox.append(field('Body', text(a.body, v => { a.body = v; changed(false); }, { placeholder: '{"from": "edge"}', class: 'wide' }),
+          'Optional. Sent as JSON if it is JSON, otherwise as text. The button flashes red if the URL doesn\'t answer OK.'));
+      }
+      if (a.type === 'screens-off') bbox.append(field('Note', el('span', { class: 'hint' }, 'Turns every screen off, the Edge too. Any mouse move, key or touch wakes them. The mouse jiggler wakes them too, so pause it first.')));
       if (a.type === 'volume' || a.type === 'hue-dim' || a.type === 'keylight-dim') {
         const c = cat || { keylights: [], rooms: [], hue: {} };
+        if (a.type === 'volume') {
+          const known = ['', 'front', 'Discord', 'AppleMusic'], custom = a.app && !known.includes(a.app);
+          bbox.append(field('Whose volume', select([['', 'The PC (speakers / headphones)'], ['front', 'The app in front (your game)'], ['Discord', 'Discord'], ['AppleMusic', 'Apple Music'], ['custom', 'Another app…']],
+            custom ? 'custom' : a.app || '', v => { if (v === 'custom') a.app = a.app && !known.includes(a.app) ? a.app : 'Spotify'; else if (v) a.app = v; else delete a.app; changed(); }),
+            'An app shows "–" while it has no sound open; Windows only lists apps that are playing or have played.'));
+          if (custom) bbox.append(field('App', text(a.app, v => { a.app = v.trim().replace(/\.exe$/i, ''); changed(false); }, { placeholder: 'Spotify' }), 'Its process name, as in Task Manager → Details, without .exe.'));
+        }
         if (a.type === 'hue-dim') bbox.append(field('Room', c.hue.paired ? select([['', 'Pick a room'], ...c.rooms.map(r => [r.id, r.name])], a.room, v => { a.room = v; changed(false); })
           : el('span', { class: 'hint' }, 'Pair the Hue bridge first (Lights, above).')));
         if (a.type === 'keylight-dim') bbox.append(field('Light', select(c.keylights.map(k => [k.id, k.name]), a.light || (c.keylights[0] || {}).id, v => { a.light = v; changed(false); })));

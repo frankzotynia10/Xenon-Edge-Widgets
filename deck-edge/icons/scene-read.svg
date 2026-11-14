@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k38bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4dc"/><stop offset="1" stop-color="#f2c27a"/></linearGradient>
-<linearGradient id="k38sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k38glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k38soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k38clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k41bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4dc"/><stop offset="1" stop-color="#f2c27a"/></linearGradient>
+<linearGradient id="k41sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k41glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k41soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k41clip"><rect width="144" height="144" rx="22"/></clipPath>
 
 </defs>
-<g clip-path="url(#k38clip)">
-<rect width="144" height="144" fill="url(#k38bg)"/>
+<g clip-path="url(#k41clip)">
+<rect width="144" height="144" fill="url(#k41bg)"/>
 <path d="M72 34 C60 26 46 26 34 30 V78 C46 74 60 74 72 82 Z" fill="#ffffff" stroke="#b07a2a" stroke-width="3" stroke-linejoin="round"/>
 <path d="M72 34 C84 26 98 26 110 30 V78 C98 74 84 74 72 82 Z" fill="#fffaf0" stroke="#b07a2a" stroke-width="3" stroke-linejoin="round"/>
 <line x1="42" y1="42" x2="64" y2="45" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/><line x1="80" y1="45" x2="102" y2="42" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/><line x1="42" y1="52" x2="64" y2="55" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/><line x1="80" y1="55" x2="102" y2="52" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/><line x1="42" y1="62" x2="64" y2="65" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/><line x1="80" y1="65" x2="102" y2="62" stroke="#d8b47a" stroke-width="2.5" stroke-linecap="round"/>
-<rect width="144" height="144" fill="url(#k38sh)"/>
+<rect width="144" height="144" fill="url(#k41sh)"/>
 </g>
 </svg>

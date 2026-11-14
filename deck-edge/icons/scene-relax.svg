@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k31bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf7a"/><stop offset="0.5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#c2541c"/></linearGradient>
-<linearGradient id="k31sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k31glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k31soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k31clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k34bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf7a"/><stop offset="0.5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#c2541c"/></linearGradient>
+<linearGradient id="k34sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k34glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k34soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k34clip"><rect width="144" height="144" rx="22"/></clipPath>
 
 </defs>
-<g clip-path="url(#k31clip)">
-<rect width="144" height="144" fill="url(#k31bg)"/>
-<circle cx="72" cy="70" r="26" fill="#fff3c4" opacity="0.8" filter="url(#k31glow)"/>
+<g clip-path="url(#k34clip)">
+<rect width="144" height="144" fill="url(#k34bg)"/>
+<circle cx="72" cy="70" r="26" fill="#fff3c4" opacity="0.8" filter="url(#k34glow)"/>
 <circle cx="72" cy="74" r="22" fill="#fff1c9"/>
 <rect x="0" y="74" width="144" height="70" fill="#c2541c"/>
 <path d="M10 84 q15 -7 30 0 t30 0 t30 0 t30 0" fill="none" stroke="#ffd59a" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/><path d="M16 96 q15 -7 30 0 t30 0 t30 0 t30 0" fill="none" stroke="#ffd59a" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/><path d="M22 108 q15 -7 30 0 t30 0 t30 0 t30 0" fill="none" stroke="#ffd59a" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
-<rect width="144" height="144" fill="url(#k31sh)"/>
+<rect width="144" height="144" fill="url(#k34sh)"/>
 </g>
 </svg>

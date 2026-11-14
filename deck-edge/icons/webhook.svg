@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k12bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1638"/><stop offset="1" stop-color="#100818"/></linearGradient>
+<linearGradient id="k12sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k12glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k12soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k12clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k12clip)">
+<rect width="144" height="144" fill="url(#k12bg)"/>
+<circle cx="72" cy="50" r="22" fill="#c56bff" opacity="0.4" filter="url(#k12glow)"/>
+<path d="M72 30 L52 64 M72 30 L92 64 M52 64 H92" fill="none" stroke="#e3b8ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="72" cy="30" r="9" fill="#c56bff" stroke="#f3e2ff" stroke-width="3"/>
+<circle cx="52" cy="64" r="9" fill="#ff6bb5" stroke="#f3e2ff" stroke-width="3"/>
+<circle cx="92" cy="64" r="9" fill="#6bb8ff" stroke="#f3e2ff" stroke-width="3"/>
+<rect width="144" height="144" fill="url(#k12sh)"/>
+</g>
+</svg>

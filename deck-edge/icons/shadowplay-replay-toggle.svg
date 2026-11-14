@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k11bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22300f"/><stop offset="1" stop-color="#0c1107"/></linearGradient>
-<linearGradient id="k11sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k11glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k11soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k11clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k14bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22300f"/><stop offset="1" stop-color="#0c1107"/></linearGradient>
+<linearGradient id="k14sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k14glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k14soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k14clip"><rect width="144" height="144" rx="22"/></clipPath>
 
 </defs>
-<g clip-path="url(#k11clip)">
-<rect width="144" height="144" fill="url(#k11bg)"/>
+<g clip-path="url(#k14clip)">
+<rect width="144" height="144" fill="url(#k14bg)"/>
 <path d="M50 40 A26 26 0 1 1 46 58" fill="none" stroke="#76b900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 30 L50 41 L62 37" fill="none" stroke="#76b900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M66 41 L82 52 L66 63 Z" fill="#ffffff"/>
-<rect width="144" height="144" fill="url(#k11sh)"/>
+<rect width="144" height="144" fill="url(#k14sh)"/>
 </g>
 </svg>

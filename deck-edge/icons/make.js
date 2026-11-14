@@ -102,6 +102,23 @@ ${TV} fill="url(#IDscr)" stroke="#e9ecf2" stroke-width="3"/>
 '<linearGradient id="#IDscr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff4fa3"/><stop offset=".5" stop-color="#a66bff"/><stop offset="1" stop-color="#3fb6ff"/></linearGradient>'));
 add('huesync-off', key(OFF, `${TV} ${S('#5d626c', 4)}/><line x1="60" y1="84" x2="84" y2="84" ${S('#4a4e57', 5)}/>`));
 
+// PC ------------------------------------------------------------------------------
+// Screens off: a monitor with a crescent moon on it.
+add('screens-off', key(['#1a1d33', '#090a14'], `${glow('#8f9bff', 20, 72, 48, .45)}
+<rect x="34" y="26" width="76" height="50" rx="7" ${S('#c9cdf5', 4)}/>
+<path d="M60 84 H84 M72 76 V84" ${S('#8a8fb0', 4)}/>
+<path d="M78 36 A14 14 0 1 0 84 62 A11 11 0 1 1 78 36 Z" fill="#ffd36b"/>`));
+// Audio: a speaker with sound waves (e.g. a folder of volume sliders).
+add('audio', key(['#0f2a3a', '#061219'], `${glow('#4cc2ff', 22, 66, 50, .45)}
+<path d="M36 42 H50 L66 28 V72 L50 58 H36 Z" fill="#e6f6ff"/>
+<path d="M78 40 A14 14 0 0 1 78 60 M86 32 A26 26 0 0 1 86 68" ${S('#4cc2ff', 5)}/>`));
+// Webhook: three linked nodes, like the webhook symbol.
+add('webhook', key(['#2b1638', '#100818'], `${glow('#c56bff', 22, 72, 50, .4)}
+<path d="M72 30 L52 64 M72 30 L92 64 M52 64 H92" ${S('#e3b8ff', 5)}/>
+<circle cx="72" cy="30" r="9" fill="#c56bff" stroke="#f3e2ff" stroke-width="3"/>
+<circle cx="52" cy="64" r="9" fill="#ff6bb5" stroke="#f3e2ff" stroke-width="3"/>
+<circle cx="92" cy="64" r="9" fill="#6bb8ff" stroke="#f3e2ff" stroke-width="3"/>`));
+
 // NVIDIA ShadowPlay (green) ------------------------------------------------------
 const G = '#76b900', GBG = ['#22300f', '#0c1107'];
 add('shadowplay-save-replay', key(GBG, `${replayArrow(G)}<path d="M72 40 V60 M64 53 L72 61 L80 53" ${S('#ffffff', 5)}/>`));

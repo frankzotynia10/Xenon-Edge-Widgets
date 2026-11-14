@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k30bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14072f"/><stop offset="0.5" stop-color="#4a1d7a"/><stop offset="1" stop-color="#0f8f97"/></linearGradient>
-<linearGradient id="k30sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k30glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k30soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k30clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k33bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14072f"/><stop offset="0.5" stop-color="#4a1d7a"/><stop offset="1" stop-color="#0f8f97"/></linearGradient>
+<linearGradient id="k33sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k33glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k33soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k33clip"><rect width="144" height="144" rx="22"/></clipPath>
 
 </defs>
-<g clip-path="url(#k30clip)">
-<rect width="144" height="144" fill="url(#k30bg)"/>
+<g clip-path="url(#k33clip)">
+<rect width="144" height="144" fill="url(#k33bg)"/>
 <circle cx="24" cy="24" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="40" cy="70" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="112" cy="82" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="124" cy="30" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="96" cy="16" r="1.6" fill="#ffffff" opacity=".85"/>
-<circle cx="66" cy="50" r="24" fill="#c9a6ff" opacity="0.6" filter="url(#k30glow)"/>
+<circle cx="66" cy="50" r="24" fill="#c9a6ff" opacity="0.6" filter="url(#k33glow)"/>
 <path d="M80 26 A28 28 0 1 0 92 70 A22 22 0 1 1 80 26 Z" fill="#efe3ff"/>
 <path d="M104 36 Q104 46 114 46 Q104 46 104 56 Q104 46 94 46 Q104 46 104 36 Z" fill="#7ff5e6"/><path d="M40 29 Q40 36 47 36 Q40 36 40 43 Q40 36 33 36 Q40 36 40 29 Z" fill="#e3c8ff"/><path d="M98 67 Q98 72 103 72 Q98 72 98 77 Q98 72 93 72 Q98 72 98 67 Z" fill="#ffffff"/>
-<rect width="144" height="144" fill="url(#k30sh)"/>
+<rect width="144" height="144" fill="url(#k33sh)"/>
 </g>
 </svg>

@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k28bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1055"/><stop offset="0.5" stop-color="#7a1f8f"/><stop offset="1" stop-color="#ff6ec7"/></linearGradient>
-<linearGradient id="k28sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k28glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k28soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k28clip"><rect width="144" height="144" rx="22"/></clipPath>
-<linearGradient id="k28sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45e"/><stop offset="1" stop-color="#ff3fa4"/></linearGradient>
+<linearGradient id="k31bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1055"/><stop offset="0.5" stop-color="#7a1f8f"/><stop offset="1" stop-color="#ff6ec7"/></linearGradient>
+<linearGradient id="k31sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k31glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k31soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k31clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k31sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45e"/><stop offset="1" stop-color="#ff3fa4"/></linearGradient>
 </defs>
-<g clip-path="url(#k28clip)">
-<rect width="144" height="144" fill="url(#k28bg)"/>
-<circle cx="72" cy="66" r="34" fill="url(#k28sun)"/>
+<g clip-path="url(#k31clip)">
+<rect width="144" height="144" fill="url(#k31bg)"/>
+<circle cx="72" cy="66" r="34" fill="url(#k31sun)"/>
 <rect x="30" y="66" width="84" height="2" fill="#7a1f8f"/><rect x="30" y="74" width="84" height="2.8" fill="#7a1f8f"/><rect x="30" y="81" width="84" height="3.6" fill="#7a1f8f"/><rect x="30" y="87" width="84" height="4.4" fill="#7a1f8f"/><rect x="30" y="92" width="84" height="5.2" fill="#7a1f8f"/>
 <rect x="0" y="98" width="144" height="46" fill="#1a0838"/>
 <line x1="54" y1="98" x2="-24" y2="144" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="63" y1="98" x2="24" y2="144" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="72" y1="98" x2="72" y2="144" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="81" y1="98" x2="120" y2="144" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="90" y1="98" x2="168" y2="144" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/>
 <line x1="0" y1="104" x2="144" y2="104" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="0" y1="112" x2="144" y2="112" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="0" y1="124" x2="144" y2="124" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/><line x1="0" y1="140" x2="144" y2="140" stroke="#2ee6ff" stroke-width="1.5" opacity=".8"/>
-<rect width="144" height="144" fill="url(#k28sh)"/>
+<rect width="144" height="144" fill="url(#k31sh)"/>
 </g>
 </svg>

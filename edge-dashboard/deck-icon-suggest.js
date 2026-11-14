@@ -20,6 +20,8 @@
         return pick('keylight-on', 'keylight-off');
       case 'shadowplay': return pick('shadowplay-' + (a.op || 'save-replay'));
       case 'obs': return pick('obs-' + (a.op || 'record'));
+      case 'screens-off': return pick('screens-off');
+      case 'webhook': return pick('webhook');
       default: return null;
     }
   }

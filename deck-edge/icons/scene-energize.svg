@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
 <defs>
-<linearGradient id="k29bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f6ff"/><stop offset="0.5" stop-color="#8cc8ff"/><stop offset="1" stop-color="#3d8bff"/></linearGradient>
-<linearGradient id="k29sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<filter id="k29glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
-<filter id="k29soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-<clipPath id="k29clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k32bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f6ff"/><stop offset="0.5" stop-color="#8cc8ff"/><stop offset="1" stop-color="#3d8bff"/></linearGradient>
+<linearGradient id="k32sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k32glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k32soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k32clip"><rect width="144" height="144" rx="22"/></clipPath>
 
 </defs>
-<g clip-path="url(#k29clip)">
-<rect width="144" height="144" fill="url(#k29bg)"/>
-<circle cx="72" cy="52" r="34" fill="#ffffff" opacity="0.9" filter="url(#k29glow)"/>
+<g clip-path="url(#k32clip)">
+<rect width="144" height="144" fill="url(#k32bg)"/>
+<circle cx="72" cy="52" r="34" fill="#ffffff" opacity="0.9" filter="url(#k32glow)"/>
 <circle cx="72" cy="52" r="20" fill="#ffffff"/><line x1="100.0" y1="52.0" x2="112.0" y2="52.0" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="91.8" y1="71.8" x2="100.3" y2="80.3" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="72.0" y1="80.0" x2="72.0" y2="92.0" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="52.2" y1="71.8" x2="43.7" y2="80.3" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="44.0" y1="52.0" x2="32.0" y2="52.0" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="52.2" y1="32.2" x2="43.7" y2="23.7" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="72.0" y1="24.0" x2="72.0" y2="12.0" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="91.8" y1="32.2" x2="100.3" y2="23.7" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M76 36 L64 56 H74 L68 70 L82 48 H72 Z" fill="#3d8bff"/>
-<rect width="144" height="144" fill="url(#k29sh)"/>
+<rect width="144" height="144" fill="url(#k32sh)"/>
 </g>
 </svg>
