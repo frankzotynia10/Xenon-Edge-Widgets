@@ -11,6 +11,13 @@ Still to do:
 - Stream Deck
 - start at login
 
+## Mouse lock
+When the dashboard runs on the Edge, `mouse-lock.ps1` keeps the **mouse** off the Edge, like iCUE's mouse lock. **Touch** still works.
+- **How it works:** a low-level mouse hook drops mouse moves that would land on the Edge. Windows tags taps from the touchscreen and pen, and those pass through.
+- **After a tap:** the next real mouse move sends the cursor back to where it was on your main screen.
+- **Turning it off:** set `"mouseLock": false` in `layout.json`.
+- **When it runs:** only in Edge mode, not with `--dev`. The dashboard restarts it if it stops.
+
 ## Settings
 - **Opening it:** tap the faint gear at the right edge of the Edge. The settings window opens on your main screen. Outside Electron, open `http://127.0.0.1:6800/settings`.
 - **What's on it:** the page is built from each widget's own setting definitions, so new settings show up on their own. Changes apply on the Edge right away; iCUE's equivalent is `onDataUpdated`.

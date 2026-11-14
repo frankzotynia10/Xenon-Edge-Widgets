@@ -1,6 +1,7 @@
 {
   "screen": { "width": 2560, "height": 720 },
   "background": "#000000",
+  "mouseLock": true,
   "widgets": [
     { "id": "discord",       "dir": "discord-edge/widget",       "port": 6801, "x": 64,   "y": 8,   "w": 840, "h": 344 },
     { "id": "notifications", "dir": "notifications-edge/widget", "port": 6802, "x": 64,   "y": 368, "w": 840, "h": 344 },

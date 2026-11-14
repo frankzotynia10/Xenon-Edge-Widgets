@@ -3,6 +3,9 @@
 //   npx electron . --dev    a framed 1280x360 preview window on the main screen
 'use strict';
 const { app, BrowserWindow, screen } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
 const server = require('./server');
 
 const DEV = process.argv.includes('--dev');
@@ -31,6 +34,22 @@ function createWindow(url) {
   win.on('closed', () => { win = null; });
 }
 
+// Mouse lock: keeps the mouse off the Edge while touch still works (mouse-lock.ps1).
+// On by default; set "mouseLock": false in layout.json to turn it off.
+let lockProc = null, quitting = false;
+function startMouseLock() {
+  let layout = {};
+  try { layout = JSON.parse(fs.readFileSync(path.join(__dirname, 'layout.json'), 'utf8')); } catch { /* defaults */ }
+  if (layout.mouseLock === false) return;
+  const s = layout.screen || EDGE;
+  lockProc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'mouse-lock.ps1'),
+    '-Width', String(s.width), '-Height', String(s.height)], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  lockProc.stdout.on('data', d => console.log('mouse lock:', String(d).trim()));
+  lockProc.stderr.on('data', d => console.error('mouse lock:', String(d).trim()));
+  lockProc.on('exit', code => { lockProc = null; if (!quitting) { console.log(`mouse lock exited (${code}), restarting in 3 s`); setTimeout(startMouseLock, 3000); } });
+}
+app.on('before-quit', () => { quitting = true; if (lockProc) lockProc.kill(); });
+
 // Settings open in a normal window on the main screen, where there's a mouse and keyboard.
 let settingsWin = null;
 function openSettings(url) {
@@ -47,6 +66,7 @@ app.whenReady().then(async () => {
   const { url } = await server.start();
   server.events.on('open-settings', () => openSettings(url));
   createWindow(url);
+  if (!DEV) startMouseLock();
 
   // Re-pin after the Edge is unplugged/replugged or Windows rearranges displays.
   const repin = () => {
