@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deck</title>
+<style>
+:root { --bg: #111214; --panel: #1b1c1f; --panel2: #26272b; --text: #f2f3f5; --muted: #949ba4; --accent: #4CC2FF; --bad: #ff5a5f; --gap: 10px; --foot: 30px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", "Segoe UI Emoji", sans-serif; user-select: none; -webkit-user-select: none; }
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+
+#wrap { position: absolute; inset: 0; padding: var(--gap); display: flex; flex-direction: column; }
+#grid { flex: 1; display: grid; gap: var(--gap); align-content: center; justify-content: center; touch-action: none; }
+
+.key { width: var(--t); height: var(--t); border-radius: calc(var(--t) * .16); background: var(--panel); position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; transition: transform .08s, box-shadow .25s; }
+.key.empty { background: rgba(255,255,255,.025); pointer-events: none; }
+.key:active { transform: scale(.93); }
+.key img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.key .title { position: absolute; left: 6%; right: 6%; bottom: 7%; text-align: center; font-weight: 700; font-size: calc(var(--t) * .13); line-height: 1.1;
+  text-shadow: 0 1px 3px #000, 0 0 6px #000; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.key.plain .title { position: static; font-size: calc(var(--t) * .15); text-shadow: none; padding: 0 8%; }
+.key .text { font-size: calc(var(--t) * .34); line-height: 1.1; text-align: center; padding: 0 6%; word-break: break-word; }
+.key .text.long { font-size: calc(var(--t) * .15); }
+.key .glyph { width: 38%; height: 38%; color: var(--muted); }
+.key.has-glyph .title { color: var(--muted); }
+.key.pending { opacity: .42; }
+.key.pending::after { content: "soon"; position: absolute; top: 6%; right: 7%; font-size: calc(var(--t) * .09); font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); }
+.key.ok { box-shadow: inset 0 0 0 3px var(--accent); }
+.key.err { box-shadow: inset 0 0 0 3px var(--bad); }
+
+#foot { height: var(--foot); display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 13px; color: var(--muted); gap: 10px; }
+#profile { display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 99px; background: var(--panel); font-weight: 600; font-size: 12.5px; letter-spacing: .03em; text-transform: uppercase; }
+#profile .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+#profile.manual .dot { background: var(--muted); }
+#dots { display: flex; gap: 7px; }
+#dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--panel2); }
+#dots i.on { background: var(--text); }
+#pagename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+#msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 8px; text-align: center; padding: 30px; }
+#msg b { font-size: 26px; } #msg span { color: var(--muted); font-size: 17px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="grid"></div>
+  <div id="foot">
+    <button id="profile" title="Tap to switch profile"><span class="dot"></span><span id="pname"></span></button>
+    <div id="dots"></div>
+    <div id="pagename"></div>
+  </div>
+</div>
+<div id="msg"><b>Deck isn't connected</b><span>It runs on the Edge dashboard (edge-dashboard), not in iCUE.</span></div>
+<script>
+'use strict';
+const API = window.__edgeApi || 'http://127.0.0.1:6800';
+const GLYPH = {
+  folder: '<svg class="glyph" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h3.6l2 2.2h7.4A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>',
+  back: '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6 4 12l6 6M4.5 12H20"/></svg>',
+  next: '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
+  prev: '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
+};
+
+let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const profile = () => cfg.profiles.find(p => p.id === profileId) || cfg.profiles[0];
+const mainPages = () => profile().pages.filter(p => !p.folder);
+const page = () => profile().pages.find(p => p.id === pageId) || mainPages()[0] || profile().pages[0];
+
+function setProfile(id, isManual) {
+  if (!cfg.profiles.some(p => p.id === id)) id = cfg.profiles[0].id;
+  if (id !== profileId) { profileId = id; pageId = null; stack = []; }
+  manual = !!isManual;
+  render();
+}
+
+function render() {
+  if (!cfg) return;
+  const pr = profile(), pg = page();
+  pageId = pg.id;
+  const grid = pr.grid || cfg.grid || { cols: 5, rows: 3 };
+  const g = $('grid');
+  const gap = 10, W = g.clientWidth, H = g.clientHeight;
+  const t = Math.floor(Math.min((W - gap * (grid.cols - 1)) / grid.cols, (H - gap * (grid.rows - 1)) / grid.rows));
+  g.style.setProperty('--t', t + 'px');
+  g.style.gridTemplateColumns = `repeat(${grid.cols}, ${t}px)`;
+  let html = '';
+  for (let r = 0; r < grid.rows; r++) for (let c = 0; c < grid.cols; c++) {
+    const pos = `${c},${r}`, b = (pg.buttons || {})[pos];
+    if (!b) { html += '<div class="key empty"></div>'; continue; }
+    const a = b.action || {};
+    const cls = ['key'];
+    let inner = '';
+    if (b.icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(b.icon)}" alt="" draggable="false">`;
+    else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
+    else {
+      const glyph = a.type === 'folder' ? 'folder' : a.type === 'back' ? 'back' : a.type === 'page' ? (a.step < 0 ? 'prev' : 'next') : null;
+      if (glyph) { inner += GLYPH[glyph]; cls.push('has-glyph'); } else cls.push('plain');
+    }
+    if (b.title) inner += `<div class="title">${esc(b.title)}</div>`;
+    if (!b.title && !b.icon && cls.includes('plain')) inner += `<div class="title">${esc(a.keys || a.type || '')}</div>`;
+    if (a.type === 'pending' || !b.action) cls.push('pending');
+    html += `<button class="${cls.join(' ')}" data-pos="${pos}">${inner}</button>`;
+  }
+  g.innerHTML = html;
+
+  $('pname').textContent = pr.name;
+  $('profile').classList.toggle('manual', manual);
+  $('profile').style.visibility = cfg.profiles.length > 1 ? '' : 'hidden';
+  const mains = mainPages();
+  $('dots').innerHTML = pg.folder || mains.length < 2 ? '' : mains.map(p => `<i class="${p.id === pg.id ? 'on' : ''}"></i>`).join('');
+  $('pagename').textContent = pg.folder ? pg.name : (mains.length > 1 ? pg.name : '');
+}
+
+function step(n) {
+  const mains = mainPages();
+  if (mains.length < 2) return;
+  const i = Math.max(0, mains.findIndex(p => p.id === pageId));
+  pageId = mains[(i + n + mains.length) % mains.length].id; stack = []; render();
+}
+
+function flash(el, cls) { el.classList.remove('ok', 'err'); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 450); }
+
+async function press(el) {
+  const pos = el.dataset.pos, b = page().buttons[pos], a = (b && b.action) || {};
+  switch (a.type) {
+    case 'page': return step(a.step < 0 ? -1 : 1);
+    case 'folder': if (profile().pages.some(p => p.id === a.page)) { stack.push(pageId); pageId = a.page; render(); } return;
+    case 'back': pageId = stack.pop() || mainPages()[0].id; return render();
+    case 'pending': case undefined: return;
+  }
+  try {
+    const r = await fetch(`${API}/api/deck/press`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-edge-dashboard': '1' },
+      body: JSON.stringify({ profile: profileId, page: pageId, pos }) });
+    flash(el, r.ok ? 'ok' : 'err');
+  } catch { flash(el, 'err'); }
+}
+
+// Taps, plus swiping sideways to change page.
+let down = null;
+$('grid').addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, el: e.target.closest('.key') }; });
+$('grid').addEventListener('pointerup', e => {
+  if (!down) return;
+  const dx = e.clientX - down.x, dy = e.clientY - down.y, el = down.el; down = null;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (!page().folder) step(dx < 0 ? 1 : -1); return; }
+  if (el && Math.hypot(dx, dy) < 25) press(el);
+});
+$('grid').addEventListener('pointercancel', () => { down = null; });
+
+// Tap the profile chip to pick another profile by hand; it follows the app in front again when that changes.
+$('profile').addEventListener('click', () => {
+  const i = cfg.profiles.findIndex(p => p.id === profileId);
+  const next = cfg.profiles[(i + 1) % cfg.profiles.length].id;
+  setProfile(next, next !== autoProfile);
+});
+
+async function load() {
+  try {
+    const d = await (await fetch(`${API}/api/deck`, { cache: 'no-store' })).json();
+    cfg = d.config; autoProfile = d.profile;
+    $('msg').style.display = 'none'; $('wrap').style.display = '';
+    setProfile(manual ? profileId : d.profile, manual);
+  } catch {
+    $('msg').style.display = 'flex'; $('wrap').style.display = 'none';
+    setTimeout(load, 3000);
+  }
+}
+
+function listen() {
+  const es = new EventSource(`${API}/api/events`);
+  es.addEventListener('deck', e => { const d = JSON.parse(e.data); autoProfile = d.profile; if (cfg) setProfile(d.profile, false); });
+  es.addEventListener('deck-config', load);
+  es.onerror = () => { es.close(); setTimeout(() => { load(); listen(); }, 3000); };
+}
+
+new ResizeObserver(render).observe($('grid'));
+load(); listen();
+</script>
+</body>
+</html>

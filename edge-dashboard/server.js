@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
 const sensors = require('./sensors');
+const deck = require('./deck');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
@@ -105,11 +106,29 @@ function readBody(req) {
 }
 const json = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 
+// The widgets run on their own 127.0.0.1 ports, so they're other origins. Only those get CORS.
+const widgetOrigin = req => { const o = req.headers.origin; return o && /^http:\/\/127\.0\.0\.1:\d+$/.test(o) ? o : null; };
+const cors = req => (widgetOrigin(req) ? { 'access-control-allow-origin': widgetOrigin(req) } : {});
+const jsonCors = (req, res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(obj)); };
+
 async function dashHandler(req, res) {
   const p = req.url.split('?')[0];
+  // Preflight for the Deck widget's button presses; nothing else answers one.
+  if (req.method === 'OPTIONS' && p === '/api/deck/press' && widgetOrigin(req)) {
+    res.writeHead(204, { ...cors(req), 'access-control-allow-methods': 'POST', 'access-control-allow-headers': 'content-type, x-edge-dashboard', 'access-control-max-age': '600' });
+    return res.end();
+  }
   if (req.method === 'GET') {
+    if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current() });
+    if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
+    if (p.startsWith('/deck-icon/')) {
+      const file = deck.icon(decodeURIComponent(p.slice('/deck-icon/'.length)));
+      if (!file) { res.writeHead(404); return res.end(); }
+      return sendFile(res, file);
+    }
     if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
     if (p === '/settings') return sendFile(res, path.join(__dirname, 'settings.html'));
+    if (p === '/deck-editor.js') return sendFile(res, path.join(__dirname, 'deck-editor.js'));
     if (p === '/layout.json') return sendFile(res, LAYOUT);
     if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
     if (p === '/api/settings') return json(res, 200, loadSettings());
@@ -122,7 +141,7 @@ async function dashHandler(req, res) {
       return res.end(JSON.stringify({ ...r, labels: sensors.AUTO_LABELS }));
     }
     if (p === '/api/events') {
-      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive', ...cors(req) });
       res.write(': hi\n\n'); clients.add(res); req.on('close', () => clients.delete(res));
       return;
     }
@@ -156,6 +175,30 @@ async function dashHandler(req, res) {
     // Page switching, e.g. from a Stream Deck key: {"step": 1}, {"step": -1} or {"index": 0}
     if (p === '/api/page') { broadcast('page', typeof body.index === 'number' ? { index: body.index } : { step: body.step === -1 ? -1 : 1 }); return json(res, 200, { ok: true }); }
     if (p === '/api/reload') { broadcast('reload', {}); return json(res, 200, { ok: true }); }
+    // Deck: run a saved button, by where it is. The body never carries keys or commands.
+    if (p === '/api/deck/press') {
+      try { await deck.press(String(body.profile), String(body.page), String(body.pos)); return jsonCors(req, res, 200, { ok: true }); }
+      catch (e) { return jsonCors(req, res, 400, { error: e.message }); }
+    }
+    // Deck: save the whole config, from the settings page (same origin only).
+    if (p === '/api/deck') {
+      if (req.headers.origin && widgetOrigin(req) && new URL(req.headers.origin).port !== String(DASH_PORT)) { res.writeHead(403); return res.end(); }
+      try { deck.save(body); } catch (e) { return json(res, 400, { error: e.message }); }
+      broadcast('deck-config', {});
+      return json(res, 200, { ok: true });
+    }
+    if (p === '/api/deck/import-streamdeck') {
+      try {
+        const cfg = require('./import-streamdeck').importDecks();
+        for (const pr of cfg.profiles) delete pr._notes;
+        deck.save(cfg);
+        broadcast('deck-config', {});
+        return json(res, 200, { ok: true, profiles: cfg.profiles.map(p => p.name) });
+      } catch (e) { return json(res, 500, { error: e.message }); }
+    }
+    if (p === '/api/deck/check-keys') {
+      try { return json(res, 200, { ok: true, keys: deck.keysName(deck.parseKeys(body.keys)) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
+    }
   }
   res.writeHead(404); res.end();
 }
@@ -168,8 +211,10 @@ function listen(port, handler) {
   });
 }
 
-async function start() {
+async function start(opts = {}) {
   const layout = loadLayout();
+  deck.init({ log: opts.log });
+  deck.onChange(s => broadcast('deck', s));
   const servers = [await listen(DASH_PORT, dashHandler)];
   for (const w of widgetList(layout)) servers.push(await listen(w.port, widgetHandler(w)));
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };

@@ -1,0 +1,10 @@
+{
+  "author": "Frank",
+  "id": "com.frank.deck",
+  "name": "Deck",
+  "description": "Button deck for the Edge dashboard, in place of the Virtual Stream Deck: hotkeys, text, launching commands, pages and folders, and a profile that follows the app in front (WoW). Runs on the iCUE-free Edge dashboard only.",
+  "version": "1.0.0",
+  "os": [{ "platform": "windows" }],
+  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "interactive": true
+}

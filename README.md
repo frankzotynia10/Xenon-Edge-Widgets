@@ -10,8 +10,11 @@ Custom iCUE widgets for the Corsair Xeneon Edge, the background helper that powe
 | **Sensor Box** | GPU and CPU temperature and load, VRAM, system memory, and FPS while you're in a game. | `sensor-box-edge/` |
 | **Teams** | Meeting controls (mute, camera, hand, leave), with an optional calendar on the L and XL sizes. | `teams-edge/` |
 | **App Launcher** | One-tap buttons for your apps with their real icons. A dot shows which ones are open. | `launcher-edge/` |
+| **Deck** | A button deck in place of the Virtual Stream Deck: hotkeys, text, commands, pages and folders, and a profile that follows the app in front (WoW). Edge dashboard only. | `deck-edge/` |
 
 Each folder has its own README with details and settings.
+
+**Without iCUE:** `edge-dashboard/` runs all of these full-screen on the Edge in a small Electron window, with no iCUE at all. See its README.
 
 ## Requirements
 - **Windows 10 or 11** with a **Corsair Xeneon Edge**.

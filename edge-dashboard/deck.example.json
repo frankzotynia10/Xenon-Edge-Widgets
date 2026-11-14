@@ -1,0 +1,365 @@
+{
+  "grid": {
+    "cols": 5,
+    "rows": 3
+  },
+  "profiles": [
+    {
+      "id": "default",
+      "name": "Default",
+      "apps": [],
+      "grid": {
+        "cols": 5,
+        "rows": 3
+      },
+      "pages": [
+        {
+          "id": "main",
+          "name": "Main",
+          "buttons": {
+            "0,0": {
+              "title": "Terminal",
+              "action": {
+                "type": "open",
+                "command": "wt.exe"
+              }
+            },
+            "1,0": {
+              "title": "Emojis",
+              "action": {
+                "type": "folder",
+                "page": "emoji"
+              }
+            },
+            "2,0": {
+              "title": "Sleep",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F10"
+              }
+            },
+            "3,1": {
+              "title": "+++",
+              "action": {
+                "type": "keys",
+                "keys": "VolumeUp"
+              }
+            },
+            "4,1": {
+              "title": "---",
+              "action": {
+                "type": "keys",
+                "keys": "VolumeDown"
+              }
+            },
+            "4,2": {
+              "title": "Mute",
+              "action": {
+                "type": "keys",
+                "keys": "VolumeMute"
+              }
+            },
+            "0,2": {
+              "title": "Office",
+              "action": {
+                "type": "pending",
+                "what": "Philips Hue"
+              }
+            }
+          }
+        },
+        {
+          "id": "emoji",
+          "name": "Emojis",
+          "folder": true,
+          "buttons": {
+            "0,0": {
+              "title": "",
+              "action": {
+                "type": "back"
+              }
+            },
+            "1,0": {
+              "title": "Emoji Keyboard",
+              "action": {
+                "type": "keys",
+                "keys": "Win+Period"
+              }
+            },
+            "2,0": {
+              "title": "",
+              "action": {
+                "type": "text",
+                "text": "👍",
+                "enter": false
+              }
+            },
+            "3,0": {
+              "title": "",
+              "action": {
+                "type": "text",
+                "text": "🔥",
+                "enter": false
+              }
+            },
+            "4,0": {
+              "title": "",
+              "action": {
+                "type": "text",
+                "text": "(╯°□°)╯︵ ┻━┻",
+                "enter": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "wow",
+      "name": "WoW",
+      "apps": [
+        "Wow"
+      ],
+      "grid": {
+        "cols": 5,
+        "rows": 4
+      },
+      "pages": [
+        {
+          "id": "0034b755",
+          "buttons": {
+            "0,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F1"
+              },
+              "icon": "wow/target-8-skull.png"
+            },
+            "0,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F6"
+              },
+              "icon": "wow/target-3-diamond.png"
+            },
+            "0,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+A"
+              },
+              "icon": "wow/hello.png"
+            },
+            "0,3": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F"
+              },
+              "icon": "wow/thank-you.png"
+            },
+            "1,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F2"
+              },
+              "icon": "wow/target-7-cross.png"
+            },
+            "1,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F7"
+              },
+              "icon": "wow/target-2-circle.png"
+            },
+            "1,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+S"
+              },
+              "icon": "wow/wait.png"
+            },
+            "1,3": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+G"
+              },
+              "icon": "wow/cheer.png"
+            },
+            "2,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F3"
+              },
+              "icon": "wow/target-5-moon.png"
+            },
+            "2,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F8"
+              },
+              "icon": "wow/target-1-star.png"
+            },
+            "2,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+D"
+              },
+              "icon": "wow/pat.png"
+            },
+            "3,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+9"
+              },
+              "icon": "wow/target-6-square.png"
+            },
+            "3,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F9"
+              },
+              "icon": "wow/target-clear.png"
+            },
+            "3,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F10"
+              },
+              "icon": "wow/ready-check.png"
+            },
+            "4,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F5"
+              },
+              "icon": "wow/target-4-triangle.png"
+            },
+            "4,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F12"
+              },
+              "icon": "wow/world-clear.png"
+            },
+            "4,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F11"
+              },
+              "icon": "wow/countdown-10.png"
+            },
+            "4,3": {
+              "title": "World Markers",
+              "action": {
+                "type": "page",
+                "step": 1
+              }
+            }
+          },
+          "name": "Target Markers"
+        },
+        {
+          "id": "2a0219d2",
+          "buttons": {
+            "0,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+1"
+              },
+              "icon": "wow/world-1-square.png"
+            },
+            "0,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+5"
+              },
+              "icon": "wow/world-5-star.png"
+            },
+            "0,2": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+F12"
+              },
+              "icon": "wow/world-clear.png"
+            },
+            "0,3": {
+              "title": "Target Markers",
+              "action": {
+                "type": "page",
+                "step": -1
+              }
+            },
+            "1,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+2"
+              },
+              "icon": "wow/world-2-triangle.png"
+            },
+            "1,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+6"
+              },
+              "icon": "wow/world-6-circle.png"
+            },
+            "2,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+3"
+              },
+              "icon": "wow/world-3-diamond.png"
+            },
+            "2,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+7"
+              },
+              "icon": "wow/world-7-moon.png"
+            },
+            "3,0": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+4"
+              },
+              "icon": "wow/world-4-cross.png"
+            },
+            "3,1": {
+              "title": "",
+              "action": {
+                "type": "keys",
+                "keys": "Ctrl+Alt+Shift+8"
+              },
+              "icon": "wow/world-8-skull.png"
+            }
+          },
+          "name": "World Markers"
+        }
+      ]
+    }
+  ]
+}

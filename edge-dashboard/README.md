@@ -7,9 +7,11 @@ Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small 
 - the settings page, with an import of your iCUE settings
 - Sensor Box sensors, from LibreHardwareMonitor
 
+- the Deck widget, in place of the Virtual Stream Deck: hotkeys, text, commands, pages, folders, app profiles
+
 Still to do:
+- Deck: Philips Hue, Elgato Key Light and Hue Sync buttons
 - FPS for the Sensor Box (PresentMon)
-- the Deck widget, to replace Stream Deck
 - start at login
 
 ## Pages
@@ -24,8 +26,8 @@ Still to do:
 Every page stays loaded, so switching is instant and the widgets stay connected. The dashboard remembers the page you were on.
 
 The default pages follow the iCUE ones:
-1. **Main:** Music (S) and Sensor Box (S), Discord (M), Teams (S) and Notifications (S).
-2. **Meetings:** Music and Notifications, Teams (M), Launcher (M).
+1. **Main:** Music (S) and Sensor Box (S), Discord (M), Deck (M).
+2. **Meetings:** Music and Notifications, Teams (M), Deck (M).
 3. **Discord:** full width.
 
 Slots match iCUE's: 840×344 (S), 840×704 (M) or 2540×704 (full), in three columns at x = 10, 860 and 1710, edge to edge.
@@ -74,6 +76,25 @@ The Sensor Box gets its temperatures and loads from **LibreHardwareMonitor** in 
 - **If LibreHardwareMonitor isn't running:** the values show `--`, and the settings page says so.
 - **Duplicate IDs:** LibreHardwareMonitor sometimes gives two sensors the same ID (GPU Memory and GPU Bus). The second one gets its name added, e.g. `/gpu-nvidia/0/load/3~GPU Bus`.
 
+## Deck
+The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream Deck. Its buttons are in **`deck.json`** (git-ignored); `deck.example.json` is used until you have one.
+- **Profiles:** each one has its own pages and grid. A profile with `"apps": ["Wow"]` shows while that process is in front. The first profile shows otherwise. Alt+Tab, the taskbar and Start don't count as switching apps.
+- **Pages and folders:** swipe or use page buttons to change page. A folder opens from a button and has a Back button.
+- **Actions:** hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`), next or previous page, folder, back, and `pending`, a dimmed placeholder for Hue and Key Light until those are wired up.
+- **Editing:** tray → **Settings…** → **Deck**.
+  - Pick a profile and page, then click a button to change its title, image, action and keys.
+  - **Record** captures a key combo.
+  - Drag one button onto another to swap them.
+  - Changes save right away and the Edge updates.
+- **Import from Stream Deck:** on the same page, or `node import-streamdeck.js`. Add `--dry-run` to just print what it would import.
+  - It reads the Virtual Stream Deck profiles (the Edge's) from `%APPDATA%\Elgato\StreamDeck\ProfilesV3` and copies their key images to `deck-icons/` (git-ignored).
+  - Discord and weather keys are left out.
+- **Images:** pick from the imported Stream Deck images (`sd/…`) or the WoW icon pack (`wow/…`, from `wow-streamdeck/png`).
+- **How keys are sent:** `deck-keys.ps1` stays running and sends the keys with `SendInput` to the app in front. It also reports which app that is, for the profiles.
+  - The Edge window never takes focus, so keys go to the game.
+  - The widget only sends which button was pressed. The server looks up what that button does in `deck.json`, so a web page can't make it send keys.
+- **WoW:** one tap sends one key combo. There are no timed sequences, to stay within Blizzard's rules.
+
 ## Run it
 ```powershell
 npm install
@@ -86,7 +107,7 @@ npx electron . --dev
 Close iCUE (or turn its Edge dashboard off) first, or the two will fight over the screen.
 
 ## How it works
-- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6806), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
+- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6807), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
   - `/api/sensors` returns the LibreHardwareMonitor sensors (read by **`sensors.js`**) and the automatic picks.

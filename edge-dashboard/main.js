@@ -152,7 +152,7 @@ function updateTray() {
 
 app.whenReady().then(async () => {
   log(`Edge dashboard starting${DEV ? ' (dev mode)' : ''}`);
-  try { ({ url } = await server.start()); }
+  try { ({ url } = await server.start({ log })); }
   catch (e) { log('Could not start the local server (is another copy running?):', e); app.quit(); return; }
 
   tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'resources', 'tray.png')));
