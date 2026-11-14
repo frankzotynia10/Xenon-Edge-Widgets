@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k39bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="0.5" stop-color="#ff6a3d"/><stop offset="1" stop-color="#b8322a"/></linearGradient>
+<linearGradient id="k39sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k39glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k39soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k39clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k39clip)">
+<rect width="144" height="144" fill="url(#k39bg)"/>
+<circle cx="72" cy="70" r="30" fill="#ffd36b"/>
+<rect x="0" y="92" width="144" height="52" fill="#4a1a10"/>
+<path d="M66 92 C66 80 64 72 60 66 M66 82 C72 74 80 70 88 66" fill="none" stroke="#2a0c06" stroke-width="5" stroke-linecap="round"/>
+<path d="M30 62 C40 52 70 50 82 56 C96 50 116 54 124 62 C110 66 90 66 80 64 C66 68 44 68 30 62 Z" fill="#2a0c06"/>
+<rect width="144" height="144" fill="url(#k39sh)"/>
+</g>
+</svg>

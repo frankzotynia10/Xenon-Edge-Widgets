@@ -9,7 +9,7 @@ const lights = require('./lights');
 
 const DECK = process.env.DECK_FILE || path.join(__dirname, 'deck.json');
 const EXAMPLE = path.join(__dirname, 'deck.example.json');
-const ICON_DIRS = { sd: path.join(__dirname, 'deck-icons'), wow: path.resolve(__dirname, '..', 'wow-streamdeck', 'png') };
+const ICON_DIRS = { edge: path.resolve(__dirname, '..', 'deck-edge', 'icons'), sd: path.join(__dirname, 'deck-icons'), wow: path.resolve(__dirname, '..', 'wow-streamdeck', 'png') };
 
 // ---------- key names ----------
 const VK = { ctrl: 0x11, control: 0x11, alt: 0x12, shift: 0x10, win: 0x5B,

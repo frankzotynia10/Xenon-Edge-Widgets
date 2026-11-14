@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k10bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22300f"/><stop offset="1" stop-color="#0c1107"/></linearGradient>
+<linearGradient id="k10sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k10glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k10soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k10clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k10clip)">
+<rect width="144" height="144" fill="url(#k10bg)"/>
+<path d="M50 40 A26 26 0 1 1 46 58" fill="none" stroke="#76b900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 30 L50 41 L62 37" fill="none" stroke="#76b900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M72 40 V60 M64 53 L72 61 L80 53" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k10sh)"/>
+</g>
+</svg>

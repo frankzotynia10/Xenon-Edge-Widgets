@@ -91,7 +91,7 @@ function lightInfo(a) {
   }
   if (a.type === 'keylight' && a.op === 'brightness') return { lit: s.on, val: s.on ? s.brightness + '%' : 'off' };
   if (a.type === 'keylight' && (a.op === 'warmer' || a.op === 'cooler')) return { lit: false, val: s.kelvin + 'K' };
-  return { lit: !!s.on };
+  return { lit: !!s.on, dark: !s.on };   // dark: a light that's off shows its iconOff (bulb-off)
 }
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -125,8 +125,8 @@ function render() {
     const cls = ['key'];
     const li = lightInfo(a);
     let inner = '';
-    // iconOff: a second image for when the button's thing is paused or off (e.g. the jiggler)
-    const icon = li && li.off && b.iconOff ? b.iconOff : b.icon;
+    // iconOff: a second image for when the button's thing is paused or off (the jiggler, a light that's off)
+    const icon = li && (li.off || li.dark) && b.iconOff ? b.iconOff : b.icon;
     if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false">`;
     else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
     else {

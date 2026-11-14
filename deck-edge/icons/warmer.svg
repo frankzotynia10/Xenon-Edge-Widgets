@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k6bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2312"/><stop offset="1" stop-color="#140c07"/></linearGradient>
+<linearGradient id="k6sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k6glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k6soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k6clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k6flame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd25a"/><stop offset="1" stop-color="#ff5a1f"/></linearGradient>
+</defs>
+<g clip-path="url(#k6clip)">
+<rect width="144" height="144" fill="url(#k6bg)"/>
+<circle cx="72" cy="54" r="24" fill="#ff8a2a" opacity="0.6" filter="url(#k6glow)"/>
+<path d="M72 22 C86 38 94 50 90 64 C87 78 57 78 54 64 C51 54 60 48 63 38 C67 47 70 50 72 53 C76 44 76 33 72 22 Z" fill="url(#k6flame)"/>
+<rect width="144" height="144" fill="url(#k6sh)"/>
+</g>
+</svg>

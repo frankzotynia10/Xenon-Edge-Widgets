@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k36bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffdf2"/><stop offset="1" stop-color="#ffe9a8"/></linearGradient>
+<linearGradient id="k36sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k36glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k36soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k36clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k36clip)">
+<rect width="144" height="144" fill="url(#k36bg)"/>
+<circle cx="72" cy="52" r="36" fill="#ffffff" opacity="1" filter="url(#k36glow)"/><circle cx="72" cy="52" r="22" fill="#fff8d6"/><line x1="102.0" y1="52.0" x2="114.0" y2="52.0" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="93.2" y1="73.2" x2="101.7" y2="81.7" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="72.0" y1="82.0" x2="72.0" y2="94.0" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="50.8" y1="73.2" x2="42.3" y2="81.7" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="42.0" y1="52.0" x2="30.0" y2="52.0" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="50.8" y1="30.8" x2="42.3" y2="22.3" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="72.0" y1="22.0" x2="72.0" y2="10.0" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><line x1="93.2" y1="30.8" x2="101.7" y2="22.3" fill="none" stroke="#ffcf4a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k36sh)"/>
+</g>
+</svg>

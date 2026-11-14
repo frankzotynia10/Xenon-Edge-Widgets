@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k37bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef6ff"/><stop offset="0.5" stop-color="#a9d0ff"/><stop offset="1" stop-color="#5b9cff"/></linearGradient>
+<linearGradient id="k37sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k37glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k37soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k37clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k37clip)">
+<rect width="144" height="144" fill="url(#k37bg)"/>
+<circle cx="72" cy="52" r="32" fill="none" stroke="#ffffff" stroke-width="6"/>
+<circle cx="72" cy="52" r="20" fill="none" stroke="#2f6fe0" stroke-width="6"/><circle cx="72" cy="52" r="8" fill="#ffffff"/>
+<rect width="144" height="144" fill="url(#k37sh)"/>
+</g>
+</svg>

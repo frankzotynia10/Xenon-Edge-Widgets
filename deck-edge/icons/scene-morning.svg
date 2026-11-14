@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k34bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd3ff"/><stop offset="0.5" stop-color="#ffe2a6"/><stop offset="1" stop-color="#ffb36b"/></linearGradient>
+<linearGradient id="k34sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k34glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k34soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k34clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k34clip)">
+<rect width="144" height="144" fill="url(#k34bg)"/>
+<circle cx="72" cy="84" r="34" fill="#fff3c0" opacity="0.9" filter="url(#k34glow)"/>
+<line x1="48.0" y1="60.0" x2="38.1" y2="50.1" fill="none" stroke="#fff4cf" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><line x1="72.0" y1="50.0" x2="72.0" y2="36.0" fill="none" stroke="#fff4cf" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><line x1="96.0" y1="60.0" x2="105.9" y2="50.1" fill="none" stroke="#fff4cf" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="72" cy="84" r="26" fill="#fff6d8"/>
+<rect x="0" y="84" width="144" height="60" fill="#e48a4a"/>
+<path d="M0 92 Q36 84 72 92 T144 92 V144 H0 Z" fill="#c9673a"/>
+<rect width="144" height="144" fill="url(#k34sh)"/>
+</g>
+</svg>

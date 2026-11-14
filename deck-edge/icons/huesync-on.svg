@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k8bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2c33"/><stop offset="1" stop-color="#121317"/></linearGradient>
+<linearGradient id="k8sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k8glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k8soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k8clip"><rect width="144" height="144" rx="22"/></clipPath>
+<linearGradient id="k8scr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff4fa3"/><stop offset=".5" stop-color="#a66bff"/><stop offset="1" stop-color="#3fb6ff"/></linearGradient>
+</defs>
+<g clip-path="url(#k8clip)">
+<rect width="144" height="144" fill="url(#k8bg)"/>
+<circle cx="36" cy="50" r="16" fill="#ff4fa3" opacity="0.8" filter="url(#k8glow)"/><circle cx="108" cy="50" r="16" fill="#3fb6ff" opacity="0.8" filter="url(#k8glow)"/>
+<rect x="38" y="28" width="68" height="44" rx="6" fill="url(#k8scr)" stroke="#e9ecf2" stroke-width="3"/>
+<line x1="60" y1="84" x2="84" y2="84" fill="none" stroke="#9aa0aa" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k8sh)"/>
+</g>
+</svg>

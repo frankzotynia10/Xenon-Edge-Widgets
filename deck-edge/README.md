@@ -16,3 +16,10 @@ What a button can do:
 **Swipe** sideways to change page. **Folders** go back to the page you came from after 15 seconds without a tap (set per folder; 0 to stay).
 
 Set it up on the dashboard's settings page (tray icon → **Settings…** → **Deck**), or import your Stream Deck profiles there. Details are in [`edge-dashboard/README.md`](../edge-dashboard/README.md#deck).
+
+## Built-in button images
+`icons/` has images for the light, OBS and ShadowPlay buttons, and a picture for each common Hue scene (Tokyo, Vapor, Energize, Relax, Tropical and more).
+- **Automatic:** when you pick one of those actions in the editor, the button gets the matching image, until you choose your own.
+- **On and off:** room, Key Light and Hue Sync buttons switch to a dark version while the light is off.
+- **Redrawing:** the images are drawn by `icons/make.js`. Edit it and run `node make.js`.
+- **Existing buttons:** `node deck-icon-suggest.js --apply` in `edge-dashboard/` gives them the images. It skips images you picked yourself; add `--dry-run` to preview.

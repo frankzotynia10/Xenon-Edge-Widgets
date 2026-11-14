@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k13bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22300f"/><stop offset="1" stop-color="#0c1107"/></linearGradient>
+<linearGradient id="k13sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k13glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k13soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k13clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k13clip)">
+<rect width="144" height="144" fill="url(#k13bg)"/>
+<path d="M40 38 H56 L62 30 H82 L88 38 H104 V76 H40 Z" fill="none" stroke="#76b900" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="72" cy="56" r="12" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k13sh)"/>
+</g>
+</svg>

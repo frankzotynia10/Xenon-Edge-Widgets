@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k21bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2645"/><stop offset="1" stop-color="#100e1a"/></linearGradient>
+<linearGradient id="k21sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k21glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k21soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k21clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k21clip)">
+<rect width="144" height="144" fill="url(#k21bg)"/>
+<circle cx="72" cy="52" r="10" fill="#ff3b6b" opacity="0.7" filter="url(#k21glow)"/><circle cx="72" cy="52" r="7" fill="#ff4f6f"/>
+<path d="M58 38 A20 20 0 0 0 58 66 M86 38 A20 20 0 0 1 86 66" fill="none" stroke="#eceaf6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M46 28 A34 34 0 0 0 46 76 M98 28 A34 34 0 0 1 98 76" fill="none" stroke="#eceaf6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k21sh)"/>
+</g>
+</svg>

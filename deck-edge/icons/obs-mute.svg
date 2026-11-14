@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k26bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2645"/><stop offset="1" stop-color="#100e1a"/></linearGradient>
+<linearGradient id="k26sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k26glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k26soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k26clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k26clip)">
+<rect width="144" height="144" fill="url(#k26bg)"/>
+<g transform="translate(0 0)"><rect x="62" y="24" width="20" height="36" rx="10" fill="#eceaf6"/>
+<path d="M52 50 a20 20 0 0 0 40 0" fill="none" stroke="#eceaf6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><line x1="72" y1="70" x2="72" y2="80" fill="none" stroke="#eceaf6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><line x1="62" y1="80" x2="82" y2="80" fill="none" stroke="#eceaf6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g><line x1="46" y1="24" x2="98" y2="82" fill="none" stroke="#ff4f6f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="144" height="144" fill="url(#k26sh)"/>
+</g>
+</svg>

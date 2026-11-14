@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k18bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22300f"/><stop offset="1" stop-color="#0c1107"/></linearGradient>
+<linearGradient id="k18sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k18glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k18soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k18clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k18clip)">
+<rect width="144" height="144" fill="url(#k18bg)"/>
+<path d="M40 70 A32 32 0 0 1 104 70" fill="none" stroke="#76b900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="72" y1="42" x2="72" y2="46" transform="rotate(-60 72 70)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="72" y1="42" x2="72" y2="46" transform="rotate(-30 72 70)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="72" y1="42" x2="72" y2="46" transform="rotate(0 72 70)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="72" y1="42" x2="72" y2="46" transform="rotate(30 72 70)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="72" y1="42" x2="72" y2="46" transform="rotate(60 72 70)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="72" y1="70" x2="90" y2="50" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="72" cy="70" r="5" fill="#ffffff"/>
+<rect width="144" height="144" fill="url(#k18sh)"/>
+</g>
+</svg>

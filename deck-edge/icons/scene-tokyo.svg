@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k27bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0b3d"/><stop offset="0.5" stop-color="#5a1470"/><stop offset="1" stop-color="#ff2e88"/></linearGradient>
+<linearGradient id="k27sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k27glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k27soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k27clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k27clip)">
+<rect width="144" height="144" fill="url(#k27bg)"/>
+<circle cx="22" cy="20" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="50" cy="14" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="118" cy="22" r="1.6" fill="#ffffff" opacity=".85"/><circle cx="96" cy="12" r="1.6" fill="#ffffff" opacity=".85"/>
+<circle cx="72" cy="96" r="30" fill="#ff2e88" opacity="0.6" filter="url(#k27glow)"/>
+<path d="M0 144 V86 H14 V64 H28 V78 H38 V48 H52 V70 H60 V56 H74 V36 H86 V66 H96 V58 H108 V74 H118 V52 H132 V80 H144 V144 Z" fill="#12061f"/>
+<rect x="42" y="56" width="4" height="4" fill="#ff6ad5"/><rect x="46" y="64" width="4" height="4" fill="#2ee6ff"/><rect x="78" y="44" width="4" height="4" fill="#ff6ad5"/><rect x="80" y="52" width="4" height="4" fill="#2ee6ff"/><rect x="78" y="60" width="4" height="4" fill="#ff6ad5"/><rect x="122" y="60" width="4" height="4" fill="#2ee6ff"/><rect x="126" y="68" width="4" height="4" fill="#ff6ad5"/><rect x="18" y="72" width="4" height="4" fill="#2ee6ff"/><rect x="100" y="64" width="4" height="4" fill="#ff6ad5"/><rect x="64" y="64" width="4" height="4" fill="#2ee6ff"/>
+<rect width="144" height="144" fill="url(#k27sh)"/>
+</g>
+</svg>

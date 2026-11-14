@@ -143,6 +143,7 @@ async function dashHandler(req, res) {
     if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
     if (p === '/settings') return sendFile(res, path.join(__dirname, 'settings.html'));
     if (p === '/deck-editor.js') return sendFile(res, path.join(__dirname, 'deck-editor.js'));
+    if (p === '/deck-icon-suggest.js') return sendFile(res, path.join(__dirname, 'deck-icon-suggest.js'));
     if (p === '/layout-editor.js') return sendFile(res, path.join(__dirname, 'layout-editor.js'));
     if (p === '/layout.json') return sendFile(res, LAYOUT);
     if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));

@@ -31,7 +31,20 @@
       window.toast && window.toast(r.ok ? 'Saved' : 'Could not save');
     }, 350);
   }
-  const changed = (rerender = true) => { save(); if (rerender) draw(); };
+  // Built-in images follow the action (the scene's picture, a bulb that goes dark when the room is off),
+  // until you pick an image yourself.
+  function autoImage() {
+    const b = cfg && sel && (page().buttons || {})[sel];
+    if (!b || !window.suggestIcon || !window.autoIcon(b)) return false;
+    const a = b.action || {};
+    const sc = a.type === 'hue-scene' && cat && cat.scenes.find(x => x.id === a.scene);
+    const s = window.suggestIcon(b.action, sc ? sc.name : b.title, icons);
+    const before = [b.icon, b.iconOff].join('|');
+    if (s) { b.icon = s.icon; b.autoIcon = true; if (s.iconOff) b.iconOff = s.iconOff; else delete b.iconOff; }
+    else if (b.autoIcon) { delete b.icon; delete b.iconOff; delete b.autoIcon; }
+    return before !== [b.icon, b.iconOff].join('|');
+  }
+  const changed = (rerender = true) => { if (autoImage()) rerender = true; save(); if (rerender) draw(); };
 
   // ---------- pieces ----------
   function field(label, input, hint) {
@@ -87,10 +100,10 @@
 
   function iconPicker(b) {
     const wrap = el('div', { class: 'icons' });
-    const none = el('button', { class: 'ico none' + (!b.icon ? ' on' : ''), title: 'No image', onclick: () => { delete b.icon; changed(); } }, 'None');
+    const none = el('button', { class: 'ico none' + (!b.icon ? ' on' : ''), title: 'No image', onclick: () => { b.icon = null; delete b.iconOff; delete b.autoIcon; changed(); } }, 'None');
     wrap.append(none);
     for (const rel of icons) {
-      wrap.append(el('button', { class: 'ico' + (b.icon === rel ? ' on' : ''), title: rel, onclick: () => { b.icon = rel; changed(); } }, el('img', { src: iconUrl(rel), loading: 'lazy' })));
+      wrap.append(el('button', { class: 'ico' + (b.icon === rel ? ' on' : ''), title: rel, onclick: () => { b.icon = rel; delete b.iconOff; delete b.autoIcon; changed(); } }, el('img', { src: iconUrl(rel), loading: 'lazy' })));
     }
     return el('details', { class: 'iconbox' }, el('summary', {}, b.icon ? 'Change image' : 'Pick an image'), wrap);
   }

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+<defs>
+<linearGradient id="k32bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset="0.5" stop-color="#ff8a3c"/><stop offset="1" stop-color="#e8455e"/></linearGradient>
+<linearGradient id="k32sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="k32glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="k32soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="k32clip"><rect width="144" height="144" rx="22"/></clipPath>
+
+</defs>
+<g clip-path="url(#k32clip)">
+<rect width="144" height="144" fill="url(#k32bg)"/>
+<circle cx="96" cy="64" r="24" fill="#fff0a8" opacity=".95"/>
+<rect x="0" y="86" width="144" height="58" fill="#1b8a8f"/>
+<line x1="70" y1="92" x2="128" y2="92" stroke="#7fe0dc" stroke-width="2.5" stroke-linecap="round" opacity=".7"/><line x1="70" y1="100" x2="128" y2="100" stroke="#7fe0dc" stroke-width="2.5" stroke-linecap="round" opacity=".7"/><line x1="70" y1="110" x2="128" y2="110" stroke="#7fe0dc" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+<path d="M44 140 C46 110 48 80 56 50" fill="none" stroke="#1d3b17" stroke-width="7" stroke-linecap="round"/>
+<g fill="#1f5a1a"><path d="M56 48 C40 34 22 38 12 50 C28 44 42 46 56 50 Z"/><path d="M56 48 C46 26 30 20 18 24 C34 30 46 38 56 50 Z"/>
+<path d="M56 48 C66 28 84 24 96 30 C80 32 66 40 56 50 Z"/><path d="M56 48 C74 40 92 46 100 58 C86 52 70 50 56 50 Z"/><path d="M56 48 C56 30 62 18 70 12 C64 26 60 38 56 50 Z"/></g>
+<rect width="144" height="144" fill="url(#k32sh)"/>
+</g>
+</svg>
