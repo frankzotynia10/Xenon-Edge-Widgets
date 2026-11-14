@@ -53,7 +53,9 @@ function createWindow() {
   }
   win = new BrowserWindow(DEV
     ? { width: 1280, height: 360, useContentSize: true, title: 'Edge dashboard (preview)', backgroundColor: '#000000' }
-    : { ...edge.bounds, frame: false, resizable: false, movable: false, alwaysOnTop: true, skipTaskbar: true,
+    // thickFrame: false drops Windows' invisible 8 px resize border, which otherwise grows the
+    // window to 2576x728 and leaves a sliver of desktop showing at the top of the Edge.
+    : { ...edge.bounds, frame: false, thickFrame: false, resizable: false, movable: false, alwaysOnTop: true, skipTaskbar: true,
         focusable: false, fullscreenable: false, backgroundColor: '#000000', title: 'Edge dashboard' });
   win.setMenuBarVisibility(false);
   if (!DEV) { win.setAlwaysOnTop(true, 'screen-saver'); win.setBounds(edge.bounds); }
