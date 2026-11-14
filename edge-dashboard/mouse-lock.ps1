@@ -42,6 +42,13 @@ public static class EdgeMouseLock {
   static int wantW, wantH;
   public static int Blocked;
 
+  // Centre of the primary screen (the one at 0,0).
+  static POINT MainCentre() {
+    POINT o = new POINT(); MONITORINFOEX mi = new MONITORINFOEX(); mi.cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
+    POINT c = new POINT();
+    if (GetMonitorInfo(MonitorFromPoint(o, 1 /* MONITOR_DEFAULTTOPRIMARY */), ref mi)) { c.X = (mi.rcMonitor.L + mi.rcMonitor.R) / 2; c.Y = (mi.rcMonitor.T + mi.rcMonitor.B) / 2; }
+    return c;
+  }
   static bool InEdge(POINT p) { return haveEdge && p.X >= edge.L && p.X < edge.R && p.Y >= edge.T && p.Y < edge.B; }
   // Where the cursor would really end up: a point off every screen gets snapped by Windows to the
   // nearest screen, which can be the Edge (e.g. just left of it), so check the nearest monitor too.
@@ -78,8 +85,13 @@ public static class EdgeMouseLock {
           }
         }
         if (LandsOnEdge(s.pt)) {
-          // A tap left the cursor on the Edge: send it back to where the mouse last was.
-          if (InEdge(cur) && haveOutside) SetCursorPos(lastOutside.X, lastOutside.Y);
+          // A tap left the cursor on the Edge: send it back to where the mouse last was. If it was
+          // never seen off the Edge (the lock started with it there), use the main screen's centre,
+          // or it would be stuck on the Edge with every move dropped.
+          if (InEdge(cur)) {
+            if (!haveOutside) { lastOutside = MainCentre(); haveOutside = true; }
+            SetCursorPos(lastOutside.X, lastOutside.Y);
+          }
           Blocked++;
           return (IntPtr)1;
         }
