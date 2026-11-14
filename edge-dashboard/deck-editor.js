@@ -4,7 +4,7 @@
 (() => {
   const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
-  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC)'],['open', 'Open (command line)'],['page', 'Next / previous page'],
+  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC)'], ['hue-dim', 'Hue brightness slider'], ['keylight-dim', 'Key Light brightness slider'], ['open', 'Open (command line)'],['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
     ['obs', 'OBS Studio'], ['shadowplay', 'NVIDIA ShadowPlay'],
     ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['jiggler', 'Mouse jiggler: pause today / resume'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
@@ -301,10 +301,15 @@
       if (a.type === 'open') bbox.append(field('Command line', text(a.command, v => { a.command = v; changed(false); }, { placeholder: 'powershell.exe -NoExit -Command "ssh me@server"', class: 'wide' }), 'Started like Run (Win+R).'));
       if (a.type === 'app') bbox.append(field('Apps', text((a.apps || []).join(', '), v => { a.apps = v.split(',').map(s => s.trim()).filter(Boolean); changed(false); }, { placeholder: 'AppleInc.AppleMusicWin_nzyj5cx40ttqa!App', class: 'wide' }),
         'Start menu app IDs, comma-separated (PowerShell: Get-StartApps). Each one starts, or comes to the front if it\'s open.'));
-      if (a.type === 'volume') {
+      if (a.type === 'volume' || a.type === 'hue-dim' || a.type === 'keylight-dim') {
+        const c = cat || { keylights: [], rooms: [], hue: {} };
+        if (a.type === 'hue-dim') bbox.append(field('Room', c.hue.paired ? select([['', 'Pick a room'], ...c.rooms.map(r => [r.id, r.name])], a.room, v => { a.room = v; changed(false); })
+          : el('span', { class: 'hint' }, 'Pair the Hue bridge first (Lights, above).')));
+        if (a.type === 'keylight-dim') bbox.append(field('Light', select(c.keylights.map(k => [k.id, k.name]), a.light || (c.keylights[0] || {}).id, v => { a.light = v; changed(false); })));
         const rows = (pr.grid || cfg.grid || { rows: 3 }).rows, r = Number(sel.split(',')[1]), max = rows - r;
         bbox.append(field('Rows', select(Array.from({ length: max }, (_, i) => [String(i + 1), String(i + 1)]), String(Math.min(max, b.span || max)), v => { b.span = Number(v); changed(false); }),
-          'How many spots it covers, going down. Buttons in those spots are hidden. Drag to set the volume of your speakers/headphones; tap the speaker to mute.'));
+          'How many spots it covers, going down. Buttons in those spots are hidden. ' + (a.type === 'volume'
+            ? 'Drag to set the volume of your speakers/headphones; tap the speaker to mute.' : 'Drag to dim (all the way down is off); tap the bulb to turn it on or off.')));
       }
       if (a.type === 'page') bbox.append(field('Direction', select([['1', 'Next page'], ['-1', 'Previous page']], String(a.step || 1), v => { a.step = Number(v); changed(); })));
       if (a.type === 'folder') {

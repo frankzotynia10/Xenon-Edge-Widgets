@@ -50,6 +50,10 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   border-radius: 50%; background: rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; }
 .slider .spk svg { width: 58%; height: 58%; }
 .slider.muted .spk { background: var(--bad); }
+.slider.light .fill { background: linear-gradient(180deg, #ffe39a, #ffc94d); }
+.slider.light.muted .fill { background: #4a4d55; }
+.slider.light .spk { color: #3a2f12; background: rgba(255,255,255,.55); }
+.slider.light.muted .spk { color: var(--muted); background: rgba(0,0,0,.28); }
 
 #foot { height: var(--foot); display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 13px; color: var(--muted); gap: 10px; }
 #profile { display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 99px; background: var(--panel); font-weight: 600; font-size: 12.5px; letter-spacing: .03em; text-transform: uppercase; }
@@ -86,7 +90,10 @@ const GLYPH = {
 let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [], lightState = {}, volume = null, drag = null;
 const SPK = { on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="m16 9.5 5 5m0-5-5 5"/></svg>' };
-const sliderRows = (b, r, rows) => Math.max(1, Math.min(rows - r, Number(b.span) || rows - r));
+const BULB = { on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="currentColor"/></svg>',
+  off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>' };
+const SLIDERS = ['volume', 'hue-dim', 'keylight-dim'];
+const sliderRows =(b, r, rows) => Math.max(1, Math.min(rows - r, Number(b.span) || rows - r));
 
 // Which live state a light button shows: { lit, val }.
 function lightInfo(a) {
@@ -138,7 +145,7 @@ function render() {
   // Sliders cover the spots below them.
   const covered = new Set();
   for (const [pos, b] of Object.entries(pg.buttons || {})) {
-    if (!b.action || b.action.type !== 'volume') continue;
+    if (!b.action || !SLIDERS.includes(b.action.type)) continue;
     const [c, r] = pos.split(',').map(Number);
     for (let i = 1; i < sliderRows(b, r, grid.rows); i++) covered.add(`${c},${r + i}`);
   }
@@ -149,7 +156,7 @@ function render() {
     const at = `grid-column:${c + 1};grid-row:${r + 1}`;
     if (!b) { html += `<div class="key empty" style="${at}"></div>`; continue; }
     const a = b.action || {};
-    if (a.type === 'volume') { html += sliderHtml(b, pos, `grid-column:${c + 1};grid-row:${r + 1} / span ${sliderRows(b, r, grid.rows)}`); continue; }
+    if (SLIDERS.includes(a.type)) { html += sliderHtml(b, pos, `grid-column:${c + 1};grid-row:${r + 1} / span ${sliderRows(b, r, grid.rows)}`); continue; }
     const cls = ['key'];
     const li = lightInfo(a);
     let inner = '';
@@ -182,22 +189,38 @@ function render() {
   if (pg.id !== render.lastPage) { render.lastPage = pg.id; armReturn(); }   // a different page: start (or stop) the timer
 }
 
-function sliderHtml(b, pos, at) {
-  const v = drag && drag.pos === pos ? { level: drag.level, muted: false } : volume;
-  const lvl = v ? v.level : 0, muted = !v || v.muted;
-  return `<div class="key slider${muted ? ' muted' : ''}${v ? '' : ' offline'}" data-pos="${pos}" style="${at}">` +
-    `<div class="fill" style="height:${lvl}%"></div><div class="pct">${v ? lvl : '–'}</div><div class="lbl">${esc(b.title || 'Volume')}</div>` +
-    `<div class="spk">${muted ? SPK.off : SPK.on}</div></div>`;
+// What a slider shows: { level, off } (off = muted, or the light is off), or null when there's nothing to read.
+function sliderValue(pos) {
+  if (drag && drag.pos === pos) return { level: drag.level, off: drag.level === 0 && !isVolume(pos) };
+  const b = page().buttons[pos], a = (b && b.action) || {};
+  if (a.type === 'volume') return volume && { level: volume.level, off: volume.muted };
+  const key = lightKeyFor(pos), s = key && lightState[key];
+  return s && { level: s.brightness == null ? (s.on ? 100 : 0) : s.brightness, off: !s.on };
 }
-// Updates just the slider (not the whole grid) while the value moves.
+// The light state entry a light slider follows.
+function lightKeyFor(pos) {
+  const b = page().buttons[pos], a = (b && b.action) || {};
+  if (a.type === 'hue-dim') return 'hue-room:' + a.room;
+  if (a.type !== 'keylight-dim') return null;
+  return a.light && a.light !== 'all' ? 'keylight:' + String(a.light).toUpperCase() : Object.keys(lightState).find(k => k.startsWith('keylight:'));
+}
+const isVolume = pos => { const b = page().buttons[pos]; return !!(b && b.action && b.action.type === 'volume'); };
+const sliderIcon = (pos, off) => isVolume(pos) ? (off ? SPK.off : SPK.on) : (off ? BULB.off : BULB.on);
+function sliderHtml(b, pos, at) {
+  const v = sliderValue(pos), kind = b.action.type === 'volume' ? 'vol' : 'light';
+  const def = { volume: 'Volume', 'hue-dim': 'Hue', 'keylight-dim': 'Key Light' }[b.action.type];
+  return `<div class="key slider ${kind}${!v || v.off ? ' muted' : ''}${v ? '' : ' offline'}" data-pos="${pos}" style="${at}">` +
+    `<div class="fill" style="height:${v ? v.level : 0}%"></div><div class="pct">${!v ? '–' : v.off && kind === 'light' ? 'Off' : v.level}</div><div class="lbl">${esc(b.title || def)}</div>` +
+    `<div class="spk">${sliderIcon(pos, !v || v.off)}</div></div>`;
+}
+// Updates just the sliders (not the whole grid) while the value moves.
 function paintSliders() {
   for (const el of document.querySelectorAll('.slider')) {
-    const v = drag && drag.pos === el.dataset.pos ? { level: drag.level, muted: false } : volume;
-    const lvl = v ? v.level : 0, muted = !v || v.muted;
-    el.classList.toggle('muted', muted); el.classList.toggle('offline', !v);
-    el.querySelector('.fill').style.height = lvl + '%';
-    el.querySelector('.pct').textContent = v ? lvl : '–';
-    el.querySelector('.spk').innerHTML = muted ? SPK.off : SPK.on;
+    const pos = el.dataset.pos, v = sliderValue(pos);
+    el.classList.toggle('muted', !v || v.off); el.classList.toggle('offline', !v);
+    el.querySelector('.fill').style.height = (v ? v.level : 0) + '%';
+    el.querySelector('.pct').textContent = !v ? '–' : v.off && el.classList.contains('light') ? 'Off' : v.level;
+    el.querySelector('.spk').innerHTML = sliderIcon(pos, !v || v.off);
   }
 }
 function sendSlider(pos, value) {
@@ -277,14 +300,16 @@ function endDrag() {
   if (!drag) return;
   const d = drag; drag = null;
   d.el.classList.remove('dragging');
-  volume = { level: d.level, muted: false };   // shown until the PC reports back
+  // Shown until the PC or the light reports back.
+  if (isVolume(d.pos)) volume = { level: d.level, muted: false };
+  else { const key = lightKeyFor(d.pos); if (key && lightState[key]) lightState[key] = { ...lightState[key], on: d.level > 0, ...(d.level > 0 ? { brightness: d.level } : {}) }; }
   if (d.sent !== d.level) sendSlider(d.pos, d.level);
   paintSliders();
 }
 $('grid').addEventListener('pointerup', e => {
   if (drag) return endDrag();
   if (!down) return;
-  if (down.mute) { const d = down; down = null; if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 25) sendSlider(d.mute, 'mute'); return; }
+  if (down.mute) { const d = down; down = null; if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 25) sendSlider(d.mute, isVolume(d.mute) ? 'mute' : 'toggle'); return; }
   const dx = e.clientX - down.x, dy = e.clientY - down.y, el = down.el; down = null;
   if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (!page().folder) step(dx < 0 ? 1 : -1); return; }
   if (el && Math.hypot(dx, dy) < 25) press(el);

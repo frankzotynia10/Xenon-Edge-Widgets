@@ -7,6 +7,7 @@ What a button can do:
 - **Type text:** emoji and symbols too, optionally followed by Enter.
 - **Start / switch to app:** one or more Start menu apps. Each one starts, or comes to the front if it's already open (so OBS never says "already running"). Uses the App Launcher part of the Edge helper, so no console window.
 - **Volume slider (PC):** a column covering 1 or more spots (pick "Rows"). Drag up or down to set the volume of your current speakers or headphones; tap the speaker to mute. It follows volume changes made anywhere else.
+- **Hue / Key Light brightness sliders:** the same kind of column for a Hue room (or zone) or a Key Light. Drag to dim; all the way down turns it off, and dragging up turns it on. Tap the bulb to turn it on or off. They follow changes made in the Hue app or Control Center within a few seconds.
 - **Open:** a command line, like Stream Deck's Open (e.g. an SSH session).
 - **Pages, folders and Back.**
 - **Elgato Key Light:** on/off, brightness steps, warmer/cooler. The button shows the current brightness or color temperature.

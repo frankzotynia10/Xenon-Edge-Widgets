@@ -119,6 +119,7 @@ async function press(profile, page, pos, value) {
   if (!b || !b.action) throw new Error('no such button');
   const a = b.action;
   if (a.type === 'volume') return value === 'mute' ? command('M') : setVolume(Number(value));
+  if (a.type === 'hue-dim' || a.type === 'keylight-dim') return lights.setLevel(a, value === 'toggle' ? 'toggle' : Number(value));
   if (lights.isLight(a.type)) return lights.run(a);
   switch (a.type) {
     case 'keys': return command('K ' + parseKeys(a.keys).join(','));

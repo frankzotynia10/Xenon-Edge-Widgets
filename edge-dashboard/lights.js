@@ -181,9 +181,10 @@ async function poll() {
         const zones = await hue('GET', 'zone').catch(() => ({ data: [] }));
         const gls = await hue('GET', 'grouped_light');
         const glOn = Object.fromEntries(gls.data.map(g => [g.id, g.on && g.on.on]));
+        const glDim = Object.fromEntries(gls.data.map(g => [g.id, g.dimming ? Math.round(g.dimming.brightness) : null]));
         for (const r of [...rooms.data, ...zones.data]) {
           const gl = (r.services || []).find(x => x.rtype === 'grouped_light');
-          if (gl) { groupedLightOf[r.id] = gl.rid; s['hue-room:' + r.id] = { on: !!glOn[gl.rid], name: r.metadata && r.metadata.name }; }
+          if (gl) { groupedLightOf[r.id] = gl.rid; s['hue-room:' + r.id] = { on: !!glOn[gl.rid], brightness: glDim[gl.rid], name: r.metadata && r.metadata.name }; }
         }
         for (const sc of scenes.data) s['hue-scene:' + sc.id] = { on: !!(sc.status && sc.status.active && sc.status.active !== 'inactive'), name: sc.metadata && sc.metadata.name };
       } catch (e) { log('Hue: ' + e.message); }
@@ -206,6 +207,48 @@ async function run(a) {
   else if (a.type === 'obs') return obs.run(a);   // OBS's own events update the state
   else throw new Error(`not a light action: ${a.type}`);
   setTimeout(poll, 250);
+}
+// Deck brightness sliders. value: 0-100, or 'toggle' (a tap on the slider's bulb). 0 turns the light off,
+// anything above turns it on at that brightness. While dragging, only the newest waiting value is sent.
+const dimNext = {}, dimBusy = {};
+function stateKey(a) {
+  if (a.type === 'hue-dim') return 'hue-room:' + a.room;
+  const k = keylight(a.light || 'all');
+  return k ? 'keylight:' + k.id : null;
+}
+async function setLevelNow(a, v) {
+  const key = stateKey(a);
+  if (!key) throw new Error('no Key Light found');
+  if (v === 'toggle') {
+    if (a.type === 'hue-dim') await hueAction({ type: 'hue-room', room: a.room, op: 'toggle' }); else await keyLightAction({ light: a.light, op: 'toggle' });
+    return setTimeout(poll, 250);
+  }
+  const n = Math.round(Math.max(0, Math.min(100, Number(v))));
+  if (a.type === 'hue-dim') {
+    const gl = await roomLight(a.room);
+    await hue('PUT', `grouped_light/${gl}`, n > 0 ? { on: { on: true }, dimming: { brightness: n } } : { on: { on: false } });
+  } else {
+    const k = keylight(a.light || 'all');
+    const cur = ((await klCall(k, 'GET')) || {}).lights[0];
+    await klCall(k, 'PUT', { numberOfLights: 1, lights: [{ ...cur, on: n > 0 ? 1 : 0, ...(n > 0 ? { brightness: Math.max(3, n) } : {}) }] });
+  }
+  // Show it right away instead of waiting for the next poll.
+  state[key] = { ...(state[key] || {}), on: n > 0, ...(n > 0 ? { brightness: n } : {}) }; changed();
+}
+function setLevel(a, value) {
+  if (value !== 'toggle' && !Number.isFinite(Number(value))) return Promise.reject(new Error('bad level'));
+  const id = a.type + ':' + (a.room || a.light || 'all');
+  dimNext[id] = value;
+  if (dimBusy[id]) return Promise.resolve();
+  dimBusy[id] = true;
+  const loop = async () => {
+    while (dimNext[id] !== undefined) {
+      const v = dimNext[id]; delete dimNext[id];
+      try { await setLevelNow(a, v); } catch (e) { log('Deck slider: ' + e.message); }
+    }
+    dimBusy[id] = false;
+  };
+  return loop();
 }
 const isLight = t => ['keylight', 'hue-scene', 'hue-room', 'huesync', 'jiggler', 'obs'].includes(t);
 
@@ -248,7 +291,7 @@ async function colorLights() {
     .sort((a, b) => (a.room + a.name).localeCompare(b.room + b.name));
 }
 
-module.exports = { init, run, isLight, watch, stateNow, catalog, pairHue, discover, obs, hue, colorLights };
+module.exports = { init, run, setLevel, isLight, watch, stateNow, catalog, pairHue, discover, obs, hue, colorLights };
 
 if (require.main === module) {
   (async () => {
