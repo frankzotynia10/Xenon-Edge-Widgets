@@ -13,6 +13,6 @@ What a button can do:
 
 **Profiles** switch on their own with the app in front. The WoW profile shows while `Wow` has focus, and the first profile shows otherwise. Tap the profile chip at the bottom left to switch by hand, until the app in front changes.
 
-**Swipe** sideways to change page.
+**Swipe** sideways to change page. **Folders** go back to the page you came from after 15 seconds without a tap (set per folder; 0 to stay).
 
 Set it up on the dashboard's settings page (tray icon → **Settings…** → **Deck**), or import your Stream Deck profiles there. Details are in [`edge-dashboard/README.md`](../edge-dashboard/README.md#deck).

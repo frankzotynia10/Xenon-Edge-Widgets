@@ -137,6 +137,21 @@ function render() {
   const mains = mainPages();
   $('dots').innerHTML = pg.folder || mains.length < 2 ? '' : mains.map(p => `<i class="${p.id === pg.id ? 'on' : ''}"></i>`).join('');
   $('pagename').textContent = pg.folder ? pg.name : (mains.length > 1 ? pg.name : '');
+  if (pg.id !== render.lastPage) { render.lastPage = pg.id; armReturn(); }   // a different page: start (or stop) the timer
+}
+
+// Folders go back to the page they were opened from after a while with no taps (like Stream Deck).
+// The folder's "returnAfter" is in seconds: 15 when not set, 0 to stay.
+let returnTimer = null;
+function armReturn() {
+  clearTimeout(returnTimer);
+  if (!cfg) return;
+  const pg = page();
+  const secs = pg.folder ? (pg.returnAfter ?? 15) : 0;
+  if (secs > 0) returnTimer = setTimeout(() => {
+    if (!page().folder) return;
+    pageId = stack[0] || mainPages()[0].id; stack = []; render();
+  }, secs * 1000);
 }
 
 function step(n) {
@@ -165,7 +180,7 @@ async function press(el) {
 
 // Taps, plus swiping sideways to change page.
 let down = null;
-$('grid').addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, el: e.target.closest('.key') }; });
+$('grid').addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, el: e.target.closest('.key') }; armReturn(); });
 $('grid').addEventListener('pointerup', e => {
   if (!down) return;
   const dx = e.clientX - down.x, dy = e.clientY - down.y, el = down.el; down = null;

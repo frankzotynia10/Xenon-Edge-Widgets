@@ -183,6 +183,9 @@
     pageBox.append(field('Name', text(pg.name, v => { pg.name = v || 'Page'; changed(); })));
     pageBox.append(field('Folder', (() => { const c = el('input', { type: 'checkbox' }); c.checked = !!pg.folder; c.addEventListener('change', () => { pg.folder = c.checked || undefined; changed(); }); return el('label', { class: 'switch' }, c, el('span')); })(),
       'A folder only opens from a button. Pages are swiped through.'));
+    if (pg.folder) pageBox.append(field('Go back after', el('span', { class: 'ctl' },
+      num(pg.returnAfter ?? 15, 0, 600, v => { pg.returnAfter = v; changed(false); }), el('span', { class: 'hint' }, 'seconds')),
+      'With no taps, the folder goes back to the page it was opened from. 0 stays put.'));
     root.append(pageBox);
 
     // Buttons grid

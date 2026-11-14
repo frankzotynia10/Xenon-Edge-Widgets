@@ -81,6 +81,9 @@ The Sensor Box gets its temperatures and loads from **LibreHardwareMonitor** in 
 The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream Deck. Its buttons are in **`deck.json`** (git-ignored); `deck.example.json` is used until you have one.
 - **Profiles:** each one has its own pages and grid. A profile with `"apps": ["Wow"]` shows while that process is in front. The first profile shows otherwise. Alt+Tab, the taskbar and Start don't count as switching apps.
 - **Pages and folders:** swipe or use page buttons to change page. A folder opens from a button and has a Back button.
+  - With no taps for 15 seconds, a folder goes back to the page it was opened from, like Stream Deck.
+  - Each tap restarts the countdown.
+  - Set it per folder under **Go back after** (`"returnAfter"` in seconds; 0 stays put).
 - **Actions:**
   - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
   - next or previous page, folder, back
