@@ -90,6 +90,10 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
   - next or previous page, folder, back
   - lights: `keylight`, `hue-scene`, `hue-room`, `huesync` (see Lights below)
+  - `jiggler` (**`jiggler.js`**): the [mousejiggler-cli](https://github.com/frankzotynia10/mousejiggler-cli) toggle, like its Stream Deck plugin.
+    - A press pauses it for the rest of today, or resumes it.
+    - The button shows ACTIVE, IDLE, PAUSED, STOPPED or OFF, with the plugin's on/paused images (`icon` / `iconOff`).
+    - The jiggler keeps running from its own scheduled task. This only reads its schedule and writes `pause.json`.
   - `edge-sleep`: the Edge helper's sleep cover, called directly. It needs no hotkey, so set `"hotkey": ""` in `edge-helper/sleep.json` to free Ctrl+Alt+Shift+F10 for WoW.
   - `pending`, a dimmed button that does nothing
 - **Editing:** tray → **Settings…** → **Deck**.
@@ -100,6 +104,7 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
 - **Import from Stream Deck:** on the same page, or `node import-streamdeck.js`. Add `--dry-run` to just print what it would import.
   - It reads the Virtual Stream Deck profiles (the Edge's) from `%APPDATA%\Elgato\StreamDeck\ProfilesV3` and copies their key images to `deck-icons/` (git-ignored).
   - Discord and weather keys are left out.
+  - The mouse jiggler key comes over with its plugin's images.
 - **Images:** pick from the imported Stream Deck images (`sd/…`) or the WoW icon pack (`wow/…`, from `wow-streamdeck/png`).
 - **How keys are sent:** `deck-keys.ps1` stays running and sends the keys with `SendInput` to the app in front. It also reports which app that is, for the profiles.
   - The Edge window never takes focus, so keys go to the game.

@@ -78,8 +78,10 @@ function lightInfo(a) {
   else if (a.type === 'hue-room') key = 'hue-room:' + a.room;
   else if (a.type === 'hue-scene') key = 'hue-scene:' + a.scene;
   else if (a.type === 'huesync') key = 'huesync';
+  else if (a.type === 'jiggler') key = 'jiggler';
   const s = key && lightState[key];
   if (!s) return null;
+  if (a.type === 'jiggler') return { lit: s.on, label: s.title, off: s.state !== 'ACTIVE' && s.state !== 'IDLE' };
   if (a.type === 'keylight' && a.op === 'brightness') return { lit: s.on, val: s.on ? s.brightness + '%' : 'off' };
   if (a.type === 'keylight' && (a.op === 'warmer' || a.op === 'cooler')) return { lit: false, val: s.kelvin + 'K' };
   return { lit: !!s.on };
@@ -114,17 +116,20 @@ function render() {
     if (!b) { html += '<div class="key empty"></div>'; continue; }
     const a = b.action || {};
     const cls = ['key'];
+    const li = lightInfo(a);
     let inner = '';
-    if (b.icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(b.icon)}" alt="" draggable="false">`;
+    // iconOff: a second image for when the button's thing is paused or off (e.g. the jiggler)
+    const icon = li && li.off && b.iconOff ? b.iconOff : b.icon;
+    if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false">`;
     else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
     else {
       const glyph = a.type === 'folder' ? 'folder' : a.type === 'back' ? 'back' : a.type === 'page' ? (a.step < 0 ? 'prev' : 'next') : null;
       if (glyph) { inner += GLYPH[glyph]; cls.push('has-glyph'); } else cls.push('plain');
     }
-    if (b.title) inner += `<div class="title">${esc(b.title)}</div>`;
+    const title = li && li.label ? li.label : b.title;   // live text (the jiggler's ACTIVE / PAUSED today) replaces the title
+    if (title) inner += `<div class="title">${esc(title)}</div>`;
     if (!b.title && !b.icon && cls.includes('plain')) inner += `<div class="title">${esc(a.keys || a.type || '')}</div>`;
     if (a.type === 'pending' || !b.action) cls.push('pending');
-    const li = lightInfo(a);
     if (li && li.lit) cls.push('lit');
     if (li && li.val) inner += `<div class="val">${esc(li.val)}</div>`;
     html += `<button class="${cls.join(' ')}" data-pos="${pos}">${inner}</button>`;

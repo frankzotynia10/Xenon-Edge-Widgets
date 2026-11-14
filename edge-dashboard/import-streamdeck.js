@@ -49,7 +49,26 @@ function convertLight(u, s, title) {
     return { action: { type: 'keylight', light: mac || 'all', op: warm ? 'warmer' : 'cooler', step: 20 }, title: warm ? 'Warmer' : 'Cooler' };
   }
   if (/huesync\.huesyncstartstop$/.test(u)) return { action: { type: 'huesync', op: 'toggle', mode: s.mode || 'games', intensity: s.intensity || 'moderate' }, title: 'Hue Sync' };
+  // mousejiggler-cli's own Stream Deck plugin: same toggle, with the plugin's on / paused images.
+  if (/mousejiggler\.toggle$/.test(u)) return { action: { type: 'jiggler' }, title: '', icons: pluginIcons('mousejiggler', 'on@2x.png', 'paused@2x.png') };
   return null;
+}
+
+// Copies a plugin's own key images to deck-icons/ (the key has none of its own) -> { icon, iconOff }
+function pluginIcons(match, on, off) {
+  const plugins = path.join(PROFILES, '..', 'Plugins');
+  try {
+    const dir = fs.readdirSync(plugins).find(d => d.includes(match));
+    const out = {};
+    for (const [k, f] of [['icon', on], ['iconOff', off]]) {
+      const src = path.join(plugins, dir, 'imgs', f);
+      if (!fs.existsSync(src)) continue;
+      const name = `${match}-${f.replace('@2x', '')}`;
+      fs.mkdirSync(ICONS, { recursive: true }); fs.copyFileSync(src, path.join(ICONS, name));
+      out[k] = 'sd/' + name;
+    }
+    return out;
+  } catch { return {}; }
 }
 
 function convertAction(a, notes) {
@@ -57,7 +76,7 @@ function convertAction(a, notes) {
   const s = a.Settings || {};
   const st = (a.States || [])[0] || {};
   const light = convertLight(u, s, cleanTitle(String(st.Title || '').split('|')[0]));
-  if (light) { a._title = light.title; return light.action; }
+  if (light) { a._title = light.title; a._icons = light.icons; return light.action; }
   if (/system\.hotkey$/.test(u)) { const k = hotkey((s.Hotkeys || [])[0]); return k ? { type: 'keys', keys: k } : null; }
   if (/page\.next$/.test(u)) return { type: 'page', step: 1 };
   if (/page\.previous$/.test(u)) return { type: 'page', step: -1 };
@@ -97,6 +116,7 @@ function readDeck(dir, dry) {
             b.icon = 'sd/' + name;
           }
         }
+        if (a._icons) Object.assign(b, a._icons);
         if (action && action.type === 'keys') { hotkeys++; if (/^Ctrl\+Alt\+Shift\+/.test(action.keys)) cas++; }
         if (action && action.type === 'folder') folderTitles[action.page] = b.title;
         const [col, row] = pos.split(',').map(Number);
@@ -145,6 +165,14 @@ function upgradeLights(current) {
       const src = (fp.pages.find(p => p.id === pg.id) || {}).buttons;
       const nb = src && src[pos];
       if (nb && nb.action && nb.action.type !== 'pending') { b.action = nb.action; if (!b.title || nb.title !== b.title) b.title = nb.title || b.title; n++; break; }
+    }
+  }
+  // Buttons an older import left out entirely (e.g. the mouse jiggler), where that spot is still free.
+  for (const fp of fresh.profiles) for (const fpg of fp.pages) {
+    const pg = current.profiles.flatMap(p => p.pages).find(p => p.id === fpg.id);
+    if (!pg) continue;
+    for (const [pos, nb] of Object.entries(fpg.buttons)) {
+      if (!pg.buttons[pos] && nb.action && ['jiggler', 'keylight', 'hue-scene', 'hue-room', 'huesync'].includes(nb.action.type)) { pg.buttons[pos] = nb; n++; }
     }
   }
   return n;

@@ -6,7 +6,7 @@
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
   const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['open', 'Open (command line)'], ['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
-    ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
+    ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['jiggler', 'Mouse jiggler: pause today / resume'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
     ['pending', 'Placeholder (does nothing)']];
   const KL_OPS = [['toggle', 'On / off'], ['on', 'On'], ['off', 'Off'], ['brightness', 'Brightness step'], ['warmer', 'Warmer'], ['cooler', 'Cooler']];
   const MOD_KEYS = { Control: 'Ctrl', Alt: 'Alt', Shift: 'Shift', Meta: 'Win' };

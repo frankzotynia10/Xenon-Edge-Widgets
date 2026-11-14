@@ -12,6 +12,7 @@ const http = require('http');
 const https = require('https');
 const os = require('os');
 const { browse } = require('./mdns');
+const jiggler = require('./jiggler');   // not a light, but it's a live-state button too
 
 const FILE = path.join(__dirname, 'lights.json');
 const HUESYNC_URL = 'ws://127.0.0.1:24851/';
@@ -187,6 +188,7 @@ async function poll() {
       } catch (e) { log('Hue: ' + e.message); }
     })(),
   ]);
+  try { s.jiggler = jiggler.state(); } catch { /* ignore */ }
   state = s; changed();
 }
 function watch(fn) {
@@ -199,10 +201,11 @@ async function run(a) {
   if (a.type === 'keylight') await keyLightAction(a);
   else if (a.type === 'hue-scene' || a.type === 'hue-room') await hueAction(a);
   else if (a.type === 'huesync') await hueSyncAction(a);
+  else if (a.type === 'jiggler') jiggler.toggle();
   else throw new Error(`not a light action: ${a.type}`);
   setTimeout(poll, 250);
 }
-const isLight = t => ['keylight', 'hue-scene', 'hue-room', 'huesync'].includes(t);
+const isLight = t => ['keylight', 'hue-scene', 'hue-room', 'huesync', 'jiggler'].includes(t);
 
 // For the editor: the lights, rooms and scenes to choose from.
 async function catalog() {
