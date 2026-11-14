@@ -15,7 +15,15 @@ Your Claude Code sessions at a glance, so you can see from the Edge when one nee
 - **Setting:** turn off "Show what each session is doing" to hide the prompt line.
 
 ## Setup
-The widget is fed by a Claude Code hook. Add this to `%USERPROFILE%\.claude\settings.json`, merging it with any `hooks` you already have:
+The widget is fed by a Claude Code hook. The easy way to add it:
+
+```powershell
+node claude-edge\install-hooks.js
+```
+
+It adds the hooks to `%USERPROFILE%\.claude\settings.json` and keeps everything else in that file (the old copy is saved as `settings.json.bak`). To take them out again, run it with `--remove`. Only Claude Code sessions started afterwards show up.
+
+Or by hand: add this to `%USERPROFILE%\.claude\settings.json`, merging it with any `hooks` you already have:
 
 ```json
 "hooks": {
