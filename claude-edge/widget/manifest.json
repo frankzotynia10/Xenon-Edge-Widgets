@@ -4,8 +4,25 @@
   "name": "Claude",
   "description": "Your Claude Code sessions at a glance: working, needs you, or your turn. Needs the Edge helper and the Claude Code hook.",
   "version": "1.0.0",
-  "os": [{ "platform": "windows" }],
-  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "preview_icon": "resources/icon.png",
+  "min_app_version": "5.44",
+  "min_framework_version": "1.0.0",
+  "os": [
+    {
+      "platform": "windows"
+    }
+  ],
+  "supported_devices": [
+    {
+      "type": "dashboard_lcd"
+    }
+  ],
   "interactive": false,
-  "permissions": [{ "type": "url", "domain": "localhost", "port": 6795 }]
+  "permissions": [
+    {
+      "type": "url",
+      "domain": "localhost",
+      "port": 6795
+    }
+  ]
 }

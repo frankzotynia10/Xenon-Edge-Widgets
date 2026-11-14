@@ -1,0 +1,9 @@
+{
+  "en": {
+    "translation": {
+      "Show what each session is doing": "Show what each session is doing",
+      "Claude Code": "Claude Code",
+      "Needs the Edge helper and the Claude Code hook (see claude-edge/README.md). Shows each session: working, needs you, or your turn.": "Needs the Edge helper and the Claude Code hook (see claude-edge/README.md). Shows each session: working, needs you, or your turn."
+    }
+  }
+}

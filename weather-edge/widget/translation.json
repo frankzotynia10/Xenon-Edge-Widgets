@@ -1,0 +1,13 @@
+{
+  "en": {
+    "translation": {
+      "Location": "Location",
+      "Units": "Units",
+      "Fahrenheit, mph": "Fahrenheit, mph",
+      "Celsius, km/h": "Celsius, km/h",
+      "24-hour clock": "24-hour clock",
+      "Weather": "Weather",
+      "A town (\"Denver, CO\" or \"Paris, France\") or coordinates (\"39.74, -104.99\"). Forecasts are from Open-Meteo, no account needed.": "A town (\"Denver, CO\" or \"Paris, France\") or coordinates (\"39.74, -104.99\"). Forecasts are from Open-Meteo, no account needed."
+    }
+  }
+}

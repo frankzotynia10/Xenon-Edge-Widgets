@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Weather</title>
+<title>'Weather'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
 <meta name="x-icue-property" content="weatherPlace" data-label="tr('Location')" data-type="textfield" data-default="''" />
-<meta name="x-icue-property" content="weatherUnits" data-label="tr('Units')" data-type="combobox" data-default="'imperial'" data-values="[{'key':'imperial','value':tr('°F and mph')},{'key':'metric','value':tr('°C and km/h')}]" />
+<meta name="x-icue-property" content="weatherUnits" data-label="tr('Units')" data-type="combobox" data-default="'imperial'" data-values="[{'key':'imperial','value':tr('Fahrenheit, mph')},{'key':'metric','value':tr('Celsius, km/h')}]" />
 <meta name="x-icue-property" content="weatherClock" data-label="tr('24-hour clock')" data-type="switch" data-default="false" />
 <script type="application/json" id="x-icue-groups">
 [
-  { "title": "tr('Weather')", "properties": ["weatherPlace", "weatherUnits", "weatherClock"], "info": "tr('A town (\"West Orange, NJ\" or \"Paris, France\") or coordinates (\"40.80, -74.24\"). Forecasts are from Open-Meteo, no account needed.')" }
+  { "title": "tr('Weather')", "properties": ["weatherPlace", "weatherUnits", "weatherClock"], "info": "tr('A town (\"Denver, CO\" or \"Paris, France\") or coordinates (\"39.74, -104.99\"). Forecasts are from Open-Meteo, no account needed.')" }
 ]
 </script>
 </head>
@@ -127,7 +128,7 @@ const STATES = { AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA:
   NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
   SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia' };
 
-// "West Orange, NJ" -> { lat, lon, name } via Open-Meteo's geocoder (cached), or "40.8, -74.24" as is.
+// "Denver, CO" -> { lat, lon, name } via Open-Meteo's geocoder (cached), or "39.74, -104.99" as is.
 async function place(text) {
   const coords = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(text);
   if (coords) return { lat: +coords[1], lon: +coords[2], name: text.trim() };

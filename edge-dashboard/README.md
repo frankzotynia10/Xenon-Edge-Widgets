@@ -1,15 +1,18 @@
 # Edge dashboard (iCUE-free)
 
-Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small Electron window, which uses about 270 MB with all five widgets, compared with iCUE's growing memory use.
+Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small Electron window, which uses about 270 MB with five widgets, compared with iCUE's growing memory use. It replaces iCUE completely for the Edge: you can uninstall iCUE.
 
-**Status: work in progress.** Done:
-- the window, the layout and the iCUE stand-in
-- the settings page, with an import of your iCUE settings
-- Sensor Box sensors (from LibreHardwareMonitor) and FPS (from PresentMon)
-- the Deck widget, in place of the Virtual Stream Deck: hotkeys, text, commands, pages, folders, app profiles
-- Deck lights: Elgato Key Light, Philips Hue and Hue Sync, with live state
+What it has:
+- **Window and layout:** every widget, several pages, and a layout editor in the settings window. It can import your iCUE settings.
+- **Sensor Box:** sensors from LibreHardwareMonitor, FPS from PresentMon.
+- **Deck widget**, in place of the Virtual Stream Deck:
+  - hotkeys, text, commands, starting apps, pages, folders, and app profiles
+  - Elgato Key Light, Philips Hue and Hue Sync, OBS and ShadowPlay buttons, with live state
+  - volume and brightness sliders
+- **Mute lights:** a Hue light turns red while you're muted in Teams or Discord.
+- **Mouse lock:** keeps the mouse off the Edge, while touch still works.
 
-Still to do: the switch-over. Turn on start at login (tray menu), test a reboot with iCUE closed, check touch mapping, then uninstall iCUE.
+To start it at login, use the tray menu. To start it from the Start menu, see the shortcut steps under "Run it".
 
 ## Pages
 `layout.json` can have several pages, each with its own layout. Ways to switch:
@@ -165,7 +168,7 @@ $s.TargetPath = "$d\node_modules\electron\dist\electron.exe"; $s.Arguments = "`"
 Run it in `edge-dashboard/`. Starting it when it's already running does nothing.
 
 ## How it works
-- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6807), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
+- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6809), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
   - `/api/sensors` returns the LibreHardwareMonitor sensors (read by **`sensors.js`**) and the automatic picks.

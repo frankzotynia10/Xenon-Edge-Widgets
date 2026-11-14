@@ -8,7 +8,7 @@ Current conditions, the next hours and the days ahead, for the Edge.
 - **Full width:** all three side by side.
 
 **Settings** (dashboard settings page → Weather, or in iCUE):
-- **Location:** a town, like `West Orange, NJ` or `Paris, France` (US state abbreviations work), or coordinates like `40.80, -74.24`.
+- **Location:** a town, like `Denver, CO` or `Paris, France` (US state abbreviations work), or coordinates like `39.74, -104.99`.
 - **Units:** °F and mph, or °C and km/h.
 - **24-hour clock.**
 

@@ -20,7 +20,7 @@ Each folder has its own README with details and settings.
 
 ## Requirements
 - **Windows 10 or 11** with a **Corsair Xeneon Edge**.
-- **iCUE 5.44 or newer.**
+- **iCUE 5.44 or newer**, or the **Edge dashboard** (`edge-dashboard/`) instead of iCUE. The Deck widget only runs on the dashboard.
 - **[Node.js](https://nodejs.org) 18 or newer**, used by the helper. Sensor Box works without it, except for system memory.
 
 ## Setup
@@ -36,6 +36,8 @@ Each folder has its own README with details and settings.
    ```
 4. **Import the widgets.** In iCUE, import the `.icuewidget` files, either from the [latest release](https://github.com/frankzotynia10/Xenon-Edge-Widgets/releases/latest) or from each widget folder.
    - **App Launcher:** first run `node build.js` in `launcher-edge/`. It fills the app dropdowns from your Start menu and creates `app-launcher.icuewidget`.
+   - **Claude:** also add the Claude Code hook (`node claude-edge\install-hooks.js`, see [claude-edge/README.md](claude-edge/README.md)).
+   - **Without iCUE:** skip this step and run the Edge dashboard instead. It shows all the widgets, including the Deck. See [edge-dashboard/README.md](edge-dashboard/README.md).
 
 ## How it fits together
 A widget can't start programs or read other apps on its own. So one Node process, the **Edge helper** (`edge-helper/`), runs in the background, and the widgets talk to it over `localhost` WebSockets:
