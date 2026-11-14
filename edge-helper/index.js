@@ -29,7 +29,8 @@ const MODULES = [
   { name: 'Notifications', file: path.join(ROOT, 'notifications-edge', 'helper', 'index.js') },
   { name: 'System stats', file: path.join(__dirname, 'system.js') },  // Sensor Box memory + Edge sleep cover, port 6792
   { name: 'Teams', file: path.join(ROOT, 'teams-edge', 'helper', 'index.js') },
-  { name: 'App launcher', file: path.join(ROOT, 'launcher-edge', 'helper', 'index.js') }
+  { name: 'App launcher', file: path.join(ROOT, 'launcher-edge', 'helper', 'index.js') },
+  { name: 'Claude status', file: path.join(ROOT, 'claude-edge', 'helper', 'index.js') }        // port 6795, fed by claude-edge/hook.js
 ];
 const loaded = [];
 

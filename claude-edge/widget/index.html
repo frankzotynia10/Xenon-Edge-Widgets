@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Claude</title>
+<meta name="x-icue-property" content="claudeShowTask" data-label="tr('Show what each session is doing')" data-type="switch" data-default="true" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Claude Code')", "properties": ["claudeShowTask"], "info": "tr('Needs the Edge helper and the Claude Code hook (see claude-edge/README.md). Shows each session: working, needs you, or your turn.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #232428; --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a;
+    --clay: #d97757; --need: #ffb547; --done: #5fd38d; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", sans-serif; user-select: none; }
+  #app { width: 100%; height: 100%; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  header { display: flex; align-items: center; gap: 14px; padding: 0 6px; height: 40px; flex: 0 0 auto; }
+  header svg { width: 32px; height: 32px; color: var(--clay); flex: 0 0 auto; }
+  header .name { font-size: 26px; font-weight: 700; }
+  header .sum { margin-left: auto; display: flex; gap: 18px; font-size: 20px; font-weight: 700; color: var(--muted); }
+  header .sum b { font-variant-numeric: tabular-nums; }
+  header .sum .need { color: var(--need); } header .sum .work { color: var(--clay); } header .sum .turn { color: var(--done); }
+
+  #list { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+    grid-auto-rows: var(--row); align-content: start; gap: 10px 14px; overflow: hidden; }
+  .more { grid-column: 1 / -1; }
+  .s { flex: 0 0 auto; height: var(--row); background: var(--panel); border-radius: 18px; display: grid; align-items: center;
+    grid-template-columns: 54px 1fr auto; gap: 18px; padding: 0 22px 0 18px; position: relative; overflow: hidden; }
+  .s .ind { width: 54px; height: 54px; display: grid; place-items: center; }
+  .s .ind svg { width: 54px; height: 54px; }
+  .s .txt { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .s .proj { font-size: 28px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .s .task { font-size: 20px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .s .st { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .s .lbl { font-size: 22px; font-weight: 800; white-space: nowrap; }
+  .s .age { font-size: 18px; color: var(--dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .s.working .lbl { color: var(--clay); } .s.waiting .lbl { color: var(--need); } .s.done .lbl { color: var(--done); } .s.idle .lbl { color: var(--dim); }
+  .s.waiting { box-shadow: inset 0 0 0 2px rgba(255, 181, 71, .65); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: inset 0 0 0 2px rgba(255, 181, 71, .2); } }
+  .spin { animation: spin 1.1s linear infinite; transform-origin: 50% 50%; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .more { font-size: 20px; font-weight: 700; color: var(--muted); text-align: center; padding: 2px 0; }
+  /* Without the task line the rows can be shorter. */
+  body.notask .s .task { display: none; }
+
+  #msg { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 0 30px; }
+  #msg b { font-size: 30px; } #msg span { font-size: 22px; color: var(--muted); font-weight: 600; }
+</style>
+
+<div id="app">
+  <header>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l1.6 6.3 6.1-2.5-4.3 5 5.4 3.6-6.5.4.6 6.5-3.6-5.4-3.4 5.5.4-6.6-6.5-.2 5.3-3.8-4.4-4.8 6.2 2.3z"/></svg>
+    <div class="name">Claude</div>
+    <div class="sum" id="sum"></div>
+  </header>
+  <div id="list"></div>
+  <div id="msg"></div>
+</div>
+
+<script>
+'use strict';
+const HELPER = 'http://localhost:6795';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let data = null, skew = 0, connected = false;
+
+const ICON = {
+  working: '<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="20" fill="none" stroke="#3a2a24" stroke-width="6"/><circle class="spin" cx="27" cy="27" r="20" fill="none" stroke="#d97757" stroke-width="6" stroke-linecap="round" stroke-dasharray="40 86"/></svg>',
+  waiting: '<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="#ffb547"/><rect x="24" y="13" width="6" height="18" rx="3" fill="#1b1c1f"/><circle cx="27" cy="38" r="3.6" fill="#1b1c1f"/></svg>',
+  done: '<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="#5fd38d"/><path d="M17 28 L24 35 L38 20" fill="none" stroke="#1b1c1f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  idle: '<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="20" fill="none" stroke="#4a4e57" stroke-width="5"/><circle cx="27" cy="27" r="6" fill="#4a4e57"/></svg>',
+};
+const LABEL = { working: 'Working', waiting: 'Needs you', done: 'Your turn', idle: 'Idle' };
+
+function age(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60); if (m < 60) return m + 'm';
+  const h = Math.floor(m / 60); return h < 24 ? `${h}h ${m % 60}m` : Math.floor(h / 24) + 'd';
+}
+
+function draw() {
+  const showTask = window.claudeShowTask !== false && window.claudeShowTask !== 'false';
+  document.body.classList.toggle('notask', !showTask);
+  const msg = $('msg'), list = $('list');
+  const sessions = (data && data.sessions) || [];
+  const count = st => sessions.filter(s => s.state === st).length;
+  const sum = [];
+  if (count('waiting')) sum.push(`<span class="need"><b>${count('waiting')}</b> need you</span>`);
+  if (count('working')) sum.push(`<span class="work"><b>${count('working')}</b> working</span>`);
+  if (count('done')) sum.push(`<span class="turn"><b>${count('done')}</b> your turn</span>`);
+  $('sum').innerHTML = sum.join('');
+
+  if (!connected || !sessions.length) {
+    list.style.display = 'none'; msg.style.display = 'flex';
+    msg.innerHTML = !connected
+      ? '<b>Can\'t reach the Edge helper</b><span>Claude status needs the helper running (port 6795).</span>'
+      : '<b>No Claude sessions</b><span>Start Claude Code and it shows up here.</span>';
+    return;
+  }
+  msg.style.display = 'none'; list.style.display = 'grid';
+
+  // Fit as many rows as the widget has room for (in columns when it's wide); the rest become "+N more".
+  const rowH = showTask ? 92 : 70, gap = 10;
+  const cols = Math.max(1, Math.floor((innerWidth - 36 + 14) / (640 + 14)));
+  document.body.style.setProperty('--row', rowH + 'px');
+  document.body.style.setProperty('--cols', cols);
+  const room = list.clientHeight || (innerHeight - 88);
+  const perCol = n => Math.max(1, Math.floor((n + gap) / (rowH + gap)));
+  let fit = perCol(room) * cols;
+  if (fit < sessions.length) fit = Math.max(1, perCol(room - 30) * cols);
+  const now = Date.now() + skew;
+  let html = '';
+  for (const s of sessions.slice(0, fit)) {
+    const sub = s.state === 'waiting' ? s.message : (s.state === 'working' && s.message ? s.message : s.task);
+    html += `<div class="s ${s.state}"><div class="ind">${ICON[s.state] || ICON.idle}</div>
+      <div class="txt"><div class="proj">${esc(s.project)}</div><div class="task">${esc(sub || '')}</div></div>
+      <div class="st"><div class="lbl">${LABEL[s.state] || s.state}</div><div class="age">${age(now - s.since)}</div></div></div>`;
+  }
+  if (sessions.length > fit) html += `<div class="more">+${sessions.length - fit} more</div>`;
+  list.innerHTML = html;
+}
+
+function connect() {
+  const es = new EventSource(HELPER + '/events');
+  es.onmessage = ev => {
+    try { data = JSON.parse(ev.data); skew = data.now - Date.now(); } catch { return; }
+    connected = true; draw();
+  };
+  es.onerror = () => { if (connected) { connected = false; draw(); } };   // EventSource retries by itself
+}
+
+window.icueEvents = {
+  onICUEInitialized: draw,
+  onDataUpdated: p => { if (p && p.settings) for (const [k, v] of Object.entries(p.settings)) window[k] = v; draw(); },
+};
+new ResizeObserver(() => draw()).observe(document.body);
+setInterval(draw, 15000);   // keep the "5m" ages current
+connect();
+draw();
+</script>
+</body>
+</html>
