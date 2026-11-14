@@ -101,7 +101,8 @@ let settingsWin = null;
 function openSettings() {
   if (settingsWin) { settingsWin.show(); settingsWin.focus(); return; }
   const wa = screen.getPrimaryDisplay().workArea;
-  const w = Math.min(1100, wa.width), h = Math.min(820, wa.height);
+  // Wide enough for the Layout page's 870 px screen preview next to the 220 px sidebar, without scrolling sideways.
+  const w = Math.min(1300, wa.width), h = Math.min(880, wa.height);
   settingsWin = new BrowserWindow({ x: wa.x + Math.round((wa.width - w) / 2), y: wa.y + Math.round((wa.height - h) / 2), width: w, height: h,
     title: 'Edge widget settings', backgroundColor: '#0f1012', autoHideMenuBar: true, icon: path.join(__dirname, 'resources', 'tray.png') });
   settingsWin.loadURL(url + 'settings');
