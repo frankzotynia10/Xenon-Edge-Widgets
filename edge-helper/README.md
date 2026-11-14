@@ -26,6 +26,7 @@ The per-widget `install-startup.ps1` scripts are no longer needed. The scheduled
 A full-screen, heavily dimmed wallpaper over the Xeneon Edge, with a faint centered clock. It covers whatever iCUE is showing, without changing the Edge's brightness.
 
 **Turning it on and off:**
+- **Deck widget (Edge dashboard):** a button with the **Edge sleep cover** action. It calls `/sleep/toggle` directly, so no hotkey is needed.
 - **Stream Deck "Hotkey" action:** set it to **Ctrl+Alt+Shift+F10**. The same key toggles it on and off.
 - **Stream Deck "System › Open" action:** point it at `edge-helper\sleep-toggle.vbs`. It runs with no window.
 - **Anything else:** `http://localhost:6792/sleep/toggle` (also `/sleep`, `/wake`, `/sleep/status`).
@@ -35,7 +36,7 @@ A full-screen, heavily dimmed wallpaper over the Xeneon Edge, with a faint cente
 
 | Key | Default | Meaning |
 |---|---|---|
-| `hotkey` | `ctrl+alt+shift+f10` | Any ctrl/alt/shift/win + letter, digit or F-key. |
+| `hotkey` | `ctrl+alt+shift+f10` | Any ctrl/alt/shift/win + letter, digit or F-key. `""` for no hotkey. It's global, so it takes the key away from every other app; Ctrl+Alt+Shift+F10 is also the WoW `/readycheck` bind in `wow-streamdeck/SETUP.txt`, so set it to `""` if you use the Deck. |
 | `wallpaper` | `""` | Empty means your desktop wallpaper. Or a full path to any image (it's cropped to fill the Edge). |
 | `dim` | `0.88` | 0 is the image at full brightness, 1 is solid black. |
 | `clock` | `true` | Faint time and date. It moves a few pixels each minute. |

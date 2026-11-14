@@ -125,6 +125,14 @@ async function press(profile, page, pos) {
       // /s with the whole line in quotes: cmd strips just those outer quotes and keeps the ones inside.
       spawn('cmd.exe', ['/d', '/s', '/c', `"start "" ${a.command}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
       return;
+    case 'edge-sleep':
+      // The Edge helper's sleep cover, called directly: no global hotkey, so nothing clashes with game binds.
+      return new Promise((resolve, reject) => {
+        const op = ['sleep', 'wake'].includes(a.op) ? (a.op === 'sleep' ? '/sleep' : '/wake') : '/sleep/toggle';
+        require('http').get({ host: '127.0.0.1', port: 6792, path: op, timeout: 2000 }, r => { r.resume(); r.statusCode < 400 ? resolve() : reject(new Error(`helper said ${r.statusCode}`)); })
+          .on('timeout', function () { this.destroy(new Error('Edge helper not answering')); })
+          .on('error', e => reject(new Error('Edge helper not running: ' + e.message)));
+      });
     default: throw new Error(`"${a.type}" isn't something the server runs`);
   }
 }

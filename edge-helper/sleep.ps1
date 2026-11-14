@@ -80,6 +80,8 @@ namespace EdgeSleep {
 
     void RegisterKey() {
       UnregisterHotKey(Handle, HOTKEY_ID);
+      hotkeyText = "";
+      if (string.IsNullOrWhiteSpace(S.Hotkey)) { Out("info hotkey off"); return; }   // "" = no global hotkey (the Deck calls /sleep/toggle)
       uint mods = 0, vk = 0;
       foreach (var raw in (S.Hotkey ?? "").ToLowerInvariant().Split('+')) {
         var k = raw.Trim();

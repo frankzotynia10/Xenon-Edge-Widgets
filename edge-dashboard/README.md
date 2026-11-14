@@ -88,6 +88,7 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
   - next or previous page, folder, back
   - lights: `keylight`, `hue-scene`, `hue-room`, `huesync` (see Lights below)
+  - `edge-sleep`: the Edge helper's sleep cover, called directly. It needs no hotkey, so set `"hotkey": ""` in `edge-helper/sleep.json` to free Ctrl+Alt+Shift+F10 for WoW.
   - `pending`, a dimmed button that does nothing
 - **Editing:** tray → **Settings…** → **Deck**.
   - Pick a profile and page, then click a button to change its title, image, action and keys.

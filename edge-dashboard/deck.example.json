@@ -34,8 +34,8 @@
             "2,0": {
               "title": "Sleep",
               "action": {
-                "type": "keys",
-                "keys": "Ctrl+Alt+Shift+F10"
+                "type": "edge-sleep",
+                "op": "toggle"
               }
             },
             "3,1": {

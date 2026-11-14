@@ -6,7 +6,7 @@
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
   const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['open', 'Open (command line)'], ['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
-    ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
+    ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
     ['pending', 'Placeholder (does nothing)']];
   const KL_OPS = [['toggle', 'On / off'], ['on', 'On'], ['off', 'Off'], ['brightness', 'Brightness step'], ['warmer', 'Warmer'], ['cooler', 'Cooler']];
   const MOD_KEYS = { Control: 'Ctrl', Alt: 'Alt', Shift: 'Shift', Meta: 'Win' };
@@ -235,6 +235,7 @@
         bbox.append(field('Folder', folders.length ? select(folders.map(p => [p.id, p.name]), a.page, v => { a.page = v; changed(false); }) : el('span', { class: 'hint' }, 'Make a folder first (Page → New folder).')));
       }
       lightFields(bbox, a);
+      if (a.type === 'edge-sleep') bbox.append(field('Does', select([['toggle', 'Sleep / wake'], ['sleep', 'Sleep'], ['wake', 'Wake']], a.op || 'toggle', v => { a.op = v; changed(false); }), 'Needs the Edge helper running. Tap the cover to wake it.'));
       if (a.type === 'pending') bbox.append(field('For', text(a.what, v => { a.what = v; changed(false); }, { placeholder: 'Philips Hue' }), 'Shows dimmed and does nothing.'));
       bbox.append(el('div', { class: 'row' }, el('span', { class: 'spacer' }),
         el('button', { class: 'small danger', onclick: () => { delete pg.buttons[sel]; sel = null; changed(); } }, 'Remove button')));
