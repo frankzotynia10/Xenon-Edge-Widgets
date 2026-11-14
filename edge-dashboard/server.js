@@ -18,7 +18,9 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
 
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } };
-const loadLayout = () => readJson(LAYOUT, { widgets: [] });
+const loadLayout = () => readJson(LAYOUT, { widgets: {}, pages: [] });
+// layout.json "widgets" is { id: { dir, port } }; this returns [{ id, dir, port }].
+const widgetList = layout => Array.isArray(layout.widgets) ? layout.widgets : Object.entries(layout.widgets || {}).map(([id, w]) => ({ id, ...w }));
 const loadSettings = () => readJson(SETTINGS, {});
 
 function sendFile(res, file, transform) {
@@ -108,7 +110,7 @@ async function dashHandler(req, res) {
     if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
     if (p === '/settings') return sendFile(res, path.join(__dirname, 'settings.html'));
     if (p === '/layout.json') return sendFile(res, LAYOUT);
-    if (p === '/api/widgets') return json(res, 200, loadLayout().widgets.map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
+    if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
     if (p === '/api/settings') return json(res, 200, loadSettings());
     if (p === '/api/events') {
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
@@ -125,7 +127,7 @@ async function dashHandler(req, res) {
     const m = /^\/api\/settings\/([\w-]+)$/.exec(p);
     if (m) {
       const id = m[1];
-      if (!loadLayout().widgets.some(w => w.id === id)) return json(res, 404, { error: 'no such widget' });
+      if (!widgetList(loadLayout()).some(w => w.id === id)) return json(res, 404, { error: 'no such widget' });
       const all = loadSettings();
       all[id] = { ...(all[id] || {}), ...body };
       saveSettings(all);
@@ -142,6 +144,8 @@ async function dashHandler(req, res) {
       } catch (e) { return json(res, 500, { error: e.message }); }
     }
     if (p === '/api/open-settings') { const opened = events.listenerCount('open-settings') > 0; events.emit('open-settings'); return json(res, 200, { opened }); }
+    // Page switching, e.g. from a Stream Deck key: {"step": 1}, {"step": -1} or {"index": 0}
+    if (p === '/api/page') { broadcast('page', typeof body.index === 'number' ? { index: body.index } : { step: body.step === -1 ? -1 : 1 }); return json(res, 200, { ok: true }); }
     if (p === '/api/reload') { broadcast('reload', {}); return json(res, 200, { ok: true }); }
   }
   res.writeHead(404); res.end();
@@ -158,11 +162,11 @@ function listen(port, handler) {
 async function start() {
   const layout = loadLayout();
   const servers = [await listen(DASH_PORT, dashHandler)];
-  for (const w of layout.widgets) servers.push(await listen(w.port, widgetHandler(w)));
+  for (const w of widgetList(layout)) servers.push(await listen(w.port, widgetHandler(w)));
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };
 }
 
-module.exports = { start, events, DASH_PORT };
+module.exports = { start, events, broadcast, widgetList, DASH_PORT };
 
 if (require.main === module) {
   start().then(r => console.log(`Edge dashboard on ${r.url}`), e => { console.error(e.message); process.exit(1); });

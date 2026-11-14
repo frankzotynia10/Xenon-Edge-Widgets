@@ -82,7 +82,8 @@ function readIcue() {
 function idMap() {
   const layout = JSON.parse(fs.readFileSync(LAYOUT, 'utf8'));
   const map = {};
-  for (const w of layout.widgets) {
+  const list = Array.isArray(layout.widgets) ? layout.widgets : Object.entries(layout.widgets || {}).map(([id, w]) => ({ id, ...w }));
+  for (const w of list) {
     try { map[JSON.parse(fs.readFileSync(path.join(ROOT, w.dir, 'manifest.json'), 'utf8')).id] = w.id; } catch { /* no manifest */ }
   }
   return map;

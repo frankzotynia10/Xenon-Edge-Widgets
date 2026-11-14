@@ -3,7 +3,7 @@
 //   npx electron . --dev    a framed 1280x360 preview window on the main screen
 // A tray icon has the controls; everything that happens goes to dashboard.log.
 'use strict';
-const { app, BrowserWindow, Menu, Tray, screen, shell, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, Tray, globalShortcut, screen, shell, nativeImage } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -106,6 +106,20 @@ function openSettings() {
   settingsWin.on('closed', () => { settingsWin = null; });
 }
 
+// ---------- page hotkeys (Alt+Left / Alt+Right by default, like iCUE) ----------
+// Global, so they work from any app. Like iCUE's, they take those keys from other apps
+// (Alt+Left is Back in browsers); change them with "pageKeys" in layout.json.
+function registerPageKeys() {
+  const keys = { previous: 'Alt+Left', next: 'Alt+Right', ...(readJson(LAYOUT, {}).pageKeys || {}) };
+  for (const [name, accel] of Object.entries(keys)) {
+    if (!accel) continue;
+    const step = name === 'previous' ? -1 : 1;
+    let ok = false;
+    try { ok = globalShortcut.register(accel, () => server.broadcast('page', { step })); } catch (e) { log(`Bad page key "${accel}":`, e.message); }
+    log(ok ? `Page key ${accel} -> ${name} page` : `Couldn't register ${accel} (another app, maybe iCUE, has it)`);
+  }
+}
+
 // ---------- start at login ----------
 const loginArgs = () => ({ path: process.execPath, args: [app.getAppPath()] });
 const startsAtLogin = () => app.getLoginItemSettings(loginArgs()).openAtLogin;
@@ -146,6 +160,7 @@ app.whenReady().then(async () => {
   server.events.on('open-settings', openSettings);
   createWindow();
   startMouseLock();
+  registerPageKeys();
 
   screen.on('display-added', () => repin('display added'));
   screen.on('display-removed', () => repin('display removed'));
@@ -156,5 +171,6 @@ app.on('render-process-gone', (e, wc, d) => log(`A page crashed (${d.reason}, ex
 app.on('child-process-gone', (e, d) => { if (d.reason !== 'clean-exit') log(`Electron ${d.type} process gone: ${d.reason}`); });
 app.on('second-instance', () => { log('Second copy started; showing this one'); repin('second copy'); });
 app.on('before-quit', () => { quitting = true; stopMouseLock(); });
+app.on('will-quit', () => globalShortcut.unregisterAll());
 // The tray keeps the app running when windows close; Quit is in the tray menu.
 app.on('window-all-closed', () => { if (DEV) app.quit(); });

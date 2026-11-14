@@ -11,6 +11,24 @@ Still to do:
 - Stream Deck
 - start at login
 
+## Pages
+`layout.json` can have several pages, each with its own layout. Ways to switch:
+- **Alt+← / Alt+→** from any app, like iCUE. They wrap around.
+  - These are global hotkeys, so they take Alt+← (Back) from browsers too, the same as iCUE does.
+  - Change them with `"pageKeys": { "previous": "...", "next": "..." }` in `layout.json`, using Electron key names. Set one to `""` to turn it off.
+  - If another app already has the key, `dashboard.log` says so.
+- **Tap a dot** in the left margin of the Edge.
+- **From anything else, like a Stream Deck key:** `POST http://127.0.0.1:6800/api/page` with `{"step": 1}`, `{"step": -1}` or `{"index": 0}`, and the header `x-edge-dashboard: 1`.
+
+Every page stays loaded, so switching is instant and the widgets stay connected. The dashboard remembers the page you were on.
+
+The default pages follow the iCUE ones:
+1. **Main:** Music (S) and Notifications (S), Discord (M), Teams (S) and Launcher (S).
+2. **Meetings:** Music and Notifications, Teams (M), Launcher (M).
+3. **Discord:** full width.
+
+Slots are 800×344 (S), 800×704 (M) or 2448×704 (full), in three columns at x = 56, 880 and 1704. The left and right margins hold the page dots and the gear.
+
 ## Tray icon and log
 The dashboard has a tray icon (a little blue Edge) in the notification area. Its menu has:
 - **Status:** whether it's on the Edge or waiting for it, and whether the mouse lock is on.
@@ -53,11 +71,7 @@ npx electron . --dev
 Close iCUE (or turn its Edge dashboard off) first, or the two will fight over the screen.
 
 ## How it works
-- **`layout.json`** places each widget on the 2560×720 screen and gives it a port (6801–6805). Each widget gets its own origin and storage, like separate widgets in iCUE.
-  - Keep the slot sizes the widgets were designed for:
-    - **S:** 840×344
-    - **M:** 624×704
-    - **L:** 1920×720
+- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6805), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
 - **`settings.html`** is the settings page, and **`import-icue.js`** is the iCUE importer. It decodes iCUE's saved values from Qt's binary format: switches, numbers, text and colors.
