@@ -1,0 +1,11 @@
+{
+  "en": {
+    "translation": {
+      "Presets (minutes)": "Presets (minutes)",
+      "Beep when done": "Beep when done",
+      "Accent color": "Accent color",
+      "Timer": "Timer",
+      "Tap a preset to start. Tap the time to pause or resume; -1 and +1 change it while it runs.": "Tap a preset to start. Tap the time to pause or resume; -1 and +1 change it while it runs."
+    }
+  }
+}

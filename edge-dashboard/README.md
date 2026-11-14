@@ -168,7 +168,7 @@ $s.TargetPath = "$d\node_modules\electron\dist\electron.exe"; $s.Arguments = "`"
 Run it in `edge-dashboard/`. Starting it when it's already running does nothing.
 
 ## How it works
-- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6810), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
+- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6811), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
   - `/api/sensors` returns the LibreHardwareMonitor sensors (read by **`sensors.js`**) and the automatic picks.

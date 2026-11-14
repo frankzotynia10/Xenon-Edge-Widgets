@@ -14,7 +14,8 @@
     "deck":         { "dir": "deck-edge/widget",         "port": 6807 },
     "weather":      { "dir": "weather-edge/widget",      "port": 6808 },
     "claude":       { "dir": "claude-edge/widget",       "port": 6809 },
-    "homelab":      { "dir": "homelab-edge/widget",      "port": 6810 }
+    "homelab":      { "dir": "homelab-edge/widget",      "port": 6810 },
+    "timer":        { "dir": "timer-edge/widget",        "port": 6811 }
   },
 
   "pages": [
