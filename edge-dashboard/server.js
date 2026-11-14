@@ -96,6 +96,17 @@ function broadcast(event, data) {
   for (const res of clients) res.write(msg);
 }
 
+// layout.json, written the way it's laid out by hand: one line per widget and per slot.
+function layoutText(layout) {
+  const { widgets, pages, ...rest } = layout;
+  const top = Object.entries(rest).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v).replace(/,"/g, ', "').replace(/":/g, '": ').replace(/^\{/, '{ ').replace(/\}$/, ' }')}`);
+  const pad = (s, n) => s + ' '.repeat(Math.max(1, n - s.length));
+  const wl = Object.entries(widgets || {}).map(([id, w]) => `    ${pad(JSON.stringify(id) + ':', 16)}{ "dir": ${pad(JSON.stringify(w.dir) + ',', 28)}"port": ${w.port} }`);
+  const pl = (pages || []).map(pg => `    { "name": ${JSON.stringify(pg.name)}, "items": [\n` +
+    pg.items.map(it => `      { "widget": ${pad(JSON.stringify(it.widget) + ',', 16)}"x": ${pad(it.x + ',', 6)}"y": ${pad(it.y + ',', 5)}"w": ${pad(it.w + ',', 6)}"h": ${it.h} }`).join(',\n') + '\n    ] }');
+  return `{\n${top.join(',\n')},\n\n  "widgets": {\n${wl.join(',\n')}\n  },\n\n  "pages": [\n${pl.join(',\n')}\n  ]\n}\n`;
+}
+
 function saveSettings(all) { fs.writeFileSync(SETTINGS, JSON.stringify(all, null, 2) + '\n'); }
 
 function readBody(req) {
@@ -123,7 +134,7 @@ async function dashHandler(req, res) {
     if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current(), lights: deck.lights.stateNow() });
     if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
     if (p === '/api/fps') return jsonCors(req, res, 200, fps.read());
-    if (p === '/api/lights/catalog') return json(res, 200, await deck.lights.catalog());
+    if (p === '/api/lights/catalog') return json(res, 200, { ...(await deck.lights.catalog()), obs: deck.lights.obs.status() });
     if (p.startsWith('/deck-icon/')) {
       const file = deck.icon(decodeURIComponent(p.slice('/deck-icon/'.length)));
       if (!file) { res.writeHead(404); return res.end(); }
@@ -132,6 +143,7 @@ async function dashHandler(req, res) {
     if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
     if (p === '/settings') return sendFile(res, path.join(__dirname, 'settings.html'));
     if (p === '/deck-editor.js') return sendFile(res, path.join(__dirname, 'deck-editor.js'));
+    if (p === '/layout-editor.js') return sendFile(res, path.join(__dirname, 'layout-editor.js'));
     if (p === '/layout.json') return sendFile(res, LAYOUT);
     if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
     if (p === '/api/settings') return json(res, 200, loadSettings());
@@ -178,6 +190,26 @@ async function dashHandler(req, res) {
     // Page switching, e.g. from a Stream Deck key: {"step": 1}, {"step": -1} or {"index": 0}
     if (p === '/api/page') { broadcast('page', typeof body.index === 'number' ? { index: body.index } : { step: body.step === -1 ? -1 : 1 }); return json(res, 200, { ok: true }); }
     if (p === '/api/reload') { broadcast('reload', {}); return json(res, 200, { ok: true }); }
+    // Layout editor: save the pages (which widget goes where). Widgets themselves stay as they are.
+    if (p === '/api/layout') {
+      const layout = loadLayout();
+      const known = new Set(widgetList(layout).map(w => w.id));
+      const W = (layout.screen || {}).width || 2560, Hh = (layout.screen || {}).height || 720;
+      const pages = Array.isArray(body.pages) ? body.pages : null;
+      if (!pages || !pages.length) return json(res, 400, { error: 'needs at least one page' });
+      for (const pg of pages) {
+        if (typeof pg.name !== 'string' || !Array.isArray(pg.items)) return json(res, 400, { error: 'bad page' });
+        for (const it of pg.items) {
+          if (!known.has(it.widget)) return json(res, 400, { error: `unknown widget "${it.widget}"` });
+          for (const k of ['x', 'y', 'w', 'h']) if (!Number.isFinite(it[k]) || it[k] < 0) return json(res, 400, { error: 'bad position' });
+          if (it.x + it.w > W || it.y + it.h > Hh) return json(res, 400, { error: `${it.widget} is off the screen` });
+        }
+      }
+      layout.pages = pages.map(pg => ({ name: pg.name, items: pg.items.map(({ widget, x, y, w, h }) => ({ widget, x, y, w, h })) }));
+      fs.writeFileSync(LAYOUT, layoutText(layout));
+      broadcast('reload', {});
+      return json(res, 200, { ok: true });
+    }
     // Deck: run a saved button, by where it is. The body never carries keys or commands.
     if (p === '/api/deck/press') {
       try { await deck.press(String(body.profile), String(body.page), String(body.pos)); return jsonCors(req, res, 200, { ok: true }); }
@@ -200,6 +232,8 @@ async function dashHandler(req, res) {
       } catch (e) { return json(res, 500, { error: e.message }); }
     }
     // Pair with the Hue bridge: press its link button, then call this (it waits up to 30 s).
+    // OBS WebSocket password / port, from the Deck settings page. The password is never sent back.
+    if (p === '/api/obs/config') { deck.lights.obs.setConfig(body); await new Promise(r => setTimeout(r, 1500)); return json(res, 200, deck.lights.obs.status()); }
     if (p === '/api/lights/discover') { try { await deck.lights.discover(); return json(res, 200, await deck.lights.catalog()); } catch (e) { return json(res, 500, { error: e.message }); } }
     if (p === '/api/lights/pair-hue') {
       try { return json(res, 200, { ok: await deck.lights.pairHue({ wait: 30000 }) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }

@@ -26,7 +26,7 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .key .text.long { font-size: calc(var(--t) * .15); }
 .key .glyph { width: 38%; height: 38%; color: var(--muted); }
 .key.has-glyph .title { color: var(--muted); }
-.key.pending { opacity: .42; }
+.key.pending, .key.offline { opacity: .42; }
 .key.pending::after { content: "soon"; position: absolute; top: 6%; right: 7%; font-size: calc(var(--t) * .09); font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted); }
 /* Live light state: lit buttons get a warm glow bar; steppers show the current value. */
@@ -79,9 +79,16 @@ function lightInfo(a) {
   else if (a.type === 'hue-scene') key = 'hue-scene:' + a.scene;
   else if (a.type === 'huesync') key = 'huesync';
   else if (a.type === 'jiggler') key = 'jiggler';
+  else if (a.type === 'obs') key = 'obs';
   const s = key && lightState[key];
   if (!s) return null;
   if (a.type === 'jiggler') return { lit: s.on, label: s.title, off: s.state !== 'ACTIVE' && s.state !== 'IDLE' };
+  if (a.type === 'obs') {
+    if (!s.connected) return { lit: false, off: true, val: 'OBS off' };
+    const on = { record: s.record, 'record-pause': s.recordPaused, stream: s.stream, 'replay-buffer': s.replay, virtualcam: s.virtualcam,
+      scene: s.scene === a.scene, mute: !!(s.muted || {})[a.input] }[a.op];
+    return { lit: !!on, val: a.op === 'record' && s.record ? (s.recordPaused ? 'PAUSED' : 'REC') : a.op === 'stream' && s.stream ? 'LIVE' : a.op === 'mute' && on ? 'MUTED' : '' };
+  }
   if (a.type === 'keylight' && a.op === 'brightness') return { lit: s.on, val: s.on ? s.brightness + '%' : 'off' };
   if (a.type === 'keylight' && (a.op === 'warmer' || a.op === 'cooler')) return { lit: false, val: s.kelvin + 'K' };
   return { lit: !!s.on };
@@ -131,6 +138,7 @@ function render() {
     if (!b.title && !b.icon && cls.includes('plain')) inner += `<div class="title">${esc(a.keys || a.type || '')}</div>`;
     if (a.type === 'pending' || !b.action) cls.push('pending');
     if (li && li.lit) cls.push('lit');
+    if (li && li.off && !b.iconOff) cls.push('offline');   // e.g. OBS isn't running
     if (li && li.val) inner += `<div class="val">${esc(li.val)}</div>`;
     html += `<button class="${cls.join(' ')}" data-pos="${pos}">${inner}</button>`;
   }

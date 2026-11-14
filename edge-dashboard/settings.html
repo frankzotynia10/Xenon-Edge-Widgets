@@ -51,6 +51,24 @@
   button.small.danger { color: #ff8a8a; }
   input.num { width: 64px; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; }
   input.wide { width: 420px; }
+  /* Layout editor */
+  .navsep { height: 1px; background: var(--line); margin: 6px 4px; }
+  .lt-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .lt-tab { background: var(--panel2); color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 7px 14px; font: inherit; cursor: pointer; }
+  .lt-tab.on { color: var(--text); border-color: var(--accent); font-weight: 600; }
+  .lt-screen { position: relative; width: 870px; height: 245px; background: #000; border-radius: 10px; border: 1px solid var(--line); }
+  .lt-cell { position: absolute; border: 2px dashed #2e3036; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #4a4d55; font-size: 26px; cursor: pointer; }
+  .lt-cell:hover { border-color: var(--accent); color: var(--accent); }
+  .lt-cell.used { border-color: transparent; }
+  .lt-item { position: absolute; border-radius: 7px; background: color-mix(in srgb, var(--c) 28%, #1a1b1f); border: 2px solid color-mix(in srgb, var(--c) 70%, transparent);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: grab; text-align: center; padding: 4px; }
+  .lt-item b { font-size: 14px; } .lt-item span { font-size: 11px; color: var(--muted); }
+  .lt-item.sel { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+  .lt-item.off { border-style: dashed; cursor: pointer; }
+  .lt-save { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 14px 0; background: var(--bg); }
+  button.small.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.small[disabled] { opacity: .45; cursor: default; }
+  input[type=password] { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; width: 200px; }
   .row .spacer { flex: 1; }
   .deckgrid { display: grid; gap: 8px; }
   .dkey { width: 92px; height: 92px; border-radius: 14px; background: #1f2126; border: 2px solid transparent; position: relative; overflow: hidden; cursor: pointer;
@@ -75,6 +93,7 @@
 <main id="main"></main>
 <div id="toast"></div>
 <script src="/deck-editor.js"></script>
+<script src="/layout-editor.js"></script>
 <script>
 'use strict';
 const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
@@ -153,7 +172,11 @@ function control(w, p, value, onChange) {
 function render() {
   const w = widgets.find(x => x.id === current); const main = document.getElementById('main');
   main.replaceChildren();
-  main.classList.toggle('wide', current === 'deck');
+  main.classList.toggle('wide', current === 'deck' || current === '__layout');
+  if (current === '__layout') {
+    main.append($('h2', {}, 'Layout'), $('div', { class: 'sub' }, 'Which widgets go where, on each page of the Edge.'));
+    return window.layoutEditor(main);
+  }
   if (!w) return;
   main.append($('h2', {}, w.name), $('div', { class: 'sub' }, 'Changes apply on the Edge right away.'));
   if (w.id === 'deck') return window.deckEditor(main);
@@ -182,6 +205,7 @@ function render() {
 function nav() {
   const n = document.getElementById('nav');
   n.replaceChildren($('h1', {}, 'Edge widgets'));
+  n.append($('button', { class: current === '__layout' ? 'on' : '', onclick: () => { current = '__layout'; nav(); render(); } }, '▦  Layout'), $('div', { class: 'navsep' }));
   for (const w of widgets) n.append($('button', { class: w.id === current ? 'on' : '', onclick: () => { current = w.id; nav(); render(); } }, w.name));
   n.append($('div', { class: 'spacer' }),
     $('button', { class: 'tool', onclick: importIcue }, 'Import from iCUE'),

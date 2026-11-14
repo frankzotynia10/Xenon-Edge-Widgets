@@ -1,0 +1,11 @@
+{
+  "author": "Frank",
+  "id": "com.frank.weather",
+  "name": "Weather",
+  "description": "Current conditions, the next hours and the week ahead, from Open-Meteo (no account needed). Set your town in the widget's settings.",
+  "version": "1.0.0",
+  "os": [{ "platform": "windows" }],
+  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "interactive": false,
+  "permissions": [{ "type": "url", "domain": "api.open-meteo.com" }, { "type": "url", "domain": "geocoding-api.open-meteo.com" }]
+}

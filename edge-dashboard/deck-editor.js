@@ -6,8 +6,13 @@
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
   const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['open', 'Open (command line)'], ['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
+    ['obs', 'OBS Studio'], ['shadowplay', 'NVIDIA ShadowPlay'],
     ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['jiggler', 'Mouse jiggler: pause today / resume'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
     ['pending', 'Placeholder (does nothing)']];
+  const SP_OPS = [['save-replay', 'Save replay (last minutes)'], ['replay-toggle', 'Instant replay on/off'], ['record', 'Record start/stop'], ['screenshot', 'Screenshot'],
+    ['overlay', 'Open the overlay'], ['mic', 'Microphone on/off'], ['photo-mode', 'Photo mode'], ['game-filter', 'Game filter'], ['perf-overlay', 'Performance overlay']];
+  const OBS_OPS = [['record', 'Record start/stop'], ['record-pause', 'Recording pause/resume'], ['stream', 'Stream start/stop'], ['replay-buffer', 'Replay buffer on/off'],
+    ['save-replay', 'Save replay'], ['virtualcam', 'Virtual camera on/off'], ['scene', 'Switch to scene'], ['mute', 'Mute/unmute an audio input']];
   const KL_OPS = [['toggle', 'On / off'], ['on', 'On'], ['off', 'Off'], ['brightness', 'Brightness step'], ['warmer', 'Warmer'], ['cooler', 'Cooler']];
   const MOD_KEYS = { Control: 'Ctrl', Alt: 'Alt', Shift: 'Shift', Meta: 'Win' };
   const CODE_NAMES = { Comma: 'Comma', Period: 'Period', Minus: 'Minus', Equal: 'Plus', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Slash: '/', Backquote: '`',
@@ -93,7 +98,7 @@
   // ---------- lights: what's connected, pairing ----------
   function status(ok, textOk, textBad) { return el('span', { class: 'hint', style: `color: ${ok ? 'var(--ok)' : '#ffb35c'}` }, ok ? '● ' + textOk : '○ ' + textBad); }
   function lightsBox() {
-    const box = el('div', { class: 'group' }, el('h3', {}, 'Lights'));
+    const box = el('div', { class: 'group' }, el('h3', {}, 'Connections'));
     if (!cat) { box.append(el('div', { class: 'empty' }, 'Looking for lights…')); return box; }
     if (!cat.keylights.length) box.append(field('Elgato Key Light', status(false, '', 'None found on the network')));
     for (const k of cat.keylights) box.append(field(k.name, status(k.reachable, `Connected (${k.ip})`, `Not answering (${k.ip || 'no address'})`)));
@@ -107,6 +112,19 @@
     const hs = cat.huesync;
     box.append(field('Hue Sync app', status(hs.connected, hs.state === 'syncing' ? 'Connected, syncing' : 'Connected', 'Not reachable'),
       hs.connected ? null : 'Start Hue Sync and turn on Settings → Third-party control.'));
+    // OBS: password field (never filled back in; the server keeps it)
+    const o = cat.obs || {};
+    const pw = el('input', { type: 'password', placeholder: o.hasPassword ? 'Saved (type to change)' : 'WebSocket password', autocomplete: 'off' });
+    const saveObs = async () => {
+      window.toast && window.toast('Connecting to OBS…');
+      const r = await (await fetch('/api/obs/config', { method: 'POST', headers: H, body: JSON.stringify(pw.value ? { password: pw.value } : {}) })).json();   // empty box: keep the saved one, just reconnect
+      cat.obs = r; draw();
+      window.toast && window.toast(r.connected ? 'OBS connected' : (r.error || 'OBS not reachable (is it running?)'));
+    };
+    pw.addEventListener('keydown', e => { if (e.key === 'Enter') saveObs(); });
+    box.append(field('OBS Studio', el('span', { class: 'ctl' },
+      status(o.connected, `Connected (${(o.scenes || []).length} scenes)`, o.error || 'Not connected (is OBS running?)'), pw, el('button', { class: 'small', onclick: saveObs }, 'Save')),
+      o.connected ? null : 'In OBS: Tools → WebSocket Server Settings → Enable, then Show Connect Info and copy the password here.'));
     box.append(el('div', { class: 'row' }, el('span', { class: 'spacer' }),
       el('button', { class: 'small', onclick: async () => { cat = null; draw(); cat = await (await fetch('/api/lights/discover', { method: 'POST', headers: H, body: '{}' })).json(); draw(); } }, 'Search again')));
     return box;
@@ -144,6 +162,16 @@
       s.value = a.scene || '';
       s.addEventListener('change', () => { const sc = c.scenes.find(x => x.id === s.value); a.scene = s.value; a.room = sc && sc.room; changed(false); });
       box.append(field('Scene', s));
+    }
+    if (a.type === 'shadowplay') {
+      box.append(field('Does', select(SP_OPS, a.op || 'save-replay', v => { a.op = v; changed(false); }), 'Sends the hotkey set in the NVIDIA App (Alt+F10 etc.), read when you tap.'));
+    }
+    if (a.type === 'obs') {
+      const o = c.obs || {};
+      box.append(field('Does', select(OBS_OPS, a.op || 'record', v => { a.op = v; changed(); })));
+      const list = (items, cur) => [...(items || []).map(x => [x, x]), ...(cur && !(items || []).includes(cur) ? [[cur, cur + ' (not in OBS now)']] : [])];
+      if (a.op === 'scene') box.append(field('Scene', o.connected || a.scene ? select([['', 'Pick a scene'], ...list(o.scenes, a.scene)], a.scene || '', v => { a.scene = v; changed(false); }) : el('span', { class: 'hint' }, 'Start OBS to pick a scene.')));
+      if (a.op === 'mute') box.append(field('Input', o.connected || a.input ? select([['', 'Pick an input'], ...list(o.inputs, a.input)], a.input || '', v => { a.input = v; changed(false); }) : el('span', { class: 'hint' }, 'Start OBS to pick an input.')));
     }
     if (a.type === 'huesync') {
       box.append(field('Does', select([['toggle', 'Start / stop'], ['start', 'Start'], ['stop', 'Stop']], a.op || 'toggle', v => { a.op = v; changed(false); })));

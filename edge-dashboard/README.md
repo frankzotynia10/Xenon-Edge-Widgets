@@ -29,6 +29,16 @@ The default pages follow the iCUE ones:
 
 Slots match iCUE's: 840×344 (S), 840×704 (M) or 2540×704 (full), in three columns at x = 10, 860 and 1710, edge to edge.
 
+## Editing the layout
+Tray → **Settings…** → **Layout** (at the top of the list).
+- **Pages:** tabs for each page. **+ Page** adds one, ◀ ▶ reorder them, and **Delete page** removes one. The first page is where the dashboard starts.
+- **The screen:** a 3 × 2 grid of iCUE-sized cells.
+  - Click an empty cell to add a widget in a size that fits there: S, Wide (2 cells), M (tall), L (2 × 2), Strip (a full-width row) or Full.
+  - Click a widget to change it, resize it or remove it, or drag it to a free spot.
+- **Save and show on the Edge** writes `layout.json` and reloads the dashboard. **Undo changes** throws away anything not saved.
+- A widget can be on as many pages as you like.
+- A new widget folder still has to be added to `"widgets"` in `layout.json` by hand, with its own port, and the dashboard restarted.
+
 ## Tray icon and log
 The dashboard has a tray icon (a little blue Edge) in the notification area. Its menu has:
 - **Status:** whether it's on the Edge or waiting for it, and whether the mouse lock is on.
@@ -90,6 +100,13 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
   - next or previous page, folder, back
   - lights: `keylight`, `hue-scene`, `hue-room`, `huesync` (see Lights below)
+  - `shadowplay` (**`shadowplay.js`**): NVIDIA ShadowPlay (the NVIDIA App overlay).
+    - Actions: save replay, instant replay on/off, record, screenshot, overlay, mic, photo mode, game filter and the performance overlay.
+    - NVIDIA has no API, so it sends the overlay's hotkey. The hotkeys are read from the NVIDIA App's own settings in the registry, so changing them there changes the button.
+  - `obs` (**`obs.js`**): OBS Studio over its built-in WebSocket (obs-websocket 5).
+    - Actions: record, record pause, stream, replay buffer, save replay, virtual camera, switch scene, mute an input.
+    - The buttons light up from OBS's own events: REC, LIVE, the current scene, MUTED. They dim while OBS isn't running.
+    - **Setup:** in OBS, open Tools → WebSocket Server Settings and tick **Enable**. Then paste the password into Settings → Deck → **Connections** → OBS Studio. It's kept in `obs.json` (git-ignored) and never sent back to the page.
   - `jiggler` (**`jiggler.js`**): the [mousejiggler-cli](https://github.com/frankzotynia10/mousejiggler-cli) toggle, like its Stream Deck plugin.
     - A press pauses it for the rest of today, or resumes it.
     - The button shows ACTIVE, IDLE, PAUSED, STOPPED or OFF, with the plugin's on/paused images (`icon` / `iconOff`).

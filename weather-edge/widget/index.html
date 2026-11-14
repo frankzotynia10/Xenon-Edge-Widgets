@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Weather</title>
+<meta name="x-icue-property" content="weatherPlace" data-label="tr('Location')" data-type="textfield" data-default="''" />
+<meta name="x-icue-property" content="weatherUnits" data-label="tr('Units')" data-type="combobox" data-default="'imperial'" data-values="[{'key':'imperial','value':tr('°F and mph')},{'key':'metric','value':tr('°C and km/h')}]" />
+<meta name="x-icue-property" content="weatherClock" data-label="tr('24-hour clock')" data-type="switch" data-default="false" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Weather')", "properties": ["weatherPlace", "weatherUnits", "weatherClock"], "info": "tr('A town (\"West Orange, NJ\" or \"Paris, France\") or coordinates (\"40.80, -74.24\"). Forecasts are from Open-Meteo, no account needed.')" }
+]
+</script>
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #232428; --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a; --sun: #ffc83d; --rain: #4ea7ff; --hot: #ff8a5c; --cold: #7cc4ff; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", sans-serif; user-select: none; }
+  #app { width: 100%; height: 100%; padding: 3vh; display: grid; gap: 2.4vh;
+    grid-template-columns: 0.95fr 1.3fr; grid-template-rows: 1fr; grid-template-areas: "now hours"; }
+  .card { background: var(--panel); border-radius: 2.6vh; min-width: 0; min-height: 0; overflow: hidden; position: relative; }
+
+  /* current conditions */
+  #now { grid-area: now; padding: 3.4vh 3.6vh; display: flex; flex-direction: column; justify-content: space-between; }
+  #now .place { font-size: 4.2vh; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #now .main { display: flex; align-items: center; gap: 2.6vh; }
+  #now .main svg { width: 25vh; height: 25vh; flex: 0 0 auto; }
+  #now .temp { font-size: 22vh; font-weight: 700; line-height: .9; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  #now .temp sup { font-size: 9vh; font-weight: 600; color: var(--muted); vertical-align: top; margin-left: .4vh; }
+  #now .cond { font-size: 5.2vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #now .meta { display: flex; gap: 3vh; font-size: 3.8vh; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  #now .meta b { color: var(--text); font-weight: 700; }
+
+  /* next hours */
+  #hours { grid-area: hours; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 2.6vh 1.6vh; }
+  .hr { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1vh 0; min-width: 0; }
+  .hr .t { font-size: 3.8vh; color: var(--muted); font-weight: 700; white-space: nowrap; }
+  .hr.nowh .t { color: var(--text); }
+  .hr svg { width: 11vh; height: 11vh; }
+  .hr .v { font-size: 6vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .hr .p { font-size: 3.4vh; font-weight: 700; color: var(--rain); min-height: 4vh; }
+
+  /* days (M and wide only) */
+  #days { grid-area: days; display: none; padding: 1.6vh 3vh; }
+  .day { display: grid; grid-template-columns: 9vh 7vh 6vh 1fr; align-items: center; gap: 2vh; padding: .6vh 0; }
+  .day .n { font-size: 3.2vh; font-weight: 700; }
+  .day svg { width: 6vh; height: 6vh; }
+  .day .p { font-size: 2.6vh; font-weight: 700; color: var(--rain); }
+  .day .range { display: flex; align-items: center; gap: 1.6vh; font-size: 3.2vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .day .range .lo { color: var(--muted); width: 6vh; text-align: right; }
+  .day .range .hi { width: 6vh; }
+  .day .track { flex: 1; height: 1.1vh; border-radius: 1vh; background: var(--panel2); position: relative; }
+  .day .track b { position: absolute; top: 0; bottom: 0; border-radius: 1vh; background: linear-gradient(90deg, var(--cold), var(--sun), var(--hot)); }
+
+  #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 2vh; text-align: center; padding: 6vh; }
+  #msg b { font-size: 6vh; } #msg span { font-size: 4vh; color: var(--muted); }
+  #updated { position: absolute; right: 2.6vh; bottom: 1.6vh; font-size: 2.6vh; color: var(--dim); }
+
+  /* M (tall): current on top, hours, then days */
+  @media (max-aspect-ratio: 13/10) {
+    #app { grid-template-columns: 1fr; grid-template-rows: auto 0.9fr 1.35fr; grid-template-areas: "now" "hours" "days"; gap: 1.6vh; padding: 1.8vh; }
+    #now { padding: 2.4vh 3vh; gap: 1vh; }
+    #now .place { font-size: 2.6vh; }
+    #now .main svg { width: 14vh; height: 14vh; }
+    #now .temp { font-size: 12vh; } #now .temp sup { font-size: 5vh; }
+    #now .cond { font-size: 3.4vh; } #now .meta { font-size: 2.4vh; gap: 2vh; }
+    #hours { padding: 1.4vh 1vh; }
+    .hr .t { font-size: 2.3vh; } .hr svg { width: 6.4vh; height: 6.4vh; } .hr .v { font-size: 3.6vh; } .hr .p { font-size: 2.1vh; min-height: 2.4vh; }
+    #days { display: flex; flex-direction: column; justify-content: space-around; }
+    #updated { font-size: 1.8vh; }
+  }
+  /* wide: current, hours and days side by side */
+  @media (min-aspect-ratio: 3/1) {
+    #app { grid-template-columns: 0.8fr 1.4fr 1fr; grid-template-areas: "now hours days"; }
+    #days { display: flex; flex-direction: column; justify-content: space-around; }
+    .day { grid-template-columns: 8vh 6vh 6vh 1fr; }
+  }
+</style>
+<div id="app">
+  <div class="card" id="now"></div>
+  <div class="card" id="hours"></div>
+  <div class="card" id="days"></div>
+</div>
+<div id="msg"><b></b><span></span></div>
+<script>
+'use strict';
+// ---------- icons (drawn here, no image files) ----------
+const SUN = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffc83d"/>` + [...Array(8)].map((_, i) => { const a = i * Math.PI / 4, x1 = cx + Math.cos(a) * (r + 5), y1 = cy + Math.sin(a) * (r + 5), x2 = cx + Math.cos(a) * (r + 11), y2 = cy + Math.sin(a) * (r + 11); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ffc83d" stroke-width="4" stroke-linecap="round"/>`; }).join('');
+const MOON = (cx, cy, r) => `<path d="M${cx + r * .35} ${cy - r} a${r} ${r} 0 1 0 ${r * .65} ${r * 1.55} a${r * .85} ${r * .85} 0 0 1 -${r * .65} -${r * 1.55}z" fill="#d9dcff"/>`;
+const CLOUD = (x, y, s, c = '#c9ced8') => `<path transform="translate(${x} ${y}) scale(${s})" d="M14 44h40a12 12 0 0 0 0-24 18 18 0 0 0-34-4A14 14 0 0 0 14 44z" fill="${c}"/>`;
+const DROPS = (c, n = 3) => [...Array(n)].map((_, i) => `<line x1="${30 + i * 14}" y1="70" x2="${26 + i * 14}" y2="82" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`).join('');
+const FLAKES = () => [...Array(3)].map((_, i) => `<circle cx="${30 + i * 14}" cy="${74 + (i % 2) * 6}" r="3.2" fill="#eaf4ff"/>`).join('');
+const ICONS = {
+  'clear-day': SUN(48, 48, 17), 'clear-night': MOON(48, 46, 22),
+  'partly-day': SUN(36, 34, 13) + CLOUD(22, 26, 1.05), 'partly-night': MOON(36, 34, 15) + CLOUD(22, 26, 1.05),
+  cloudy: CLOUD(8, 10, 1.05, '#8f96a3') + CLOUD(22, 24, 1.05),
+  fog: CLOUD(18, 8, 1.05, '#9aa1ad') + [60, 70, 80].map((y, i) => `<line x1="${18 + i * 4}" y1="${y}" x2="${78 - i * 4}" y2="${y}" stroke="#9aa1ad" stroke-width="4" stroke-linecap="round"/>`).join(''),
+  drizzle: CLOUD(16, 6, 1.05) + DROPS('#7dbbff', 2), rain: CLOUD(16, 6, 1.05, '#9aa4b4') + DROPS('#4ea7ff'),
+  snow: CLOUD(16, 6, 1.05) + FLAKES(),
+  storm: CLOUD(16, 6, 1.05, '#7d8594') + `<path d="M50 60l-10 16h9l-5 14 15-20h-9l6-10z" fill="#ffc83d"/>`,
+};
+const icon = (kind) => `<svg viewBox="0 0 96 96">${ICONS[kind] || ICONS.cloudy}</svg>`;
+
+// WMO weather codes (what Open-Meteo returns)
+function kindOf(code, day) {
+  if (code === 0) return day ? 'clear-day' : 'clear-night';
+  if (code <= 2) return day ? 'partly-day' : 'partly-night';
+  if (code === 3) return 'cloudy';
+  if (code === 45 || code === 48) return 'fog';
+  if (code >= 51 && code <= 57) return 'drizzle';
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+  if (code >= 95) return 'storm';
+  return 'cloudy';
+}
+const WORDS = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Cloudy', 45: 'Fog', 48: 'Freezing fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+  56: 'Freezing drizzle', 57: 'Freezing drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain', 71: 'Light snow', 73: 'Snow',
+  75: 'Heavy snow', 77: 'Snow grains', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Thunderstorms', 96: 'Thunderstorms, hail', 99: 'Thunderstorms, hail' };
+
+// ---------- settings ----------
+const setting = (k, d) => { try { const v = window[k]; return v === undefined || v === null || v === '' ? d : v; } catch { return d; } };
+const STATES = { AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts',
+  MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico',
+  NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+  SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia' };
+
+// "West Orange, NJ" -> { lat, lon, name } via Open-Meteo's geocoder (cached), or "40.8, -74.24" as is.
+async function place(text) {
+  const coords = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(text);
+  if (coords) return { lat: +coords[1], lon: +coords[2], name: text.trim() };
+  const cacheKey = 'wx-place:' + text.toLowerCase();
+  try { const c = JSON.parse(localStorage.getItem(cacheKey)); if (c) return c; } catch { /* none */ }
+  const [name, ...rest] = text.split(',').map(s => s.trim());
+  const qual = rest.join(', ').toLowerCase();
+  const r = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name=${encodeURIComponent(name)}`)).json();
+  const list = r.results || [];
+  const want = STATES[qual.toUpperCase()] ? STATES[qual.toUpperCase()].toLowerCase() : qual;
+  const hit = (qual && list.find(p => [p.admin1, p.country, p.country_code].some(x => x && x.toLowerCase() === want))) || list[0];
+  if (!hit) throw new Error(`Couldn't find "${text}"`);
+  // Rounded to about 1 km: plenty for a forecast, and all that's sent to the weather service.
+  const out = { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, name: hit.name };
+  try { localStorage.setItem(cacheKey, JSON.stringify(out)); } catch { /* private */ }
+  return out;
+}
+
+// ---------- fetch + draw ----------
+let data = null, where = null, timer = null;
+const $ = id => document.getElementById(id);
+function showMsg(title, sub) { $('msg').style.display = 'flex'; $('app').style.visibility = 'hidden'; $('msg').querySelector('b').textContent = title; $('msg').querySelector('span').textContent = sub || ''; }
+
+async function refresh() {
+  clearTimeout(timer); timer = setTimeout(refresh, 15 * 60 * 1000);
+  const text = String(setting('weatherPlace', '')).trim();
+  if (!text) return showMsg('Where are you?', 'Set a location in the dashboard settings (Weather).');
+  try {
+    where = await place(text);
+    const imperial = setting('weatherUnits', 'imperial') !== 'metric';
+    const q = new URLSearchParams({ latitude: where.lat, longitude: where.lon, timezone: 'auto', forecast_days: 7,
+      current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m',
+      hourly: 'temperature_2m,weather_code,precipitation_probability,is_day',
+      daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+      ...(imperial ? { temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', precipitation_unit: 'inch' } : {}) });
+    data = await (await fetch('https://api.open-meteo.com/v1/forecast?' + q)).json();
+    if (data.error) throw new Error(data.reason || 'weather service error');
+    data._imperial = imperial; data._at = new Date();
+    draw();
+  } catch (e) {
+    if (!data) showMsg('No weather right now', e.message);
+    clearTimeout(timer); timer = setTimeout(refresh, 60 * 1000);   // try again soon
+  }
+}
+
+const r0 = v => Math.round(v);
+function hourLabel(d, i) {
+  if (i === 0) return 'Now';
+  if (setting('weatherClock', false) === true || setting('weatherClock', false) === 'true') return String(d.getHours()).padStart(2, '0') + ':00';
+  const h = d.getHours() % 12 || 12; return h + (d.getHours() < 12 ? 'a' : 'p');
+}
+
+function draw() {
+  if (!data) return;
+  $('msg').style.display = 'none'; $('app').style.visibility = '';
+  const c = data.current, unit = data._imperial ? 'mph' : 'km/h';
+  const today = { hi: data.daily.temperature_2m_max[0], lo: data.daily.temperature_2m_min[0] };
+  $('now').innerHTML = `
+    <div class="place">${where.name}</div>
+    <div class="main">${icon(kindOf(c.weather_code, c.is_day))}<div class="temp">${r0(c.temperature_2m)}<sup>°</sup></div></div>
+    <div><div class="cond">${WORDS[c.weather_code] || ''}</div>
+      <div class="meta"><span>H <b>${r0(today.hi)}°</b></span><span>L <b>${r0(today.lo)}°</b></span><span>Feels <b>${r0(c.apparent_temperature)}°</b></span><span>${r0(c.wind_speed_10m)} ${unit}</span></div></div>`;
+
+  // next hours, starting with the current hour
+  const now = new Date(), times = data.hourly.time.map(t => new Date(t));
+  let start = times.findIndex(t => t.getTime() + 3600e3 > now.getTime()); if (start < 0) start = 0;
+  const tall = matchMedia('(max-aspect-ratio: 13/10)').matches, wide = matchMedia('(min-aspect-ratio: 3/1)').matches;
+  const count = tall ? 6 : wide ? 8 : 6, stepH = tall ? 1 : 2;
+  let hours = '';
+  for (let i = 0; i < count; i++) {
+    const k = start + i * stepH; if (k >= times.length) break;
+    const p = data.hourly.precipitation_probability[k];
+    hours += `<div class="hr${i === 0 ? ' nowh' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
+      <div class="v">${r0(data.hourly.temperature_2m[k])}°</div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
+  }
+  $('hours').innerHTML = hours;
+
+  // days, with a range bar across the week's lows and highs
+  const n = wide ? 5 : 6, d = data.daily;
+  const lo = Math.min(...d.temperature_2m_min.slice(0, n)), hi = Math.max(...d.temperature_2m_max.slice(0, n)), span = Math.max(1, hi - lo);
+  let days = '';
+  for (let i = 0; i < n && i < d.time.length; i++) {
+    const date = new Date(d.time[i] + 'T12:00'), p = d.precipitation_probability_max[i];
+    const a = (d.temperature_2m_min[i] - lo) / span * 100, b = (d.temperature_2m_max[i] - lo) / span * 100;
+    days += `<div class="day"><div class="n">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
+      <div class="p">${p >= 20 ? p + '%' : ''}</div>
+      <div class="range"><span class="lo">${r0(d.temperature_2m_min[i])}°</span><span class="track"><b style="left:${a}%;right:${100 - b}%"></b></span><span class="hi">${r0(d.temperature_2m_max[i])}°</span></div></div>`;
+  }
+  $('days').innerHTML = days;
+}
+
+window.icueEvents = {
+  onICUEInitialized: refresh,
+  onDataUpdated: p => { if (p && p.settings) for (const [k, v] of Object.entries(p.settings)) window[k] = v; data = null; refresh(); },
+};
+new ResizeObserver(() => draw()).observe(document.body);
+// Not in iCUE or the dashboard (a plain browser): start anyway.
+setTimeout(() => { if (!data && !timer) refresh(); }, 1500);
+</script>
+</body>
+</html>

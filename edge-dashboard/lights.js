@@ -12,7 +12,8 @@ const http = require('http');
 const https = require('https');
 const os = require('os');
 const { browse } = require('./mdns');
-const jiggler = require('./jiggler');   // not a light, but it's a live-state button too
+const jiggler = require('./jiggler');   // not lights, but live-state buttons too
+const obs = require('./obs');
 
 const FILE = path.join(__dirname, 'lights.json');
 const HUESYNC_URL = 'ws://127.0.0.1:24851/';
@@ -162,7 +163,7 @@ async function hueSyncAction(a) {
 // { "keylight:<id>": { on, brightness, kelvin }, "hue-room:<id>": { on }, "hue-scene:<id>": { on }, "huesync": { on, state } }
 let state = {}, lastJson = '', watchers = new Set(), pollTimer = null;
 function changed() { const j = JSON.stringify(stateNow()); if (j !== lastJson) { lastJson = j; for (const fn of watchers) fn(stateNow()); } }
-const stateNow = () => ({ ...state, ...(syncState ? { huesync: { on: syncState === 'syncing', state: syncState } } : {}) });
+const stateNow = () => ({ ...state, ...(syncState ? { huesync: { on: syncState === 'syncing', state: syncState } } : {}), obs: obs.state() });
 
 async function poll() {
   const s = {};
@@ -202,10 +203,11 @@ async function run(a) {
   else if (a.type === 'hue-scene' || a.type === 'hue-room') await hueAction(a);
   else if (a.type === 'huesync') await hueSyncAction(a);
   else if (a.type === 'jiggler') jiggler.toggle();
+  else if (a.type === 'obs') return obs.run(a);   // OBS's own events update the state
   else throw new Error(`not a light action: ${a.type}`);
   setTimeout(poll, 250);
 }
-const isLight = t => ['keylight', 'hue-scene', 'hue-room', 'huesync', 'jiggler'].includes(t);
+const isLight = t => ['keylight', 'hue-scene', 'hue-room', 'huesync', 'jiggler', 'obs'].includes(t);
 
 // For the editor: the lights, rooms and scenes to choose from.
 async function catalog() {
@@ -231,9 +233,10 @@ async function catalog() {
 function init(opts = {}) {
   if (opts.log) log = opts.log;
   if (!cfg.keylights.length || !cfg.hue) discover().catch(e => log('Light discovery: ' + e.message));
+  obs.init({ log, notify: changed });
 }
 
-module.exports = { init, run, isLight, watch, stateNow, catalog, pairHue, discover };
+module.exports = { init, run, isLight, watch, stateNow, catalog, pairHue, discover, obs };
 
 if (require.main === module) {
   (async () => {

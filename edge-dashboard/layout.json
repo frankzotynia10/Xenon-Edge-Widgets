@@ -5,30 +5,31 @@
   "pageKeys": { "previous": "Alt+Left", "next": "Alt+Right" },
 
   "widgets": {
-    "discord":       { "dir": "discord-edge/widget",       "port": 6801 },
+    "discord":      { "dir": "discord-edge/widget",      "port": 6801 },
     "notifications": { "dir": "notifications-edge/widget", "port": 6802 },
-    "apple-music":   { "dir": "apple-music-edge/widget",   "port": 6803 },
-    "teams":         { "dir": "teams-edge/widget",         "port": 6804 },
-    "launcher":      { "dir": "launcher-edge/widget",      "port": 6805 },
-    "sensor-box":    { "dir": "sensor-box-edge/widget",    "port": 6806 },
-    "deck":          { "dir": "deck-edge/widget",          "port": 6807 }
+    "apple-music":  { "dir": "apple-music-edge/widget",  "port": 6803 },
+    "teams":        { "dir": "teams-edge/widget",        "port": 6804 },
+    "launcher":     { "dir": "launcher-edge/widget",     "port": 6805 },
+    "sensor-box":   { "dir": "sensor-box-edge/widget",   "port": 6806 },
+    "deck":         { "dir": "deck-edge/widget",         "port": 6807 },
+    "weather":      { "dir": "weather-edge/widget",      "port": 6808 }
   },
 
   "pages": [
     { "name": "Main", "items": [
-      { "widget": "apple-music",   "x": 10,   "y": 8,   "w": 840,  "h": 344 },
-      { "widget": "sensor-box",    "x": 10,   "y": 368, "w": 840,  "h": 344 },
-      { "widget": "discord",       "x": 860,  "y": 8,   "w": 840,  "h": 704 },
-      { "widget": "deck",          "x": 1710, "y": 8,   "w": 840,  "h": 704 }
+      { "widget": "apple-music",  "x": 10,   "y": 8,   "w": 840,  "h": 344 },
+      { "widget": "sensor-box",   "x": 10,   "y": 368, "w": 840,  "h": 344 },
+      { "widget": "discord",      "x": 860,  "y": 8,   "w": 840,  "h": 704 },
+      { "widget": "deck",         "x": 1710, "y": 8,   "w": 840,  "h": 704 }
     ] },
     { "name": "Meetings", "items": [
-      { "widget": "apple-music",   "x": 10,   "y": 8,   "w": 840,  "h": 344 },
+      { "widget": "apple-music",  "x": 10,   "y": 8,   "w": 840,  "h": 344 },
       { "widget": "notifications", "x": 10,   "y": 368, "w": 840,  "h": 344 },
-      { "widget": "teams",         "x": 860,  "y": 8,   "w": 840,  "h": 704 },
-      { "widget": "deck",          "x": 1710, "y": 8,   "w": 840,  "h": 704 }
+      { "widget": "teams",        "x": 860,  "y": 8,   "w": 840,  "h": 704 },
+      { "widget": "deck",         "x": 1710, "y": 8,   "w": 840,  "h": 704 }
     ] },
     { "name": "Discord", "items": [
-      { "widget": "discord",       "x": 10,   "y": 8,   "w": 2540, "h": 704 }
+      { "widget": "discord",      "x": 10,   "y": 8,   "w": 2540, "h": 704 }
     ] }
   ]
 }

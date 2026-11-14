@@ -125,6 +125,9 @@ async function press(profile, page, pos) {
       // /s with the whole line in quotes: cmd strips just those outer quotes and keeps the ones inside.
       spawn('cmd.exe', ['/d', '/s', '/c', `"start "" ${a.command}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
       return;
+    case 'shadowplay':
+      // NVIDIA's overlay hotkey for this action, as set in the NVIDIA App
+      return command('K ' + (await require('./shadowplay').keysFor(a.op)).join(','));
     case 'edge-sleep':
       // The Edge helper's sleep cover, called directly: no global hotkey, so nothing clashes with game binds.
       return new Promise((resolve, reject) => {
