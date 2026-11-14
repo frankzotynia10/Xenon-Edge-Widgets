@@ -11,11 +11,26 @@ Still to do:
 - Stream Deck
 - start at login
 
+## Tray icon and log
+The dashboard has a tray icon (a little blue Edge) in the notification area. Its menu has:
+- **Status:** whether it's on the Edge or waiting for it, and whether the mouse lock is on.
+- **Show on Edge:** re-pins the window.
+- **Settings…**
+- **Reload widgets**
+- **Mouse lock** (on/off)
+- **Start at login:** a Windows login item for this app.
+- **Open log**
+- **Quit**
+
+The mouse lock choice is saved in `prefs.json`, which is git-ignored.
+
+Everything that happens goes to **`dashboard.log`**: the Edge found or lost, re-pins, the mouse lock starting or stopping, crashed pages and errors. At 1 MB it rolls over to `dashboard.log.old`. Starting a second copy just brings the running one back up.
+
 ## Mouse lock
 When the dashboard runs on the Edge, `mouse-lock.ps1` keeps the **mouse** off the Edge, like iCUE's mouse lock. **Touch** still works.
 - **How it works:** a low-level mouse hook drops mouse moves that would land on the Edge. Windows tags taps from the touchscreen and pen, and those pass through.
 - **After a tap:** the next real mouse move sends the cursor back to where it was on your main screen.
-- **Turning it off:** set `"mouseLock": false` in `layout.json`.
+- **Turning it off:** untick **Mouse lock** in the tray menu. Or, to change the default for everyone, set `"mouseLock": false` in `layout.json`.
 - **When it runs:** only in Edge mode, not with `--dev`. The dashboard restarts it if it stops.
 
 ## Settings
