@@ -53,6 +53,8 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .slider.offline .spk { background: rgba(0,0,0,.28); color: var(--muted); }   /* nothing to read (an app with no sound): not "muted" */
 .slider.light .fill { background: linear-gradient(180deg, #ffe39a, #ffc94d); }
 .slider.light.muted .fill { background: #4a4d55; }
+/* A slider color picked in the editor (not while muted or off, which stay gray) */
+.slider:not(.muted) .fill[style*="--fc"] { background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 70%, #fff), var(--fc)); }
 .slider.light .spk { color: #3a2f12; background: rgba(255,255,255,.55); }
 .slider.light.muted .spk { color: var(--muted); background: rgba(0,0,0,.28); }
 
@@ -94,6 +96,8 @@ const SPK = { on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const BULB = { on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="currentColor"/></svg>',
   off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>' };
 const SLIDERS = ['volume', 'hue-dim', 'keylight-dim'];
+// A button's own color (b.color), only if it's a plain #rrggbb.
+const colorOf = b => /^#[0-9a-f]{6}$/i.test(b && b.color || '') ? b.color : '';
 const sliderRows =(b, r, rows) => Math.max(1, Math.min(rows - r, Number(b.span) || rows - r));
 
 // Which live state a light button shows: { lit, val }.
@@ -163,7 +167,7 @@ function render() {
     let inner = '';
     // iconOff: a second image for when the button's thing is paused or off (the jiggler, a light that's off)
     const icon = li && (li.off || li.dark) && b.iconOff ? b.iconOff : b.icon;
-    if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false">`;
+    if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false"${b.hue ? ` style="filter:hue-rotate(${Number(b.hue) | 0}deg)"` : ''}>`;
     else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
     else {
       const glyph = a.type === 'folder' ? 'folder' : a.type === 'back' ? 'back' : a.type === 'page' ? (a.step < 0 ? 'prev' : 'next') : null;
@@ -176,7 +180,7 @@ function render() {
     if (li && li.lit) cls.push('lit');
     if (li && li.off && !b.iconOff) cls.push('offline');   // e.g. OBS isn't running
     if (li && li.val) inner += `<div class="val">${esc(li.val)}</div>`;
-    html += `<button class="${cls.join(' ')}" data-pos="${pos}" style="${at}">${inner}</button>`;
+    html += `<button class="${cls.join(' ')}" data-pos="${pos}" style="${at}${colorOf(b) ? ';background:' + colorOf(b) : ''}">${inner}</button>`;
   }
   g.innerHTML = html;
   if (drag) { const el = g.querySelector(`.slider[data-pos="${drag.pos}"]`); if (el) { drag.el = el; el.classList.add('dragging'); } }
@@ -223,7 +227,7 @@ const sliderIcon = (pos, off) => isVolume(pos) ? (off ? SPK.off : SPK.on) : (off
 function sliderHtml(b, pos, at) {
   const v = sliderValue(pos), kind = b.action.type === 'volume' ? 'vol' : 'light';
   return `<div class="key slider ${kind}${!v || v.off ? ' muted' : ''}${v ? '' : ' offline'}" data-pos="${pos}" style="${at}">` +
-    `<div class="fill" style="height:${v ? v.level : 0}%"></div><div class="pct">${!v ? '–' : v.off && kind === 'light' ? 'Off' : v.level}</div><div class="lbl">${esc(sliderLabel(b))}</div>` +
+    `<div class="fill" style="height:${v ? v.level : 0}%${colorOf(b) ? ';--fc:' + colorOf(b) : ''}"></div><div class="pct">${!v ? '–' : v.off && kind === 'light' ? 'Off' : v.level}</div><div class="lbl">${esc(sliderLabel(b))}</div>` +
     `<div class="spk">${sliderIcon(pos, !!v && v.off)}</div></div>`;
 }
 // Updates just the sliders (not the whole grid) while the value moves.

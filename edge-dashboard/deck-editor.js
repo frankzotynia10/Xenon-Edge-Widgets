@@ -68,6 +68,14 @@
     i.addEventListener('change', () => onChange(Math.max(min, Math.min(max, Number(i.value) || min))));
     return i;
   }
+  // A color picker with a "Default" button that clears it.
+  function colorPick(value, onChange) {
+    const i = el('input', { type: 'color' }); i.value = /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#4cc2ff';
+    i.style.opacity = value ? '1' : '.45';
+    i.addEventListener('input', () => { i.style.opacity = '1'; onChange(i.value); });
+    const clear = el('button', { class: 'small', onclick: () => { i.style.opacity = '.45'; onChange(null); } }, 'Default');
+    return el('span', { class: 'row-inline' }, i, ' ', clear);
+  }
   const iconUrl = rel => '/deck-icon/' + encodeURIComponent(rel);
 
   // Hotkey box: type a combo like Ctrl+Alt+Shift+F1, or press Record and press the keys.
@@ -266,7 +274,8 @@
       const a = (b && b.action) || {};
       const cell = el('div', { class: 'dkey' + (b ? '' : ' blank') + (sel === pos ? ' sel' : '') + (a.type === 'pending' ? ' pend' : ''), draggable: b ? 'true' : null,
         onclick: () => { if (!b) pg.buttons[pos] = { title: '', action: null }; sel = pos; draw(); } });
-      if (b && b.icon) cell.append(el('img', { src: iconUrl(b.icon) }));
+      if (b && b.icon) cell.append(el('img', { src: iconUrl(b.icon), style: b.hue ? 'filter:hue-rotate(' + (Number(b.hue) | 0) + 'deg)' : null }));
+      if (b && /^#[0-9a-f]{6}$/i.test(b.color || '')) cell.style.background = b.color;
       else if (b && a.type === 'text') cell.append(el('div', { class: 'tx' }, a.text));
       else if (!b) cell.append(el('div', { class: 'plus' }, '+'));
       if (b) cell.append(el('div', { class: 'lb' }, b.title || (a.type === 'keys' ? a.keys.replace('Ctrl+Alt+Shift+', 'CAS+') : a.type === 'folder' ? '📁' : a.type === 'back' ? '←' : a.type === 'page' ? (a.step < 0 ? '‹ page' : 'page ›') : '')));
@@ -291,6 +300,17 @@
       const bbox = el('div', { class: 'group' }, el('h3', {}, `Button ${sel.replace(',', ' / ')}`));
       bbox.append(field('Title', text(b.title, v => { b.title = v; changed(); }, { placeholder: 'Shown on the button' })));
       bbox.append(field('Image', iconPicker(b)));
+      // Colors: a slider's fill, or a button's background (behind text, symbols and see-through images).
+      const isSlider = ['volume', 'hue-dim', 'keylight-dim'].includes(a.type);
+      bbox.append(field(isSlider ? 'Slider color' : 'Button color', colorPick(b.color, v => { if (v) b.color = v; else delete b.color; changed(false); }),
+        isSlider ? 'The fill. Default: blue for volume, warm yellow for lights.' : 'Shows behind text, symbols and see-through images.'));
+      if (b.icon || b.iconOff) {
+        const r = el('input', { type: 'range', min: 0, max: 359, step: 5 }); r.value = b.hue || 0;
+        const out = el('span', { class: 'hint' }, (b.hue || 0) + '°');
+        r.addEventListener('input', () => { out.textContent = r.value + '°'; });
+        r.addEventListener('change', () => { const h = Number(r.value) % 360; if (h) b.hue = h; else delete b.hue; changed(); });
+        bbox.append(field('Image color shift', el('span', { class: 'row-inline' }, r, ' ', out), 'Turns the image\'s colors around the color wheel: 120° makes blue green, 240° makes it red-pink. 0 is the original. Gray and white parts stay as they are.'));
+      }
       bbox.append(field('Action', select(TYPES, a.type || '', v => { b.action = v ? { type: v, ...(v === 'page' ? { step: 1 } : {}), ...(v === 'folder' ? { page: (pr.pages.find(p => p.folder) || {}).id } : {}) } : null; changed(); })));
       if (a.type === 'keys') bbox.append(field('Keys', keysInput(a), 'Sent to the app in front. Ctrl+Alt+Shift combos stay clear of normal binds.'));
       if (a.type === 'text') {

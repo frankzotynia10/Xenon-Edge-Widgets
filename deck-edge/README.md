@@ -19,6 +19,8 @@ What a button can do:
 - **Philips Hue:** recall a scene, or turn a room on/off. A lit room or the active scene gets a glow bar.
 - **Hue Sync:** start/stop syncing in the Hue Sync PC app, with mode and intensity.
 
+**Colors:** in the editor, every button has a color: a slider's fill, or a button's background (it shows behind text, symbols and see-through images). A button with an image also has **Image color shift**, which turns the image's colors around the color wheel (120° makes blue green), so any built-in image can match. Gray and white parts stay as they are.
+
 **Profiles** switch on their own with the app in front. The WoW profile shows while `Wow` has focus, and the first profile shows otherwise. Tap the profile chip at the bottom left to switch by hand, until the app in front changes.
 
 **Swipe** sideways to change page. **Folders** go back to the page you came from after 15 seconds without a tap (set per folder; 0 to stay).
