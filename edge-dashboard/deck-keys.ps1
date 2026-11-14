@@ -3,7 +3,8 @@
 #   K <vk>,<vk>,...     press the keys in order, then release them in reverse (a hotkey combo)
 #   T <base64 utf-8>    type the text as Unicode characters
 # stdout:
-#   fg <process> <window class>   whenever the foreground window changes
+#   fg <process> <0|1> <window class>   whenever the foreground window (or whether it fills its screen) changes;
+#                                       1 = it covers the whole monitor, like a fullscreen game
 #   ok | err <message>            after each command
 # Keys go to whatever window has focus. The dashboard never takes focus, so that's the game or app you're in.
 $ErrorActionPreference = 'Stop'
@@ -31,6 +32,25 @@ public static class DeckKeys {
   [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder sb, int max);
+  [StructLayout(LayoutKind.Sequential)] struct RECT { public int L, T, R, B; }
+  [StructLayout(LayoutKind.Sequential)] struct MONITORINFO { public int cbSize; public RECT rcMonitor, rcWork; public uint dwFlags; }
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr h, uint flags);
+  [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr m, ref MONITORINFO mi);
+  [DllImport("user32.dll")] static extern bool SetProcessDpiAwarenessContext(IntPtr ctx);
+  [DllImport("user32.dll")] static extern UIntPtr SetTimer(IntPtr h, UIntPtr id, uint ms, IntPtr fn);
+  [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
+  [DllImport("user32.dll")] static extern IntPtr GetDesktopWindow();
+
+  // True when the window covers its whole monitor (borderless or exclusive fullscreen).
+  static bool FillsScreen(IntPtr h) {
+    if (h == GetShellWindow() || h == GetDesktopWindow()) return false;
+    RECT r; if (!GetWindowRect(h, out r)) return false;
+    MONITORINFO mi = new MONITORINFO(); mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+    if (!GetMonitorInfo(MonitorFromWindow(h, 2), ref mi)) return false;
+    return r.L <= mi.rcMonitor.L && r.T <= mi.rcMonitor.T && r.R >= mi.rcMonitor.R && r.B >= mi.rcMonitor.B
+      && r.R - r.L <= (mi.rcMonitor.R - mi.rcMonitor.L) + 2 && r.B - r.T <= (mi.rcMonitor.B - mi.rcMonitor.T) + 2;   // not a maximized window's overhang
+  }
 
   const uint KEYUP = 2, UNICODE = 4, EXTENDED = 1;
   static readonly HashSet<int> Extended = new HashSet<int> { 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x2D, 0x2E, 0x5B, 0x5C, 0x6F, 0x90, 0xA3, 0xA5 };
@@ -75,7 +95,7 @@ public static class DeckKeys {
     uint pid; GetWindowThreadProcessId(h, out pid);
     string name = "?"; try { name = Process.GetProcessById((int)pid).ProcessName; } catch { }
     StringBuilder cls = new StringBuilder(256); GetClassName(h, cls, 256);
-    string line = "fg " + name + " " + cls;
+    string line = "fg " + name + " " + (FillsScreen(h) ? "1" : "0") + " " + cls;
     if (line != lastFg) { lastFg = line; Say(line); }
   }
 
@@ -98,11 +118,13 @@ public static class DeckKeys {
     });
     reader.IsBackground = true; reader.Start();
 
+    try { SetProcessDpiAwarenessContext((IntPtr)(-4)); } catch { }   // real pixels, for the fullscreen check
     proc = (hook, ev, hwnd, idObject, idChild, thread, time) => ReportForeground();
     SetWinEventHook(3 /* EVENT_SYSTEM_FOREGROUND */, 3, IntPtr.Zero, proc, 0, 0, 0 /* WINEVENT_OUTOFCONTEXT */);
     ReportForeground();
+    SetTimer(IntPtr.Zero, UIntPtr.Zero, 2000, IntPtr.Zero);   // re-check now and then: a game can go fullscreen after it gets focus
     MSG m;
-    while (GetMessage(out m, IntPtr.Zero, 0, 0) > 0) { }
+    while (GetMessage(out m, IntPtr.Zero, 0, 0) > 0) { if (m.message == 0x113 /* WM_TIMER */) ReportForeground(); }
   }
 }
 '@

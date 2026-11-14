@@ -11,6 +11,7 @@ const path = require('path');
 const { EventEmitter } = require('events');
 const sensors = require('./sensors');
 const deck = require('./deck');
+const fps = require('./fps');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
@@ -121,6 +122,7 @@ async function dashHandler(req, res) {
   if (req.method === 'GET') {
     if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current(), lights: deck.lights.stateNow() });
     if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
+    if (p === '/api/fps') return jsonCors(req, res, 200, fps.read());
     if (p === '/api/lights/catalog') return json(res, 200, await deck.lights.catalog());
     if (p.startsWith('/deck-icon/')) {
       const file = deck.icon(decodeURIComponent(p.slice('/deck-icon/'.length)));
@@ -220,6 +222,7 @@ function listen(port, handler) {
 async function start(opts = {}) {
   const layout = loadLayout();
   deck.init({ log: opts.log });
+  fps.init({ log: opts.log, foreground: deck.foreground });
   deck.onChange(s => broadcast('deck', s));
   deck.lights.watch(s => broadcast('lights', s));
   const servers = [await listen(DASH_PORT, dashHandler)];

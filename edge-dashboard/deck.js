@@ -57,7 +57,7 @@ function findButton(cfg, profile, page, pos) {
 
 // ---------- the key sender ----------
 let helper = null, pending = [], log = () => {};
-const state = { fg: '', profile: null };
+const state = { fg: '', fullscreen: false, profile: null };
 const listeners = new Set();
 // Windows UI that shouldn't switch the deck away from the app you were in: Alt+Tab, Task View, the taskbar, Start.
 const SHELL_CLASSES = /^(ForegroundStaging|MultitaskingViewFrame|XamlExplorerHostIslandWindow|TaskSwitcherWnd|Shell_TrayWnd|Shell_SecondaryTrayWnd|Windows\.UI\.Core\.CoreWindow|NotifyIconOverflowWindow|TopLevelWindowForOverflowXamlIsland)$/;
@@ -80,9 +80,9 @@ function startHelper() {
     while ((i = buf.indexOf('\n')) >= 0) {
       const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
       if (line.startsWith('fg ')) {
-        const [, proc, cls = ''] = /^fg (\S+) ?(.*)$/.exec(line) || [];
-        if (SHELL_CLASSES.test(cls)) continue;
-        state.fg = proc;
+        const [, proc, full, cls = ''] = /^fg (\S+) ([01]) ?(.*)$/.exec(line) || [];
+        if (!proc || SHELL_CLASSES.test(cls)) continue;
+        state.fg = proc; state.fullscreen = full === '1';
         const prof = profileFor(proc);
         if (prof !== state.profile) { state.profile = prof; for (const fn of listeners) fn({ profile: prof, fg: proc }); }
       } else if (line === 'ok' || line.startsWith('err')) {
@@ -159,5 +159,6 @@ function init(opts = {}) {
 }
 const onChange = fn => listeners.add(fn);
 const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg });
+const foreground = () => ({ app: state.fg, fullscreen: state.fullscreen });
 
-module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, current, VK, ICON_DIRS, lights };
+module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, current, foreground, VK, ICON_DIRS, lights };

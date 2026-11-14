@@ -51,6 +51,33 @@
   };
   if (!plugins.Sensorsdataprovider) plugins.Sensorsdataprovider = SP;
 
+  // ---------- iCUE's FPS plugin (plugins.Fpsdataprovider), backed by PresentMon via /api/fps ----------
+  // getFpsAvailable(req) / getCurrentFps(req) answer through asyncResponse(req, value);
+  // fpsUpdated(fps) and fpsAvailabilityChanged(bool) fire as they change. Polls only once a widget asks.
+  var fpsState = { available: false, fps: 0, loaded: false }, fpsWaiters = [], fpsPolling = false;
+  function pollFps() {
+    fetch((window.__edgeApi || 'http://127.0.0.1:6800') + '/api/fps', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var was = fpsState;
+        fpsState = { available: !!d.available, fps: d.fps || 0, loaded: true };
+        if (was.available !== fpsState.available) FP.fpsAvailabilityChanged.emit(fpsState.available);
+        if (fpsState.available) FP.fpsUpdated.emit(fpsState.fps);
+      })
+      .catch(function () { if (fpsState.available) FP.fpsAvailabilityChanged.emit(false); fpsState = { available: false, fps: 0, loaded: true }; })
+      .then(function () { var w = fpsWaiters; fpsWaiters = []; w.forEach(function (f) { f(); }); });
+  }
+  function whenFps(f) {
+    if (!fpsPolling) { fpsPolling = true; pollFps(); setInterval(pollFps, 1000); }
+    if (fpsState.loaded) f(); else fpsWaiters.push(f);
+  }
+  var FP = {
+    asyncResponse: Signal(), fpsUpdated: Signal(), fpsAvailabilityChanged: Signal(),
+    getFpsAvailable: function (req) { whenFps(function () { FP.asyncResponse.emit(req, fpsState.available); }); },
+    getCurrentFps: function (req) { whenFps(function () { FP.asyncResponse.emit(req, fpsState.available ? fpsState.fps : 0); }); }
+  };
+  if (!plugins.Fpsdataprovider) plugins.Fpsdataprovider = FP;
+
   function evalExpr(expr) {
     if (expr == null || expr === '') return undefined;
     try { return new Function('tr', 'plugins', 'return (' + expr + ');')(tr, plugins); } catch (e) { return expr; }
@@ -79,6 +106,8 @@
       if (typeof ev.onICUEInitialized === 'function') { try { ev.onICUEInitialized(); } catch (e) { console.error(e); } }
       var se = window.pluginSensorsdataproviderEvents;
       if (se && typeof se.onInitialized === 'function') { try { se.onInitialized(); } catch (e) { console.error(e); } }
+      var fe = window.pluginFpsdataproviderEvents;
+      if (fe && typeof fe.onInitialized === 'function') { try { fe.onInitialized(); } catch (e) { console.error(e); } }
     }, 0);
   });
 

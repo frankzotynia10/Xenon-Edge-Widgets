@@ -5,15 +5,11 @@ Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small 
 **Status: work in progress.** Done:
 - the window, the layout and the iCUE stand-in
 - the settings page, with an import of your iCUE settings
-- Sensor Box sensors, from LibreHardwareMonitor
-
+- Sensor Box sensors (from LibreHardwareMonitor) and FPS (from PresentMon)
 - the Deck widget, in place of the Virtual Stream Deck: hotkeys, text, commands, pages, folders, app profiles
-
 - Deck lights: Elgato Key Light, Philips Hue and Hue Sync, with live state
 
-Still to do:
-- FPS for the Sensor Box (PresentMon)
-- start at login
+Still to do: the switch-over. Turn on start at login (tray menu), test a reboot with iCUE closed, check touch mapping, then uninstall iCUE.
 
 ## Pages
 `layout.json` can have several pages, each with its own layout. Ways to switch:
@@ -75,6 +71,12 @@ The Sensor Box gets its temperatures and loads from **LibreHardwareMonitor** in 
 - **Choosing other sensors:** on the settings page, each sensor setting is a dropdown with "Automatic" plus every sensor, grouped by hardware.
 - **Not imported from iCUE:** sensor picks. iCUE saves them as its own IDs, which mean nothing here, so they stay on Automatic.
 - **If LibreHardwareMonitor isn't running:** the values show `--`, and the settings page says so.
+- **FPS** (the pill next to GPU) comes from **PresentMon**, Intel's open-source frame tool:
+  - **Install:** `winget install Intel.PresentMon.Console`.
+  - **Permissions:** it needs admin or membership in the **Performance Log Users** group. Join with `Add-LocalGroupMember -Group "Performance Log Users" -Member $env:USERNAME` in an admin PowerShell, then sign out and back in.
+  - **When it shows:** only for the app in front, and only while its window fills the screen (borderless or exclusive fullscreen). Browsers and chat apps don't get one.
+  - **Running cost:** PresentMon runs only while the Sensor Box is asking, stops 20 s after, and costs about 0.3% CPU and 13 MB while running.
+  - Set the `PRESENTMON` environment variable to use a different `presentmon.exe`.
 - **Duplicate IDs:** LibreHardwareMonitor sometimes gives two sensors the same ID (GPU Memory and GPU Bus). The second one gets its name added, e.g. `/gpu-nvidia/0/load/3~GPU Bus`.
 
 ## Deck
@@ -135,6 +137,7 @@ Close iCUE (or turn its Edge dashboard off) first, or the two will fight over th
   - It calls `icueEvents.onICUEInitialized()` after load and sets `iCUE_initialized`.
   - It sends setting changes to `icueEvents.onDataUpdated({settings})`.
   - `plugins.Sensorsdataprovider` polls `/api/sensors` every second and sends `sensorValueChanged` for the sensors a widget watches.
+  - `plugins.Fpsdataprovider` polls `/api/fps` (from **`fps.js`**) every second and sends `fpsUpdated` / `fpsAvailabilityChanged`.
 - **`settings.json`** (git-ignored) holds per-widget values, keyed by widget id, e.g. `{ "discord": { "accentColor": "#5865F2" } }`.
 - **`main.js`** is the Electron window. It re-pins to the Edge when displays change.
 
