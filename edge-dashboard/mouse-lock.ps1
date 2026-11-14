@@ -30,6 +30,8 @@ public static class EdgeMouseLock {
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool GetMonitorInfo(IntPtr hMon, ref MONITORINFOEX mi);
   [DllImport("user32.dll")] static extern bool SetProcessDpiAwarenessContext(IntPtr ctx);
   [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string name);
+  [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(POINT pt, uint flags);
+  static IntPtr edgeMon = IntPtr.Zero;
 
   const int WH_MOUSE_LL = 14; const uint WM_MOUSEMOVE = 0x200, WM_TIMER = 0x113;
   const uint TOUCH_MASK = 0xFFFFFF00, TOUCH_SIGNATURE = 0xFF515700;
@@ -41,14 +43,18 @@ public static class EdgeMouseLock {
   public static int Blocked;
 
   static bool InEdge(POINT p) { return haveEdge && p.X >= edge.L && p.X < edge.R && p.Y >= edge.T && p.Y < edge.B; }
+  // Where the cursor would really end up: a point off every screen gets snapped by Windows to the
+  // nearest screen, which can be the Edge (e.g. just left of it), so check the nearest monitor too.
+  static bool LandsOnEdge(POINT p) { return InEdge(p) || (edgeMon != IntPtr.Zero && MonitorFromPoint(p, 2 /* MONITOR_DEFAULTTONEAREST */) == edgeMon); }
 
   public static string FindEdge() {
-    bool found = false; RECT r = new RECT();
+    bool found = false; RECT r = new RECT(); IntPtr mon = IntPtr.Zero;
     EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, delegate (IntPtr h, IntPtr dc, ref RECT rc, IntPtr d) {
       MONITORINFOEX mi = new MONITORINFOEX(); mi.cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
-      if (GetMonitorInfo(h, ref mi) && mi.rcMonitor.R - mi.rcMonitor.L == wantW && mi.rcMonitor.B - mi.rcMonitor.T == wantH) { r = mi.rcMonitor; found = true; }
+      if (GetMonitorInfo(h, ref mi) && mi.rcMonitor.R - mi.rcMonitor.L == wantW && mi.rcMonitor.B - mi.rcMonitor.T == wantH) { r = mi.rcMonitor; found = true; mon = h; }
       return true;
     }, IntPtr.Zero);
+    edgeMon = mon;
     bool changed = found != haveEdge || r.L != edge.L || r.T != edge.T || r.R != edge.R || r.B != edge.B;
     edge = r; haveEdge = found;
     return changed ? (found ? string.Format("Edge at {0},{1} to {2},{3}", r.L, r.T, r.R, r.B) : "Edge not found") : null;
@@ -60,7 +66,18 @@ public static class EdgeMouseLock {
       bool touch = ((uint)s.dwExtraInfo.ToUInt64() & TOUCH_MASK) == TOUCH_SIGNATURE;
       if (!touch) {
         POINT cur; GetCursorPos(out cur);
-        if (InEdge(s.pt)) {
+        // Aimed off every screen: Windows would snap the cursor to a screen of its choosing, which
+        // can be the Edge. Clamp it to the screen it's on instead, and drop the original move.
+        if (!InEdge(cur) && MonitorFromPoint(s.pt, 0 /* MONITOR_DEFAULTTONULL */) == IntPtr.Zero) {
+          MONITORINFOEX mi = new MONITORINFOEX(); mi.cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
+          if (GetMonitorInfo(MonitorFromPoint(cur, 2), ref mi)) {
+            int x = Math.Max(mi.rcMonitor.L, Math.Min(mi.rcMonitor.R - 1, s.pt.X));
+            int y = Math.Max(mi.rcMonitor.T, Math.Min(mi.rcMonitor.B - 1, s.pt.Y));
+            SetCursorPos(x, y); lastOutside.X = x; lastOutside.Y = y; haveOutside = true;
+            return (IntPtr)1;
+          }
+        }
+        if (LandsOnEdge(s.pt)) {
           // A tap left the cursor on the Edge: send it back to where the mouse last was.
           if (InEdge(cur) && haveOutside) SetCursorPos(lastOutside.X, lastOutside.Y);
           Blocked++;
