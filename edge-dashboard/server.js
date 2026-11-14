@@ -219,7 +219,7 @@ async function dashHandler(req, res) {
     }
     // Deck: run a saved button, by where it is. The body never carries keys or commands.
     if (p === '/api/deck/press') {
-      try { await deck.press(String(body.profile), String(body.page), String(body.pos)); return jsonCors(req, res, 200, { ok: true }); }
+      try { await deck.press(String(body.profile), String(body.page), String(body.pos), body.value); return jsonCors(req, res, 200, { ok: true }); }
       catch (e) { return jsonCors(req, res, 400, { error: e.message }); }
     }
     // Deck: save the whole config, from the settings page (same origin only).
@@ -268,6 +268,7 @@ async function start(opts = {}) {
   fps.init({ log: opts.log, foreground: deck.foreground });
   muteLights.init({ log: opts.log });
   deck.onChange(s => broadcast('deck', s));
+  deck.onVolume(v => broadcast('volume', v || {}));
   deck.lights.watch(s => broadcast('lights', s));
   const servers = [await listen(DASH_PORT, dashHandler)];
   for (const w of widgetList(layout)) servers.push(await listen(w.port, widgetHandler(w)));

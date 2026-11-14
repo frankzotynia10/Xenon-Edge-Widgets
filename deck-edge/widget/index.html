@@ -12,7 +12,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
 
 #wrap { position: absolute; inset: 0; padding: var(--gap); display: flex; flex-direction: column; }
-#grid { flex: 1; display: grid; gap: var(--gap); align-content: center; justify-content: center; touch-action: none; }
+#grid { flex: 1; min-height: 0; display: grid; gap: var(--gap); align-content: center; justify-content: center; touch-action: none; }
 
 .key { width: var(--t); height: var(--t); border-radius: calc(var(--t) * .16); background: var(--panel); position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center; transition: transform .08s, box-shadow .25s; }
@@ -36,6 +36,20 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .key .val { position: absolute; top: 6%; right: 7%; z-index: 2; font-size: calc(var(--t) * .1); font-weight: 700; color: #ffd36b; text-shadow: 0 1px 3px #000; }
 .key.ok { box-shadow: inset 0 0 0 3px var(--accent); }
 .key.err { box-shadow: inset 0 0 0 3px var(--bad); }
+
+/* Volume slider: a tall key spanning rows. Drag anywhere on it; tap the speaker to mute. */
+.key.slider { width: var(--t); height: 100%; display: block; touch-action: none; }
+.key.slider:active { transform: none; }
+.slider .fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #6fd3ff, var(--accent)); transition: height .12s; }
+.slider.dragging .fill { transition: none; }
+.slider.muted .fill { background: #4a4d55; }
+.slider .pct { position: absolute; top: 5%; left: 0; right: 0; text-align: center; font-weight: 700; font-size: calc(var(--t) * .2); text-shadow: 0 1px 4px rgba(0,0,0,.6); z-index: 2; }
+.slider .lbl { position: absolute; top: calc(5% + var(--t) * .24); left: 0; right: 0; text-align: center; font-size: calc(var(--t) * .1); font-weight: 600; color: var(--muted); z-index: 2; text-transform: uppercase; letter-spacing: .06em; }
+.slider.muted .pct { color: var(--muted); }
+.slider .spk { position: absolute; left: 50%; bottom: calc(var(--t) * .08); width: calc(var(--t) * .5); height: calc(var(--t) * .5); transform: translateX(-50%); z-index: 2;
+  border-radius: 50%; background: rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; }
+.slider .spk svg { width: 58%; height: 58%; }
+.slider.muted .spk { background: var(--bad); }
 
 #foot { height: var(--foot); display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 13px; color: var(--muted); gap: 10px; }
 #profile { display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 99px; background: var(--panel); font-weight: 600; font-size: 12.5px; letter-spacing: .03em; text-transform: uppercase; }
@@ -69,7 +83,10 @@ const GLYPH = {
   prev: '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
 };
 
-let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [], lightState = {};
+let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [], lightState = {}, volume = null, drag = null;
+const SPK = { on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="m16 9.5 5 5m0-5-5 5"/></svg>' };
+const sliderRows = (b, r, rows) => Math.max(1, Math.min(rows - r, Number(b.span) || rows - r));
 
 // Which live state a light button shows: { lit, val }.
 function lightInfo(a) {
@@ -117,11 +134,22 @@ function render() {
   const t = Math.floor(Math.min((W - gap * (grid.cols - 1)) / grid.cols, (H - gap * (grid.rows - 1)) / grid.rows));
   g.style.setProperty('--t', t + 'px');
   g.style.gridTemplateColumns = `repeat(${grid.cols}, ${t}px)`;
+  g.style.gridTemplateRows = `repeat(${grid.rows}, ${t}px)`;
+  // Sliders cover the spots below them.
+  const covered = new Set();
+  for (const [pos, b] of Object.entries(pg.buttons || {})) {
+    if (!b.action || b.action.type !== 'volume') continue;
+    const [c, r] = pos.split(',').map(Number);
+    for (let i = 1; i < sliderRows(b, r, grid.rows); i++) covered.add(`${c},${r + i}`);
+  }
   let html = '';
   for (let r = 0; r < grid.rows; r++) for (let c = 0; c < grid.cols; c++) {
     const pos = `${c},${r}`, b = (pg.buttons || {})[pos];
-    if (!b) { html += '<div class="key empty"></div>'; continue; }
+    if (covered.has(pos)) continue;
+    const at = `grid-column:${c + 1};grid-row:${r + 1}`;
+    if (!b) { html += `<div class="key empty" style="${at}"></div>`; continue; }
     const a = b.action || {};
+    if (a.type === 'volume') { html += sliderHtml(b, pos, `grid-column:${c + 1};grid-row:${r + 1} / span ${sliderRows(b, r, grid.rows)}`); continue; }
     const cls = ['key'];
     const li = lightInfo(a);
     let inner = '';
@@ -140,9 +168,10 @@ function render() {
     if (li && li.lit) cls.push('lit');
     if (li && li.off && !b.iconOff) cls.push('offline');   // e.g. OBS isn't running
     if (li && li.val) inner += `<div class="val">${esc(li.val)}</div>`;
-    html += `<button class="${cls.join(' ')}" data-pos="${pos}">${inner}</button>`;
+    html += `<button class="${cls.join(' ')}" data-pos="${pos}" style="${at}">${inner}</button>`;
   }
   g.innerHTML = html;
+  if (drag) { const el = g.querySelector(`.slider[data-pos="${drag.pos}"]`); if (el) { drag.el = el; el.classList.add('dragging'); } }
 
   $('pname').textContent = pr.name;
   $('profile').classList.toggle('manual', manual);
@@ -151,6 +180,39 @@ function render() {
   $('dots').innerHTML = pg.folder || mains.length < 2 ? '' : mains.map(p => `<i class="${p.id === pg.id ? 'on' : ''}"></i>`).join('');
   $('pagename').textContent = pg.folder ? pg.name : (mains.length > 1 ? pg.name : '');
   if (pg.id !== render.lastPage) { render.lastPage = pg.id; armReturn(); }   // a different page: start (or stop) the timer
+}
+
+function sliderHtml(b, pos, at) {
+  const v = drag && drag.pos === pos ? { level: drag.level, muted: false } : volume;
+  const lvl = v ? v.level : 0, muted = !v || v.muted;
+  return `<div class="key slider${muted ? ' muted' : ''}${v ? '' : ' offline'}" data-pos="${pos}" style="${at}">` +
+    `<div class="fill" style="height:${lvl}%"></div><div class="pct">${v ? lvl : '–'}</div><div class="lbl">${esc(b.title || 'Volume')}</div>` +
+    `<div class="spk">${muted ? SPK.off : SPK.on}</div></div>`;
+}
+// Updates just the slider (not the whole grid) while the value moves.
+function paintSliders() {
+  for (const el of document.querySelectorAll('.slider')) {
+    const v = drag && drag.pos === el.dataset.pos ? { level: drag.level, muted: false } : volume;
+    const lvl = v ? v.level : 0, muted = !v || v.muted;
+    el.classList.toggle('muted', muted); el.classList.toggle('offline', !v);
+    el.querySelector('.fill').style.height = lvl + '%';
+    el.querySelector('.pct').textContent = v ? lvl : '–';
+    el.querySelector('.spk').innerHTML = muted ? SPK.off : SPK.on;
+  }
+}
+function sendSlider(pos, value) {
+  return fetch(`${API}/api/deck/press`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-edge-dashboard': '1' },
+    body: JSON.stringify({ profile: profileId, page: pageId, pos, value }) }).catch(() => {});
+}
+// Sends at most every 60 ms while dragging, and always the last value.
+let sendTimer = null;
+function queueLevel() {
+  if (sendTimer) return;
+  sendTimer = setTimeout(() => { sendTimer = null; if (drag) { if (drag.sent !== drag.level) { drag.sent = drag.level; sendSlider(drag.pos, drag.level); } } }, 60);
+}
+function levelAt(el, y) {
+  const r = el.getBoundingClientRect(), pad = r.width * .1;
+  return Math.round(Math.max(0, Math.min(1, (r.bottom - pad - y) / (r.height - pad * 2))) * 100);
 }
 
 // Folders go back to the page they were opened from after a while with no taps (like Stream Deck).
@@ -193,14 +255,41 @@ async function press(el) {
 
 // Taps, plus swiping sideways to change page.
 let down = null;
-$('grid').addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, el: e.target.closest('.key') }; armReturn(); });
+$('grid').addEventListener('pointerdown', e => {
+  armReturn();
+  const s = e.target.closest('.slider');
+  if (s) {
+    try { s.setPointerCapture(e.pointerId); } catch { }
+    // The speaker mutes on a tap; anywhere else starts a drag.
+    if (e.target.closest('.spk')) { down = { x: e.clientX, y: e.clientY, mute: s.dataset.pos }; return; }
+    drag = { pos: s.dataset.pos, el: s, level: levelAt(s, e.clientY), sent: null };
+    s.classList.add('dragging'); paintSliders(); queueLevel();
+    return;
+  }
+  down = { x: e.clientX, y: e.clientY, el: e.target.closest('.key') };
+});
+$('grid').addEventListener('pointermove', e => {
+  if (!drag) return;
+  const l = levelAt(drag.el, e.clientY);
+  if (l !== drag.level) { drag.level = l; paintSliders(); queueLevel(); }
+});
+function endDrag() {
+  if (!drag) return;
+  const d = drag; drag = null;
+  d.el.classList.remove('dragging');
+  volume = { level: d.level, muted: false };   // shown until the PC reports back
+  if (d.sent !== d.level) sendSlider(d.pos, d.level);
+  paintSliders();
+}
 $('grid').addEventListener('pointerup', e => {
+  if (drag) return endDrag();
   if (!down) return;
+  if (down.mute) { const d = down; down = null; if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 25) sendSlider(d.mute, 'mute'); return; }
   const dx = e.clientX - down.x, dy = e.clientY - down.y, el = down.el; down = null;
   if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (!page().folder) step(dx < 0 ? 1 : -1); return; }
   if (el && Math.hypot(dx, dy) < 25) press(el);
 });
-$('grid').addEventListener('pointercancel', () => { down = null; });
+$('grid').addEventListener('pointercancel', () => { down = null; endDrag(); });
 
 // Tap the profile chip to pick another profile by hand; it follows the app in front again when that changes.
 $('profile').addEventListener('click', () => {
@@ -212,7 +301,7 @@ $('profile').addEventListener('click', () => {
 async function load() {
   try {
     const d = await (await fetch(`${API}/api/deck`, { cache: 'no-store' })).json();
-    cfg = d.config; autoProfile = d.profile; lightState = d.lights || {};
+    cfg = d.config; autoProfile = d.profile; lightState = d.lights || {}; volume = d.volume || null;
     $('msg').style.display = 'none'; $('wrap').style.display = '';
     setProfile(manual ? profileId : d.profile, manual);
   } catch {
@@ -226,6 +315,7 @@ function listen() {
   es.addEventListener('deck', e => { const d = JSON.parse(e.data); autoProfile = d.profile; if (cfg) setProfile(d.profile, false); });
   es.addEventListener('deck-config', load);
   es.addEventListener('lights', e => { lightState = JSON.parse(e.data); render(); });
+  es.addEventListener('volume', e => { const v = JSON.parse(e.data); volume = 'level' in v ? v : null; paintSliders(); });
   es.onerror = () => { es.close(); setTimeout(() => { load(); listen(); }, 3000); };
 }
 

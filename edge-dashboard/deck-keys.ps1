@@ -2,7 +2,10 @@
 # stdin, one command per line:
 #   K <vk>,<vk>,...     press the keys in order, then release them in reverse (a hotkey combo)
 #   T <base64 utf-8>    type the text as Unicode characters
+#   V <0-100>           set the system volume (default playback device); above 0 also unmutes
+#   M                   mute / unmute the system volume
 # stdout:
+#   vol <0-100|-> <0|1>               the system volume and whether it's muted, whenever it changes
 #   fg <process> <0|1> <window class>   whenever the foreground window (or whether it fills its screen) changes;
 #                                       1 = it covers the whole monitor, like a fullscreen game
 #   ok | err <message>            after each command
@@ -58,6 +61,56 @@ public static class DeckKeys {
   static WinEventProc proc;   // kept in a field so the GC can't collect the callback
   static string lastFg;
 
+  // ---------- system volume (the default playback device) ----------
+  [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorCo {}
+  [ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IMMDeviceEnumerator {
+    int NotUsed_EnumAudioEndpoints(int dataFlow, int mask, out IntPtr devices);
+    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice device);
+  }
+  [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IMMDevice { int Activate(ref Guid iid, int clsCtx, IntPtr p, [MarshalAs(UnmanagedType.IUnknown)] out object o); }
+  [ComImport, Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IAudioEndpointVolume {
+    int NotUsed_Register(IntPtr n); int NotUsed_Unregister(IntPtr n); int GetChannelCount(out uint c);
+    int SetMasterVolumeLevel(float db, ref Guid ctx); int SetMasterVolumeLevelScalar(float level, ref Guid ctx);
+    int GetMasterVolumeLevel(out float db); int GetMasterVolumeLevelScalar(out float level);
+    int NotUsed_SetCh(uint c, float db, ref Guid ctx); int NotUsed_SetChS(uint c, float l, ref Guid ctx);
+    int NotUsed_GetCh(uint c, out float db); int NotUsed_GetChS(uint c, out float l);
+    int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid ctx); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+  }
+  static readonly object volLock = new object();
+  static IMMDeviceEnumerator devEnum;
+  static Guid volCtx = Guid.NewGuid();
+  // Asks for the default device each time, so switching speakers/headphones just works.
+  static IAudioEndpointVolume Endpoint() {
+    if (devEnum == null) devEnum = (IMMDeviceEnumerator)new MMDeviceEnumeratorCo();
+    IMMDevice d; Marshal.ThrowExceptionForHR(devEnum.GetDefaultAudioEndpoint(0 /* render */, 1 /* multimedia */, out d));
+    Guid iid = typeof(IAudioEndpointVolume).GUID; object o;
+    Marshal.ThrowExceptionForHR(d.Activate(ref iid, 23 /* CLSCTX_ALL */, IntPtr.Zero, out o));
+    return (IAudioEndpointVolume)o;
+  }
+  public static void SetVolume(int pct) {
+    lock (volLock) {
+      IAudioEndpointVolume v = Endpoint();
+      v.SetMasterVolumeLevelScalar(Math.Max(0, Math.Min(100, pct)) / 100f, ref volCtx);
+      if (pct > 0) v.SetMute(false, ref volCtx);   // dragging up unmutes, like the Windows slider
+    }
+    ReportVolume();
+  }
+  public static void ToggleMute() {
+    lock (volLock) { IAudioEndpointVolume v = Endpoint(); bool m; v.GetMute(out m); v.SetMute(!m, ref volCtx); }
+    ReportVolume();
+  }
+  static string lastVol;
+  // "vol <0-100> <0|1 muted>" whenever it changes, from here or anywhere else.
+  static void ReportVolume() {
+    string line;
+    try { lock (volLock) { IAudioEndpointVolume v = Endpoint(); float l; bool m; v.GetMasterVolumeLevelScalar(out l); v.GetMute(out m); line = "vol " + (int)Math.Round(l * 100) + " " + (m ? "1" : "0"); } }
+    catch { line = "vol - 0"; }   // no playback device
+    if (line != lastVol) { lastVol = line; Say(line); }
+  }
+
   static void Say(string s) { lock (outLock) { Console.WriteLine(s); Console.Out.Flush(); } }
 
   static INPUT Key(int vk, bool up) {
@@ -110,6 +163,10 @@ public static class DeckKeys {
             Combo(vks.ToArray());
           } else if (line.StartsWith("T ")) {
             Text(Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(2))));
+          } else if (line.StartsWith("V ")) {
+            SetVolume(int.Parse(line.Substring(2)));
+          } else if (line == "M") {
+            ToggleMute();
           } else continue;
           Say("ok");
         } catch (Exception e) { Say("err " + e.Message.Replace("\n", " ")); }
@@ -117,6 +174,9 @@ public static class DeckKeys {
       Environment.Exit(0);   // deck.js went away
     });
     reader.IsBackground = true; reader.Start();
+    // Volume changed elsewhere (keyboard, Windows, an app): checked 4 times a second, sent only when it changes.
+    Thread vol = new Thread(() => { while (true) { ReportVolume(); Thread.Sleep(250); } });
+    vol.IsBackground = true; vol.Start();
 
     try { SetProcessDpiAwarenessContext((IntPtr)(-4)); } catch { }   // real pixels, for the fullscreen check
     proc = (hook, ev, hwnd, idObject, idChild, thread, time) => ReportForeground();

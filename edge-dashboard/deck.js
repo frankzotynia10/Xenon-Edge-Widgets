@@ -57,8 +57,8 @@ function findButton(cfg, profile, page, pos) {
 
 // ---------- the key sender ----------
 let helper = null, pending = [], log = () => {};
-const state = { fg: '', fullscreen: false, profile: null };
-const listeners = new Set();
+const state = { fg: '', fullscreen: false, profile: null, volume: null };
+const listeners = new Set(), volListeners = new Set();
 // Windows UI that shouldn't switch the deck away from the app you were in: Alt+Tab, Task View, the taskbar, Start.
 const SHELL_CLASSES = /^(ForegroundStaging|MultitaskingViewFrame|XamlExplorerHostIslandWindow|TaskSwitcherWnd|Shell_TrayWnd|Shell_SecondaryTrayWnd|Windows\.UI\.Core\.CoreWindow|NotifyIconOverflowWindow|TopLevelWindowForOverflowXamlIsland)$/;
 
@@ -85,6 +85,10 @@ function startHelper() {
         state.fg = proc; state.fullscreen = full === '1';
         const prof = profileFor(proc);
         if (prof !== state.profile) { state.profile = prof; for (const fn of listeners) fn({ profile: prof, fg: proc }); }
+      } else if (line.startsWith('vol ')) {
+        const [, lvl, muted] = line.split(' ');
+        state.volume = lvl === '-' ? null : { level: Number(lvl), muted: muted === '1' };
+        for (const fn of volListeners) fn(state.volume);
       } else if (line === 'ok' || line.startsWith('err')) {
         const cb = pending.shift();
         if (cb) cb(line === 'ok' ? null : new Error(line.slice(4)));
@@ -109,10 +113,12 @@ function command(line) {
 }
 
 // Runs a configured button. Only actions saved in deck.json can run, never keys sent by the caller.
-async function press(profile, page, pos) {
+// value: only for a slider (a number 0-100, or 'mute' for a tap on its icon).
+async function press(profile, page, pos, value) {
   const b = findButton(load(), profile, page, pos);
   if (!b || !b.action) throw new Error('no such button');
   const a = b.action;
+  if (a.type === 'volume') return value === 'mute' ? command('M') : setVolume(Number(value));
   if (lights.isLight(a.type)) return lights.run(a);
   switch (a.type) {
     case 'keys': return command('K ' + parseKeys(a.keys).join(','));
@@ -142,6 +148,21 @@ async function press(profile, page, pos) {
       });
     default: throw new Error(`"${a.type}" isn't something the server runs`);
   }
+}
+
+// While dragging, the slider sends many values; only the newest one waiting gets sent.
+let volNext = null, volBusy = false;
+function setVolume(v) {
+  if (!Number.isFinite(v)) return Promise.reject(new Error('bad volume'));
+  volNext = Math.round(Math.max(0, Math.min(100, v)));
+  if (volBusy) return Promise.resolve();
+  volBusy = true;
+  const loop = () => {
+    if (volNext === null) { volBusy = false; return Promise.resolve(); }
+    const n = volNext; volNext = null;
+    return command('V ' + n).catch(e => log('Deck volume: ' + e.message)).then(loop);
+  };
+  return loop();
 }
 
 function launchApps(ids) {
@@ -179,7 +200,8 @@ function init(opts = {}) {
   lights.init({ log });
 }
 const onChange = fn => listeners.add(fn);
-const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg });
+const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg, volume: state.volume });
+const onVolume = fn => volListeners.add(fn);
 const foreground = () => ({ app: state.fg, fullscreen: state.fullscreen });
 
-module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, current, foreground, VK, ICON_DIRS, lights };
+module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, onVolume, current, foreground, VK, ICON_DIRS, lights };
