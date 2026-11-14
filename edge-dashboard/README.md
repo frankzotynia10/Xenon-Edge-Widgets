@@ -17,7 +17,7 @@ Still to do:
   - These are global hotkeys, so they take Alt+← (Back) from browsers too, the same as iCUE does.
   - Change them with `"pageKeys": { "previous": "...", "next": "..." }` in `layout.json`, using Electron key names. Set one to `""` to turn it off.
   - If another app already has the key, `dashboard.log` says so.
-- **Tap a dot** in the left margin of the Edge.
+- Dots fade in at the bottom for a moment to show which page you're on.
 - **From anything else, like a Stream Deck key:** `POST http://127.0.0.1:6800/api/page` with `{"step": 1}`, `{"step": -1}` or `{"index": 0}`, and the header `x-edge-dashboard: 1`.
 
 Every page stays loaded, so switching is instant and the widgets stay connected. The dashboard remembers the page you were on.
@@ -27,7 +27,7 @@ The default pages follow the iCUE ones:
 2. **Meetings:** Music and Notifications, Teams (M), Launcher (M).
 3. **Discord:** full width.
 
-Slots are 800×344 (S), 800×704 (M) or 2448×704 (full), in three columns at x = 56, 880 and 1704. The left and right margins hold the page dots and the gear.
+Slots match iCUE's: 840×344 (S), 840×704 (M) or 2540×704 (full), in three columns at x = 10, 860 and 1710, edge to edge.
 
 ## Tray icon and log
 The dashboard has a tray icon (a little blue Edge) in the notification area. Its menu has:
@@ -52,7 +52,7 @@ When the dashboard runs on the Edge, `mouse-lock.ps1` keeps the **mouse** off th
 - **When it runs:** only in Edge mode, not with `--dev`. The dashboard restarts it if it stops.
 
 ## Settings
-- **Opening it:** tap the faint gear at the right edge of the Edge. The settings window opens on your main screen. Outside Electron, open `http://127.0.0.1:6800/settings`.
+- **Opening it:** choose **Settings…** in the tray menu. The settings window opens on your main screen. Outside Electron, open `http://127.0.0.1:6800/settings`.
 - **What's on it:** the page is built from each widget's own setting definitions, so new settings show up on their own. Changes apply on the Edge right away; iCUE's equivalent is `onDataUpdated`.
 - **Import from iCUE:** copies what you set in iCUE. The command-line version is `node import-icue.js`, or `node import-icue.js --dry-run` to see what it would import.
   - It reads `%APPDATA%\Corsair\CUE5\dashlcd\storage`.

@@ -14,20 +14,20 @@
 
   "pages": [
     { "name": "Main", "items": [
-      { "widget": "apple-music",   "x": 56,   "y": 8,   "w": 800,  "h": 344 },
-      { "widget": "notifications", "x": 56,   "y": 368, "w": 800,  "h": 344 },
-      { "widget": "discord",       "x": 880,  "y": 8,   "w": 800,  "h": 704 },
-      { "widget": "teams",         "x": 1704, "y": 8,   "w": 800,  "h": 344 },
-      { "widget": "launcher",      "x": 1704, "y": 368, "w": 800,  "h": 344 }
+      { "widget": "apple-music",   "x": 10,   "y": 8,   "w": 840,  "h": 344 },
+      { "widget": "notifications", "x": 10,   "y": 368, "w": 840,  "h": 344 },
+      { "widget": "discord",       "x": 860,  "y": 8,   "w": 840,  "h": 704 },
+      { "widget": "teams",         "x": 1710, "y": 8,   "w": 840,  "h": 344 },
+      { "widget": "launcher",      "x": 1710, "y": 368, "w": 840,  "h": 344 }
     ] },
     { "name": "Meetings", "items": [
-      { "widget": "apple-music",   "x": 56,   "y": 8,   "w": 800,  "h": 344 },
-      { "widget": "notifications", "x": 56,   "y": 368, "w": 800,  "h": 344 },
-      { "widget": "teams",         "x": 880,  "y": 8,   "w": 800,  "h": 704 },
-      { "widget": "launcher",      "x": 1704, "y": 8,   "w": 800,  "h": 704 }
+      { "widget": "apple-music",   "x": 10,   "y": 8,   "w": 840,  "h": 344 },
+      { "widget": "notifications", "x": 10,   "y": 368, "w": 840,  "h": 344 },
+      { "widget": "teams",         "x": 860,  "y": 8,   "w": 840,  "h": 704 },
+      { "widget": "launcher",      "x": 1710, "y": 8,   "w": 840,  "h": 704 }
     ] },
     { "name": "Discord", "items": [
-      { "widget": "discord",       "x": 56,   "y": 8,   "w": 2448, "h": 704 }
+      { "widget": "discord",       "x": 10,   "y": 8,   "w": 2540, "h": 704 }
     ] }
   ]
 }
