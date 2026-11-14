@@ -8,6 +8,49 @@
   var plugins = window.plugins = window.plugins || {};
   function tr(s) { return s; }
 
+  // ---------- iCUE's sensor plugin (plugins.Sensorsdataprovider), backed by LibreHardwareMonitor ----------
+  // Same calls and signals Sensor Box uses: getSensorValue(req, id) / getSensorUnits(req, id) answer
+  // through asyncResponse(req, value); sensorValueChanged(id, value) fires when a watched value changes.
+  function Signal() {
+    var fns = [];
+    return {
+      connect: function (f) { if (typeof f === 'function') fns.push(f); },
+      disconnect: function (f) { fns = fns.filter(function (g) { return g !== f; }); },
+      emit: function () { var a = arguments; fns.forEach(function (f) { try { f.apply(null, a); } catch (e) { console.error(e); } }); }
+    };
+  }
+  var sensorState = { byId: {}, auto: {}, ok: false, loaded: false }, watched = {}, waiters = [], polling = false;
+  function realId(id) { return sensorState.auto[id] || id; }
+  function sensorOf(id) { return sensorState.byId[realId(id)]; }
+  function pollSensors() {
+    fetch((window.__edgeApi || 'http://127.0.0.1:6800') + '/api/sensors', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var byId = {};
+        (d.sensors || []).forEach(function (s) { byId[s.id] = s; });
+        var before = sensorState.byId;
+        sensorState = { byId: byId, auto: d.auto || {}, ok: !!d.ok, loaded: true };
+        Object.keys(watched).forEach(function (id) {
+          var s = sensorOf(id), old = before[realId(id)];
+          if (s && (!old || old.value !== s.value)) SP.sensorValueChanged.emit(id, String(s.value));
+          if (s && (!old || old.unit !== s.unit)) SP.sensorUnitsChanged.emit(id, s.unit);
+        });
+      })
+      .catch(function () { sensorState.loaded = true; sensorState.ok = false; })
+      .then(function () { var w = waiters; waiters = []; w.forEach(function (f) { f(); }); });
+  }
+  function whenLoaded(f) {
+    if (!polling) { polling = true; pollSensors(); setInterval(pollSensors, 1000); }
+    if (sensorState.loaded) f(); else waiters.push(f);
+  }
+  var SP = {
+    asyncResponse: Signal(), sensorValueChanged: Signal(), sensorUnitsChanged: Signal(),
+    getDefaultSensorIdBlock: function (type, hint) { return 'auto:' + type + ':' + hint; },
+    getSensorValue: function (req, id) { watched[id] = 1; whenLoaded(function () { var s = sensorOf(id); SP.asyncResponse.emit(req, s && isFinite(s.value) ? String(s.value) : ''); }); },
+    getSensorUnits: function (req, id) { watched[id] = 1; whenLoaded(function () { var s = sensorOf(id); SP.asyncResponse.emit(req, s ? s.unit : ''); }); }
+  };
+  if (!plugins.Sensorsdataprovider) plugins.Sensorsdataprovider = SP;
+
   function evalExpr(expr) {
     if (expr == null || expr === '') return undefined;
     try { return new Function('tr', 'plugins', 'return (' + expr + ');')(tr, plugins); } catch (e) { return expr; }
@@ -34,6 +77,8 @@
       window.iCUE_initialized = true;
       var ev = events();
       if (typeof ev.onICUEInitialized === 'function') { try { ev.onICUEInitialized(); } catch (e) { console.error(e); } }
+      var se = window.pluginSensorsdataproviderEvents;
+      if (se && typeof se.onInitialized === 'function') { try { se.onInitialized(); } catch (e) { console.error(e); } }
     }, 0);
   });
 

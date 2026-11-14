@@ -5,10 +5,11 @@ Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small 
 **Status: work in progress.** Done:
 - the window, the layout and the iCUE stand-in
 - the settings page, with an import of your iCUE settings
+- Sensor Box sensors, from LibreHardwareMonitor
 
 Still to do:
-- Sensor Box sensors and FPS
-- Stream Deck
+- FPS for the Sensor Box (PresentMon)
+- the Deck widget, to replace Stream Deck
 - start at login
 
 ## Pages
@@ -23,7 +24,7 @@ Still to do:
 Every page stays loaded, so switching is instant and the widgets stay connected. The dashboard remembers the page you were on.
 
 The default pages follow the iCUE ones:
-1. **Main:** Music (S) and Notifications (S), Discord (M), Teams (S) and Launcher (S).
+1. **Main:** Music (S) and Sensor Box (S), Discord (M), Teams (S) and Notifications (S).
 2. **Meetings:** Music and Notifications, Teams (M), Launcher (M).
 3. **Discord:** full width.
 
@@ -59,8 +60,22 @@ When the dashboard runs on the Edge, `mouse-lock.ps1` keeps the **mouse** off th
   - If a widget is on several iCUE pages, it takes the copy with the most settings.
 - **Who can change settings:** only the dashboard's own pages. Changes need an `x-edge-dashboard` header, which other websites can't send to it.
 
+## Sensors (Sensor Box)
+The Sensor Box gets its temperatures and loads from **LibreHardwareMonitor** in place of iCUE's sensor plugin.
+- **Install:** `winget install LibreHardwareMonitor.LibreHardwareMonitor`. It installs the PawnIO driver, which needs admin.
+- **Run it as admin**, then tick **Options → Run On Windows Startup**:
+  ```powershell
+  Start-Process "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\LibreHardwareMonitor.LibreHardwareMonitor_Microsoft.Winget.Source_8wekyb3d8bbwe\LibreHardwareMonitor.exe" -Verb RunAs
+  ```
+- **Its web server must be on:** Options → Remote Web Server → Run, on `127.0.0.1:8085`. A different address can be set with the `LHM_URL` environment variable.
+- **Automatic sensors:** the widget's defaults are picked on this PC. They are GPU core temperature and load, and GPU memory (preferring the NVIDIA card over the CPU's built-in Radeon), plus CPU total load and Tctl/Tdie. `node sensors.js` prints what it picks.
+- **Choosing other sensors:** on the settings page, each sensor setting is a dropdown with "Automatic" plus every sensor, grouped by hardware.
+- **Not imported from iCUE:** sensor picks. iCUE saves them as its own IDs, which mean nothing here, so they stay on Automatic.
+- **If LibreHardwareMonitor isn't running:** the values show `--`, and the settings page says so.
+- **Duplicate IDs:** LibreHardwareMonitor sometimes gives two sensors the same ID (GPU Memory and GPU Bus). The second one gets its name added, e.g. `/gpu-nvidia/0/load/3~GPU Bus`.
+
 ## Run it
-```bash
+```powershell
 npm install
 npx electron . --dev
 ```
@@ -71,14 +86,16 @@ npx electron . --dev
 Close iCUE (or turn its Edge dashboard off) first, or the two will fight over the screen.
 
 ## How it works
-- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6805), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
+- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6806), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
+  - `/api/sensors` returns the LibreHardwareMonitor sensors (read by **`sensors.js`**) and the automatic picks.
 - **`settings.html`** is the settings page, and **`import-icue.js`** is the iCUE importer. It decodes iCUE's saved values from Qt's binary format: switches, numbers, text and colors.
 - **`shim.js`** stands in for the parts of iCUE the widgets use:
   - Each `<meta name="x-icue-property">` becomes a global, set from `settings.json` or from the tag's `data-default`.
   - It calls `icueEvents.onICUEInitialized()` after load and sets `iCUE_initialized`.
   - It sends setting changes to `icueEvents.onDataUpdated({settings})`.
+  - `plugins.Sensorsdataprovider` polls `/api/sensors` every second and sends `sensorValueChanged` for the sensors a widget watches.
 - **`settings.json`** (git-ignored) holds per-widget values, keyed by widget id, e.g. `{ "discord": { "accentColor": "#5865F2" } }`.
 - **`main.js`** is the Electron window. It re-pins to the Edge when displays change.
 

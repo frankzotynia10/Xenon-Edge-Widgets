@@ -78,13 +78,22 @@ function readIcue() {
   return out;
 }
 
-// manifest id (com.frank.discordvoice) -> our layout id (discord)
+// manifest id (com.frank.discordvoice) -> { id: our layout id (discord), skip: keys not to import }
+// Sensor picks are skipped: iCUE stores them as its own sensor GUIDs, which mean nothing to
+// LibreHardwareMonitor, so those settings fall back to the automatic sensors instead.
 function idMap() {
   const layout = JSON.parse(fs.readFileSync(LAYOUT, 'utf8'));
   const map = {};
   const list = Array.isArray(layout.widgets) ? layout.widgets : Object.entries(layout.widgets || {}).map(([id, w]) => ({ id, ...w }));
   for (const w of list) {
-    try { map[JSON.parse(fs.readFileSync(path.join(ROOT, w.dir, 'manifest.json'), 'utf8')).id] = w.id; } catch { /* no manifest */ }
+    try {
+      const html = fs.readFileSync(path.join(ROOT, w.dir, 'index.html'), 'utf8');
+      const skip = new Set();
+      for (const tag of html.match(/<meta\s+name="x-icue-property"[^>]*>/g) || []) {
+        if (/data-type="sensors-combobox"/.test(tag)) { const k = /content="([^"]+)"/.exec(tag); if (k) skip.add(k[1]); }
+      }
+      map[JSON.parse(fs.readFileSync(path.join(ROOT, w.dir, 'manifest.json'), 'utf8')).id] = { id: w.id, skip };
+    } catch { /* no manifest */ }
   }
   return map;
 }
@@ -93,8 +102,10 @@ function importSettings() {
   const map = idMap();
   const found = {};
   for (const inst of readIcue()) {
-    const id = map[inst.typeId];
-    if (!id) continue;
+    const target = map[inst.typeId];
+    if (!target) continue;
+    const id = target.id;
+    for (const k of target.skip) delete inst.settings[k];
     // A widget can be on several iCUE pages; keep the instance with the most settings.
     if (!found[id] || Object.keys(inst.settings).length > Object.keys(found[id].settings).length) found[id] = inst;
   }

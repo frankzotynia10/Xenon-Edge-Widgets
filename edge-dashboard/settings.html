@@ -50,7 +50,7 @@
 <script>
 'use strict';
 const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
-let widgets = [], settings = {}, current = null;
+let widgets = [], settings = {}, current = null, sensorData = null;
 const $ = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
 
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1600); }
@@ -94,7 +94,25 @@ function control(w, p, value, onChange) {
       s.addEventListener('change', () => onChange(s.value));
       return s;
     }
-    case 'sensors-combobox': return $('span', { class: 'val' }, 'Comes with the sensor step');
+    case 'sensors-combobox': {
+      const s = $('select');
+      const d = sensorData || { sensors: [], auto: {}, labels: {} };
+      if (!d.ok) { const o = $('option', { value: value || '' }); o.textContent = 'LibreHardwareMonitor not running'; s.append(o); s.disabled = true; return s; }
+      const name = id => { const x = d.sensors.find(t => t.id === id); return x ? `${x.hardware} / ${x.name}` : 'not found'; };
+      const auto = $('optgroup', { label: 'Automatic' });
+      for (const [id, label] of Object.entries(d.labels || {})) { const o = $('option', { value: id }); o.textContent = `${label}: ${d.auto[id] ? name(d.auto[id]) : 'not found'}`; auto.append(o); }
+      s.append(auto);
+      const groups = {};
+      for (const x of d.sensors) (groups[x.hardware] = groups[x.hardware] || []).push(x);
+      for (const [hw, list] of Object.entries(groups)) {
+        const g = $('optgroup', { label: hw });
+        for (const x of list) { const o = $('option', { value: x.id }); o.textContent = `${x.name} (${x.type}) ${isFinite(x.value) ? Math.round(x.value * 10) / 10 + ' ' + x.unit : ''}`; g.append(o); }
+        s.append(g);
+      }
+      s.value = value || '';
+      s.addEventListener('change', () => onChange(s.value));
+      return s;
+    }
     default: {
       const i = $('input', { type: 'text' }); i.value = value ?? '';
       i.addEventListener('change', () => onChange(i.value));
@@ -149,7 +167,8 @@ async function importIcue() {
 }
 
 (async () => {
-  [widgets, settings] = await Promise.all([fetch('/api/widgets').then(r => r.json()), fetch('/api/settings').then(r => r.json())]);
+  [widgets, settings, sensorData] = await Promise.all([fetch('/api/widgets').then(r => r.json()), fetch('/api/settings').then(r => r.json()),
+    fetch('/api/sensors').then(r => r.json()).catch(() => null)]);
   current = new URLSearchParams(location.search).get('w') || (widgets[0] && widgets[0].id);
   nav(); render();
 })();

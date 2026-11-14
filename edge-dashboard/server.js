@@ -9,6 +9,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
+const sensors = require('./sensors');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
@@ -41,7 +42,7 @@ function safeJoin(base, urlPath) {
 const SHIM = fs.readFileSync(path.join(__dirname, 'shim.js'), 'utf8');
 function inject(html, widgetId) {
   const settings = JSON.stringify(loadSettings()[widgetId] || {}).replace(/</g, '\\u003c');
-  const tag = `<script>window.__edgeSettings=${settings};</script><script>${SHIM}</script>`;
+  const tag = `<script>window.__edgeSettings=${settings};window.__edgeApi='http://127.0.0.1:${DASH_PORT}';</script><script>${SHIM}</script>`;
   return /<\/head>/i.test(html) ? html.replace(/<\/head>/i, tag + '</head>') : tag + html;
 }
 
@@ -58,7 +59,7 @@ function widgetHandler(w) {
 
 // ---------- widget properties, read from each widget's <meta name="x-icue-property"> tags ----------
 const decodeEntities = s => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-const PLUGINS_STUB = { Sensorsdataprovider: { getDefaultSensorIdBlock: () => '' } };
+const PLUGINS_STUB = { Sensorsdataprovider: { getDefaultSensorIdBlock: (type, hint) => `auto:${type}:${hint}` } };
 function evalExpr(expr) {
   if (expr == null || expr === '') return undefined;
   try { return new Function('tr', 'plugins', 'return (' + expr + ');')(s => s, PLUGINS_STUB); } catch { return expr; }
@@ -112,6 +113,14 @@ async function dashHandler(req, res) {
     if (p === '/layout.json') return sendFile(res, LAYOUT);
     if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
     if (p === '/api/settings') return json(res, 200, loadSettings());
+    if (p === '/api/sensors') {
+      // Read by the widgets (their own 127.0.0.1 ports), so allow those origins.
+      const origin = req.headers.origin;
+      const r = await sensors.read();
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store',
+        ...(origin && /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) ? { 'access-control-allow-origin': origin } : {}) });
+      return res.end(JSON.stringify({ ...r, labels: sensors.AUTO_LABELS }));
+    }
     if (p === '/api/events') {
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
       res.write(': hi\n\n'); clients.add(res); req.on('close', () => clients.delete(res));
