@@ -3,8 +3,9 @@
 //   node import-streamdeck.js --dry-run  print what it would import
 // What comes over:
 //   hotkeys, text, Open (command lines), volume keys, pages, folders and Back
-//   Philips Hue, Elgato Key Light and Hue Sync keys come over as placeholders (they get wired up later)
+//   Philips Hue scenes and room power, Elgato Key Light (power, brightness, warmer/cooler) and Hue Sync start/stop
 //   Discord, weather and other plugin keys are left out
+//   node import-streamdeck.js --upgrade-lights   only fill in light buttons that an older import left as placeholders
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -32,9 +33,31 @@ function hotkey(h) {
 const MEDIA = { 4: 'VolumeMute', 5: 'VolumeUp', 6: 'VolumeDown' };
 const PENDING = [[/philipshue|philips-hue/, 'Philips Hue'], [/controlcenter/, 'Elgato Key Light'], [/huesync/, 'Hue Sync']];
 
+// Elgato's Philips Hue, Control Center (Key Light) and Hue Sync keys. They store Hue API v2 ids and the
+// Key Light's MAC address, so they map straight onto our light actions.
+function convertLight(u, s, title) {
+  const mac = (/\(([0-9A-F:]{17})\)/i.exec(s.deviceID || '') || [])[1];
+  if (/philipshue\.scene$/.test(u) && s.scene) return { action: { type: 'hue-scene', scene: s.scene, room: s.id } };
+  if (/philipshue\.power$/.test(u) && s.id) return { action: { type: 'hue-room', room: s.id, op: 'toggle' }, title: title || String(s.name || '').replace(/^.*’s |^.*'s /, '') };
+  if (/controlcenter\.lights-on-off$/.test(u)) return { action: { type: 'keylight', light: mac || 'all', op: 'toggle' }, title: title || 'Key Light' };
+  if (/controlcenter\.brightness-stepper$/.test(u)) {
+    const up = s.step === '1';   // the key with step "1" was the brighter one on this deck
+    return { action: { type: 'keylight', light: mac || 'all', op: 'brightness', step: (up ? 1 : -1) * Number((s.lights || {}).brightness || 10) }, title: up ? 'Bright +' : 'Bright −' };
+  }
+  if (/controlcenter\.temperature-stepper$/.test(u)) {
+    const warm = /warm/i.test(title) || (!/cool/i.test(title) && s.step !== '2');
+    return { action: { type: 'keylight', light: mac || 'all', op: warm ? 'warmer' : 'cooler', step: 20 }, title: warm ? 'Warmer' : 'Cooler' };
+  }
+  if (/huesync\.huesyncstartstop$/.test(u)) return { action: { type: 'huesync', op: 'toggle', mode: s.mode || 'games', intensity: s.intensity || 'moderate' }, title: 'Hue Sync' };
+  return null;
+}
+
 function convertAction(a, notes) {
   const u = a.UUID || '';
   const s = a.Settings || {};
+  const st = (a.States || [])[0] || {};
+  const light = convertLight(u, s, cleanTitle(String(st.Title || '').split('|')[0]));
+  if (light) { a._title = light.title; return light.action; }
   if (/system\.hotkey$/.test(u)) { const k = hotkey((s.Hotkeys || [])[0]); return k ? { type: 'keys', keys: k } : null; }
   if (/page\.next$/.test(u)) return { type: 'page', step: 1 };
   if (/page\.previous$/.test(u)) return { type: 'page', step: -1 };
@@ -65,7 +88,7 @@ function readDeck(dir, dry) {
         const action = convertAction(a, notes);
         if (action === undefined) continue;
         const st = (a.States || [])[a.State || 0] || (a.States || [])[0] || {};
-        const b = { title: cleanTitle(st.Title), action };
+        const b = { title: a._title !== undefined ? a._title : cleanTitle(String(st.Title || '').split('|')[0]), action };
         if (st.Image) {
           const src = path.join(subDir, st.Image);
           if (fs.existsSync(src)) {
@@ -111,11 +134,34 @@ function importDecks({ dry = false } = {}) {
   return { grid: { cols: 5, rows: 3 }, profiles };
 }
 
-module.exports = { importDecks };
+// Fills in the light buttons of an existing deck.json from the Stream Deck, leaving everything else as it is:
+// "pending" buttons (from an older import) at the same page and position get the light action.
+function upgradeLights(current) {
+  const fresh = importDecks({ dry: true });
+  let n = 0;
+  for (const pr of current.profiles) for (const pg of pr.pages) for (const [pos, b] of Object.entries(pg.buttons || {})) {
+    if (!b.action || b.action.type !== 'pending') continue;
+    for (const fp of fresh.profiles) {
+      const src = (fp.pages.find(p => p.id === pg.id) || {}).buttons;
+      const nb = src && src[pos];
+      if (nb && nb.action && nb.action.type !== 'pending') { b.action = nb.action; if (!b.title || nb.title !== b.title) b.title = nb.title || b.title; n++; break; }
+    }
+  }
+  return n;
+}
+
+module.exports = { importDecks, upgradeLights };
 
 if (require.main === module) {
   const dry = process.argv.includes('--dry-run');
   if (!fs.existsSync(PROFILES)) { console.error(`Stream Deck profiles not found: ${PROFILES}`); process.exit(1); }
+  if (process.argv.includes('--upgrade-lights')) {
+    const current = readJson(DECK);
+    const n = upgradeLights(current);
+    if (!dry) fs.writeFileSync(DECK, JSON.stringify(current, null, 2) + '\n');
+    console.log(`${n} light buttons filled in${dry ? ' (dry run)' : ''}`);
+    process.exit(0);
+  }
   const cfg = importDecks({ dry });
   for (const p of cfg.profiles) {
     console.log(`${p.name}${p.apps.length ? ` (when ${p.apps.join(', ')} is in front)` : ''}, ${p.grid.cols}x${p.grid.rows}:`);

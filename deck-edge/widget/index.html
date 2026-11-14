@@ -29,6 +29,11 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
 .key.pending { opacity: .42; }
 .key.pending::after { content: "soon"; position: absolute; top: 6%; right: 7%; font-size: calc(var(--t) * .09); font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted); }
+/* Live light state: lit buttons get a warm glow bar; steppers show the current value. */
+.key.lit::before { content: ""; position: absolute; left: 22%; right: 22%; top: 0; height: calc(var(--t) * .045); border-radius: 0 0 99px 99px;
+  background: #ffd36b; box-shadow: 0 0 calc(var(--t) * .12) #ffcf5a; z-index: 2; }
+.key.lit { box-shadow: inset 0 0 0 2px rgba(255, 211, 107, .55); }
+.key .val { position: absolute; top: 6%; right: 7%; z-index: 2; font-size: calc(var(--t) * .1); font-weight: 700; color: #ffd36b; text-shadow: 0 1px 3px #000; }
 .key.ok { box-shadow: inset 0 0 0 3px var(--accent); }
 .key.err { box-shadow: inset 0 0 0 3px var(--bad); }
 
@@ -64,7 +69,21 @@ const GLYPH = {
   prev: '<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
 };
 
-let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [];
+let cfg = null, autoProfile = null, profileId = null, pageId = null, manual = false, stack = [], lightState = {};
+
+// Which live state a light button shows: { lit, val }.
+function lightInfo(a) {
+  let key = null;
+  if (a.type === 'keylight') key = a.light && a.light !== 'all' ? 'keylight:' + a.light.toUpperCase() : Object.keys(lightState).find(k => k.startsWith('keylight:'));
+  else if (a.type === 'hue-room') key = 'hue-room:' + a.room;
+  else if (a.type === 'hue-scene') key = 'hue-scene:' + a.scene;
+  else if (a.type === 'huesync') key = 'huesync';
+  const s = key && lightState[key];
+  if (!s) return null;
+  if (a.type === 'keylight' && a.op === 'brightness') return { lit: s.on, val: s.on ? s.brightness + '%' : 'off' };
+  if (a.type === 'keylight' && (a.op === 'warmer' || a.op === 'cooler')) return { lit: false, val: s.kelvin + 'K' };
+  return { lit: !!s.on };
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -105,6 +124,9 @@ function render() {
     if (b.title) inner += `<div class="title">${esc(b.title)}</div>`;
     if (!b.title && !b.icon && cls.includes('plain')) inner += `<div class="title">${esc(a.keys || a.type || '')}</div>`;
     if (a.type === 'pending' || !b.action) cls.push('pending');
+    const li = lightInfo(a);
+    if (li && li.lit) cls.push('lit');
+    if (li && li.val) inner += `<div class="val">${esc(li.val)}</div>`;
     html += `<button class="${cls.join(' ')}" data-pos="${pos}">${inner}</button>`;
   }
   g.innerHTML = html;
@@ -162,7 +184,7 @@ $('profile').addEventListener('click', () => {
 async function load() {
   try {
     const d = await (await fetch(`${API}/api/deck`, { cache: 'no-store' })).json();
-    cfg = d.config; autoProfile = d.profile;
+    cfg = d.config; autoProfile = d.profile; lightState = d.lights || {};
     $('msg').style.display = 'none'; $('wrap').style.display = '';
     setProfile(manual ? profileId : d.profile, manual);
   } catch {
@@ -175,6 +197,7 @@ function listen() {
   const es = new EventSource(`${API}/api/events`);
   es.addEventListener('deck', e => { const d = JSON.parse(e.data); autoProfile = d.profile; if (cfg) setProfile(d.profile, false); });
   es.addEventListener('deck-config', load);
+  es.addEventListener('lights', e => { lightState = JSON.parse(e.data); render(); });
   es.onerror = () => { es.close(); setTimeout(() => { load(); listen(); }, 3000); };
 }
 

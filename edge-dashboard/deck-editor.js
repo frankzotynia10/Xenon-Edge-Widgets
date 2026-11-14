@@ -5,12 +5,15 @@
   const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
   const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['open', 'Open (command line)'], ['page', 'Next / previous page'],
-    ['folder', 'Open folder'], ['back', 'Back (out of a folder)'], ['pending', 'Coming later (Hue, Key Light)']];
+    ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
+    ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
+    ['pending', 'Placeholder (does nothing)']];
+  const KL_OPS = [['toggle', 'On / off'], ['on', 'On'], ['off', 'Off'], ['brightness', 'Brightness step'], ['warmer', 'Warmer'], ['cooler', 'Cooler']];
   const MOD_KEYS = { Control: 'Ctrl', Alt: 'Alt', Shift: 'Shift', Meta: 'Win' };
   const CODE_NAMES = { Comma: 'Comma', Period: 'Period', Minus: 'Minus', Equal: 'Plus', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Slash: '/', Backquote: '`',
     ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down', Escape: 'Esc', PageUp: 'PageUp', PageDown: 'PageDown' };
 
-  let cfg, icons = [], pi = 0, pgi = 0, sel = null, root, saveTimer;
+  let cfg, icons = [], cat = null, pairing = false, pi = 0, pgi = 0, sel = null, root, saveTimer;
   const prof = () => cfg.profiles[pi];
   const page = () => prof().pages[pgi];
   const grid = () => prof().grid || cfg.grid || { cols: 5, rows: 3 };
@@ -87,11 +90,74 @@
     return el('details', { class: 'iconbox' }, el('summary', {}, b.icon ? 'Change image' : 'Pick an image'), wrap);
   }
 
+  // ---------- lights: what's connected, pairing ----------
+  function status(ok, textOk, textBad) { return el('span', { class: 'hint', style: `color: ${ok ? 'var(--ok)' : '#ffb35c'}` }, ok ? '● ' + textOk : '○ ' + textBad); }
+  function lightsBox() {
+    const box = el('div', { class: 'group' }, el('h3', {}, 'Lights'));
+    if (!cat) { box.append(el('div', { class: 'empty' }, 'Looking for lights…')); return box; }
+    if (!cat.keylights.length) box.append(field('Elgato Key Light', status(false, '', 'None found on the network')));
+    for (const k of cat.keylights) box.append(field(k.name, status(k.reachable, `Connected (${k.ip})`, `Not answering (${k.ip || 'no address'})`)));
+    const h = cat.hue;
+    let hueCtl;
+    if (h.paired) hueCtl = status(!cat.error, `Paired (${h.ip})`, cat.error || 'Paired, but not answering');
+    else if (h.found) hueCtl = el('span', { class: 'ctl' }, status(false, '', 'Found, not paired'),
+      el('button', { class: 'small', onclick: pairHue, disabled: pairing ? '' : null }, pairing ? 'Waiting for the link button…' : 'Pair'));
+    else hueCtl = status(false, '', 'No bridge found on the network');
+    box.append(field('Philips Hue bridge', hueCtl, h.paired ? null : 'To pair: press the round link button on top of the bridge, then click Pair within 30 seconds.'));
+    const hs = cat.huesync;
+    box.append(field('Hue Sync app', status(hs.connected, hs.state === 'syncing' ? 'Connected, syncing' : 'Connected', 'Not reachable'),
+      hs.connected ? null : 'Start Hue Sync and turn on Settings → Third-party control.'));
+    box.append(el('div', { class: 'row' }, el('span', { class: 'spacer' }),
+      el('button', { class: 'small', onclick: async () => { cat = null; draw(); cat = await (await fetch('/api/lights/discover', { method: 'POST', headers: H, body: '{}' })).json(); draw(); } }, 'Search again')));
+    return box;
+  }
+  async function pairHue() {
+    pairing = true; draw();
+    window.toast && window.toast('Press the link button on the Hue bridge');
+    const r = await (await fetch('/api/lights/pair-hue', { method: 'POST', headers: H, body: '{}' })).json();
+    pairing = false;
+    window.toast && window.toast(r.ok ? 'Hue bridge paired' : (r.error || 'The link button wasn’t pressed in time'));
+    cat = await (await fetch('/api/lights/catalog')).json(); draw();
+  }
+
+  // Fields for a light action.
+  function lightFields(box, a) {
+    const c = cat || { keylights: [], rooms: [], scenes: [], hue: {} };
+    if (a.type === 'keylight') {
+      box.append(field('Light', select([['all', 'All Key Lights'], ...c.keylights.map(k => [k.id, k.name])], a.light || 'all', v => { a.light = v; changed(false); })));
+      box.append(field('Does', select(KL_OPS, a.op || 'toggle', v => { a.op = v; if (v === 'brightness') a.step = a.step || 10; if (v === 'warmer' || v === 'cooler') a.step = 20; changed(); })));
+      if (a.op === 'brightness') box.append(field('Step', num(a.step || 10, -50, 50, v => { a.step = v; changed(false); }), 'Percent per tap. Negative dims.'));
+    }
+    if (a.type === 'hue-room' || a.type === 'hue-scene') {
+      if (!c.hue.paired) { box.append(field('Hue', el('span', { class: 'hint' }, 'Pair the Hue bridge first (Lights, above).'))); return; }
+    }
+    if (a.type === 'hue-room') {
+      box.append(field('Room', select([['', 'Pick a room'], ...c.rooms.map(r => [r.id, r.name])], a.room, v => { a.room = v; changed(false); })));
+      box.append(field('Does', select([['toggle', 'On / off'], ['on', 'On'], ['off', 'Off']], a.op || 'toggle', v => { a.op = v; changed(false); })));
+    }
+    if (a.type === 'hue-scene') {
+      const s = el('select');
+      s.append(el('option', { value: '' }, 'Pick a scene'));
+      const groups = {};
+      for (const sc of c.scenes) (groups[sc.roomName || 'Other'] = groups[sc.roomName || 'Other'] || []).push(sc);
+      for (const [room, list] of Object.entries(groups)) { const og = el('optgroup', { label: room }); for (const sc of list) og.append(el('option', { value: sc.id }, sc.name)); s.append(og); }
+      s.value = a.scene || '';
+      s.addEventListener('change', () => { const sc = c.scenes.find(x => x.id === s.value); a.scene = s.value; a.room = sc && sc.room; changed(false); });
+      box.append(field('Scene', s));
+    }
+    if (a.type === 'huesync') {
+      box.append(field('Does', select([['toggle', 'Start / stop'], ['start', 'Start'], ['stop', 'Stop']], a.op || 'toggle', v => { a.op = v; changed(false); })));
+      box.append(field('Mode', select([['games', 'Games'], ['video', 'Video'], ['music', 'Music']], a.mode || 'games', v => { a.mode = v; changed(false); })));
+      box.append(field('Intensity', select([['subtle', 'Subtle'], ['moderate', 'Moderate'], ['high', 'High'], ['extreme', 'Extreme']], a.intensity || 'moderate', v => { a.intensity = v; changed(false); })));
+    }
+  }
+
   // ---------- the editor ----------
   function draw() {
     const scrollY = window.scrollY;
     root.replaceChildren();
     const pr = prof(), pg = page(), g = grid();
+    root.append(lightsBox());
 
     // Profiles
     const profBox = el('div', { class: 'group' }, el('h3', {}, 'Profile'));
@@ -165,7 +231,8 @@
         const folders = pr.pages.filter(p => p.folder);
         bbox.append(field('Folder', folders.length ? select(folders.map(p => [p.id, p.name]), a.page, v => { a.page = v; changed(false); }) : el('span', { class: 'hint' }, 'Make a folder first (Page → New folder).')));
       }
-      if (a.type === 'pending') bbox.append(field('For', text(a.what, v => { a.what = v; changed(false); }, { placeholder: 'Philips Hue' }), 'Shows dimmed until this kind of button is supported.'));
+      lightFields(bbox, a);
+      if (a.type === 'pending') bbox.append(field('For', text(a.what, v => { a.what = v; changed(false); }, { placeholder: 'Philips Hue' }), 'Shows dimmed and does nothing.'));
       bbox.append(el('div', { class: 'row' }, el('span', { class: 'spacer' }),
         el('button', { class: 'small danger', onclick: () => { delete pg.buttons[sel]; sel = null; changed(); } }, 'Remove button')));
       root.append(bbox);
@@ -191,6 +258,7 @@
     cfg = d.config; icons = list;
     pi = Math.min(pi, cfg.profiles.length - 1); pgi = Math.min(pgi, prof().pages.length - 1);
     draw();
+    fetch('/api/lights/catalog').then(r => r.json()).then(c => { cat = c; draw(); }).catch(() => {});
   }
 
   window.deckEditor = async container => {

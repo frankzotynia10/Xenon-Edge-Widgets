@@ -9,8 +9,9 @@ Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small 
 
 - the Deck widget, in place of the Virtual Stream Deck: hotkeys, text, commands, pages, folders, app profiles
 
+- Deck lights: Elgato Key Light, Philips Hue and Hue Sync, with live state
+
 Still to do:
-- Deck: Philips Hue, Elgato Key Light and Hue Sync buttons
 - FPS for the Sensor Box (PresentMon)
 - start at login
 
@@ -80,7 +81,11 @@ The Sensor Box gets its temperatures and loads from **LibreHardwareMonitor** in 
 The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream Deck. Its buttons are in **`deck.json`** (git-ignored); `deck.example.json` is used until you have one.
 - **Profiles:** each one has its own pages and grid. A profile with `"apps": ["Wow"]` shows while that process is in front. The first profile shows otherwise. Alt+Tab, the taskbar and Start don't count as switching apps.
 - **Pages and folders:** swipe or use page buttons to change page. A folder opens from a button and has a Back button.
-- **Actions:** hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`), next or previous page, folder, back, and `pending`, a dimmed placeholder for Hue and Key Light until those are wired up.
+- **Actions:**
+  - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
+  - next or previous page, folder, back
+  - lights: `keylight`, `hue-scene`, `hue-room`, `huesync` (see Lights below)
+  - `pending`, a dimmed button that does nothing
 - **Editing:** tray → **Settings…** → **Deck**.
   - Pick a profile and page, then click a button to change its title, image, action and keys.
   - **Record** captures a key combo.
@@ -93,6 +98,15 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
 - **How keys are sent:** `deck-keys.ps1` stays running and sends the keys with `SendInput` to the app in front. It also reports which app that is, for the profiles.
   - The Edge window never takes focus, so keys go to the game.
   - The widget only sends which button was pressed. The server looks up what that button does in `deck.json`, so a web page can't make it send keys.
+- **Lights** (`lights.js`, all local, no cloud). Their status is on the Deck settings page under **Lights**, with **Pair** and **Search again**.
+  - **Elgato Key Light:** found by mDNS and controlled over its HTTP API on port 9123. Nothing to set up.
+  - **Philips Hue:** found by mDNS and controlled over the bridge's v2 API. It needs pairing once: press the link button on the bridge, then click **Pair** (or run `node lights.js pair`).
+    - The app key is kept in `lights.json` (git-ignored).
+    - The bridge's certificate is checked against its bridge ID.
+  - **Hue Sync:** the Hue Sync PC app's local WebSocket (127.0.0.1:24851). It needs Settings → **Third-party control** on in Hue Sync.
+  - **Live state:** checked every 4 s and right after a tap. Lit rooms, active scenes, a Key Light that's on and Hue Sync while syncing get a glow bar. Brightness and temperature buttons show the current value.
+  - **Imported lights:** the Stream Deck importer maps Elgato's Hue, Control Center and Hue Sync keys straight onto these. `node import-streamdeck.js --upgrade-lights` fills in placeholders from an older import without touching anything else.
+  - `node lights.js` prints what it finds.
 - **WoW:** one tap sends one key combo. There are no timed sequences, to stay within Blizzard's rules.
 
 ## Run it

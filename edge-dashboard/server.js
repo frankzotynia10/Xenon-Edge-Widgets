@@ -119,8 +119,9 @@ async function dashHandler(req, res) {
     return res.end();
   }
   if (req.method === 'GET') {
-    if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current() });
+    if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current(), lights: deck.lights.stateNow() });
     if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
+    if (p === '/api/lights/catalog') return json(res, 200, await deck.lights.catalog());
     if (p.startsWith('/deck-icon/')) {
       const file = deck.icon(decodeURIComponent(p.slice('/deck-icon/'.length)));
       if (!file) { res.writeHead(404); return res.end(); }
@@ -196,6 +197,11 @@ async function dashHandler(req, res) {
         return json(res, 200, { ok: true, profiles: cfg.profiles.map(p => p.name) });
       } catch (e) { return json(res, 500, { error: e.message }); }
     }
+    // Pair with the Hue bridge: press its link button, then call this (it waits up to 30 s).
+    if (p === '/api/lights/discover') { try { await deck.lights.discover(); return json(res, 200, await deck.lights.catalog()); } catch (e) { return json(res, 500, { error: e.message }); } }
+    if (p === '/api/lights/pair-hue') {
+      try { return json(res, 200, { ok: await deck.lights.pairHue({ wait: 30000 }) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
+    }
     if (p === '/api/deck/check-keys') {
       try { return json(res, 200, { ok: true, keys: deck.keysName(deck.parseKeys(body.keys)) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
     }
@@ -215,6 +221,7 @@ async function start(opts = {}) {
   const layout = loadLayout();
   deck.init({ log: opts.log });
   deck.onChange(s => broadcast('deck', s));
+  deck.lights.watch(s => broadcast('lights', s));
   const servers = [await listen(DASH_PORT, dashHandler)];
   for (const w of widgetList(layout)) servers.push(await listen(w.port, widgetHandler(w)));
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };

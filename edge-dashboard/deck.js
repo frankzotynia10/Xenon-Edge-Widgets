@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const lights = require('./lights');
 
 const DECK = process.env.DECK_FILE || path.join(__dirname, 'deck.json');
 const EXAMPLE = path.join(__dirname, 'deck.example.json');
@@ -112,6 +113,7 @@ async function press(profile, page, pos) {
   const b = findButton(load(), profile, page, pos);
   if (!b || !b.action) throw new Error('no such button');
   const a = b.action;
+  if (lights.isLight(a.type)) return lights.run(a);
   switch (a.type) {
     case 'keys': return command('K ' + parseKeys(a.keys).join(','));
     case 'text':
@@ -145,8 +147,9 @@ function iconList() {
 function init(opts = {}) {
   if (opts.log) log = opts.log;
   startHelper();
+  lights.init({ log });
 }
 const onChange = fn => listeners.add(fn);
 const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg });
 
-module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, current, VK, ICON_DIRS };
+module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, current, VK, ICON_DIRS, lights };

@@ -7,7 +7,9 @@ What a button can do:
 - **Type text:** emoji and symbols too, optionally followed by Enter.
 - **Open:** a command line, like Stream Deck's Open (e.g. an SSH session).
 - **Pages, folders and Back.**
-- **Coming later:** Philips Hue, Elgato Key Light and Hue Sync. Imported ones show dimmed with "soon".
+- **Elgato Key Light:** on/off, brightness steps, warmer/cooler. The button shows the current brightness or color temperature.
+- **Philips Hue:** recall a scene, or turn a room on/off. A lit room or the active scene gets a glow bar.
+- **Hue Sync:** start/stop syncing in the Hue Sync PC app, with mode and intensity.
 
 **Profiles** switch on their own with the app in front. The WoW profile shows while `Wow` has focus, and the first profile shows otherwise. Tap the profile chip at the bottom left to switch by hand, until the app in front changes.
 
