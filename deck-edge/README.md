@@ -5,6 +5,7 @@ A button deck for the Edge, in place of Elgato's Virtual Stream Deck. It runs on
 What a button can do:
 - **Hotkey:** e.g. `Ctrl+Alt+Shift+F1` for a WoW raid marker. The keys go to the app in front. Tapping the Edge never takes focus from it.
 - **Type text:** emoji and symbols too, optionally followed by Enter.
+- **Start / switch to app:** one or more Start menu apps. Each one starts, or comes to the front if it's already open (so OBS never says "already running"). Uses the App Launcher part of the Edge helper, so no console window.
 - **Open:** a command line, like Stream Deck's Open (e.g. an SSH session).
 - **Pages, folders and Back.**
 - **Elgato Key Light:** on/off, brightness steps, warmer/cooler. The button shows the current brightness or color temperature.

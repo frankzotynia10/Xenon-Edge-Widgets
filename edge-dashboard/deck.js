@@ -125,6 +125,10 @@ async function press(profile, page, pos) {
       // /s with the whole line in quotes: cmd strips just those outer quotes and keeps the ones inside.
       spawn('cmd.exe', ['/d', '/s', '/c', `"start "" ${a.command}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
       return;
+    case 'app':
+      // Start menu apps, through the App Launcher helper: starts each one, or brings it to the
+      // front if it's already open (so OBS never shows "already running"). No console window.
+      return launchApps(Array.isArray(a.apps) ? a.apps : []);
     case 'shadowplay':
       // NVIDIA's overlay hotkey for this action, as set in the NVIDIA App
       return command('K ' + (await require('./shadowplay').keysFor(a.op)).join(','));
@@ -138,6 +142,20 @@ async function press(profile, page, pos) {
       });
     default: throw new Error(`"${a.type}" isn't something the server runs`);
   }
+}
+
+function launchApps(ids) {
+  ids = ids.filter(x => typeof x === 'string' && x).slice(0, 8);
+  if (!ids.length) return Promise.reject(new Error('no app picked'));
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket('ws://127.0.0.1:6794');
+    const t = setTimeout(() => { ws.close(); reject(new Error('App launcher helper not answering')); }, 3000);
+    ws.onopen = () => {
+      for (const id of ids) ws.send(JSON.stringify({ action: 'launch', id }));
+      clearTimeout(t); setTimeout(() => { ws.close(); resolve(); }, 300);
+    };
+    ws.onerror = () => { clearTimeout(t); reject(new Error('Edge helper (App launcher) not running')); };
+  });
 }
 
 function icon(rel) {

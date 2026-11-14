@@ -97,7 +97,7 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - Each tap restarts the countdown.
   - Set it per folder under **Go back after** (`"returnAfter"` in seconds; 0 stays put).
 - **Actions:**
-  - hotkey (`keys`), type text (`text`, optional Enter), open a command line (`open`)
+  - hotkey (`keys`), type text (`text`, optional Enter), start or switch to Start menu apps (`app`, `apps: [id...]`), open a command line (`open`)
   - next or previous page, folder, back
   - lights: `keylight`, `hue-scene`, `hue-room`, `huesync` (see Lights below)
   - `shadowplay` (**`shadowplay.js`**): NVIDIA ShadowPlay (the NVIDIA App overlay).
