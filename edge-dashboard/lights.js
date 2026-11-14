@@ -236,7 +236,19 @@ function init(opts = {}) {
   obs.init({ log, notify: changed });
 }
 
-module.exports = { init, run, isLight, watch, stateNow, catalog, pairHue, discover, obs };
+// Hue lights that can show colours (for the mute lights): [{ id, name, room }]
+async function colorLights() {
+  if (!cfg.hue || !cfg.hue.appKey) return [];
+  const [lights, rooms, devices] = await Promise.all([hue('GET', 'light'), hue('GET', 'room'), hue('GET', 'device')]);
+  const roomOfDevice = {};
+  for (const r of rooms.data) for (const c of r.children || []) if (c.rtype === 'device') roomOfDevice[c.rid] = r.metadata.name;
+  const devName = Object.fromEntries(devices.data.map(d => [d.id, d.metadata && d.metadata.name]));
+  return lights.data.filter(l => l.color)
+    .map(l => ({ id: l.id, name: (l.metadata && l.metadata.name) || devName[l.owner && l.owner.rid] || 'Light', room: roomOfDevice[l.owner && l.owner.rid] || '' }))
+    .sort((a, b) => (a.room + a.name).localeCompare(b.room + b.name));
+}
+
+module.exports = { init, run, isLight, watch, stateNow, catalog, pairHue, discover, obs, hue, colorLights };
 
 if (require.main === module) {
   (async () => {

@@ -172,7 +172,12 @@ app.whenReady().then(async () => {
 app.on('render-process-gone', (e, wc, d) => log(`A page crashed (${d.reason}, exit ${d.exitCode}): ${wc.getURL()}`));
 app.on('child-process-gone', (e, d) => { if (d.reason !== 'clean-exit') log(`Electron ${d.type} process gone: ${d.reason}`); });
 app.on('second-instance', () => { log('Second copy started; showing this one'); repin('second copy'); });
-app.on('before-quit', () => { quitting = true; stopMouseLock(); });
+app.on('before-quit', e => {
+  quitting = true; stopMouseLock();
+  // Put any red mute light back before exiting (once; give it 3 s at most).
+  if (!restoredLights) { restoredLights = true; e.preventDefault(); Promise.race([server.muteLights.stop(), new Promise(r => setTimeout(r, 3000))]).finally(() => app.quit()); }
+});
+let restoredLights = false;
 app.on('will-quit', () => globalShortcut.unregisterAll());
 // The tray keeps the app running when windows close; Quit is in the tray menu.
 app.on('window-all-closed', () => { if (DEV) app.quit(); });

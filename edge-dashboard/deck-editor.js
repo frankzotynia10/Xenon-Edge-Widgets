@@ -18,6 +18,7 @@
   const CODE_NAMES = { Comma: 'Comma', Period: 'Period', Minus: 'Minus', Equal: 'Plus', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Slash: '/', Backquote: '`',
     ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down', Escape: 'Esc', PageUp: 'PageUp', PageDown: 'PageDown' };
 
+  let ml = null;
   let cfg, icons = [], cat = null, pairing = false, pi = 0, pgi = 0, sel = null, root, saveTimer;
   const prof = () => cfg.profiles[pi];
   const page = () => prof().pages[pgi];
@@ -142,6 +143,33 @@
       el('button', { class: 'small', onclick: async () => { cat = null; draw(); cat = await (await fetch('/api/lights/discover', { method: 'POST', headers: H, body: '{}' })).json(); draw(); } }, 'Search again')));
     return box;
   }
+  // ---------- mute lights: a Hue light goes red while you're muted ----------
+  function muteBox() {
+    const box = el('div', { class: 'group' }, el('h3', {}, 'Mute lights'));
+    if (!ml) { box.append(el('div', { class: 'empty' }, 'Loading…')); return box; }
+    if (!ml.lights.length) { box.append(el('div', { class: 'empty' }, ml.error || 'Pair the Hue bridge first (Connections, above). Only colour lights can turn red.')); return box; }
+    const save = async patch => {
+      ml = { ...ml, ...(await (await fetch('/api/mute-lights', { method: 'POST', headers: H, body: JSON.stringify(patch) })).json()) };
+      draw(); window.toast && window.toast('Saved');
+    };
+    const opts = [['', 'Pick a light'], ...ml.lights.map(l => [l.id, (l.room ? l.room + ': ' : '') + l.name])];
+    for (const [k, label, hint] of [['teams', 'Teams', 'Red while you’re muted in a meeting.'], ['discord', 'Discord', 'Red while you’re muted or deafened in a voice channel.']]) {
+      const c = ml[k] || {};
+      const on = el('input', { type: 'checkbox' }); on.checked = !!c.on;
+      on.addEventListener('change', () => save({ [k]: { ...c, on: on.checked } }));
+      const sel = select(opts, c.light || '', v => save({ [k]: { light: v, on: !!v || !!c.on } }));
+      const test = el('button', { class: 'small', disabled: c.light ? null : '', onclick: async () => {
+        window.toast && window.toast('Red for 3 seconds…');
+        const t = await (await fetch('/api/mute-lights/test', { method: 'POST', headers: H, body: JSON.stringify({ which: k }) })).json();
+        window.toast && window.toast(t.ok ? 'Back to normal' : t.error);
+      } }, 'Test');
+      const live = ml.live && ml.live[k] ? (ml.muted && ml.muted[k] ? ' · muted now' : '') : ` · ${label} helper not connected`;
+      box.append(field(label, el('span', { class: 'ctl' }, el('label', { class: 'switch' }, on, el('span')), sel, test), hint + live));
+    }
+    box.append(el('div', { class: 'hint', style: 'padding: 4px 2px 0' }, 'When you unmute or leave, the light goes back to how it was. Use two different lights for Teams and Discord, or the same one for both.'));
+    return box;
+  }
+
   async function pairHue() {
     pairing = true; draw();
     window.toast && window.toast('Press the link button on the Hue bridge');
@@ -199,6 +227,7 @@
     root.replaceChildren();
     const pr = prof(), pg = page(), g = grid();
     root.append(lightsBox());
+    root.append(muteBox());
 
     // Profiles
     const profBox = el('div', { class: 'group' }, el('h3', {}, 'Profile'));
@@ -304,6 +333,7 @@
     pi = Math.min(pi, cfg.profiles.length - 1); pgi = Math.min(pgi, prof().pages.length - 1);
     draw();
     fetch('/api/lights/catalog').then(r => r.json()).then(c => { cat = c; draw(); }).catch(() => {});
+    fetch('/api/mute-lights').then(r => r.json()).then(m => { ml = m; draw(); }).catch(() => {});
   }
 
   window.deckEditor = async container => {

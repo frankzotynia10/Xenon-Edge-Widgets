@@ -137,6 +137,15 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - `node lights.js` prints what it finds.
 - **WoW:** one tap sends one key combo. There are no timed sequences, to stay within Blizzard's rules.
 
+## Mute lights
+A Hue colour light turns red while you're muted, and goes back to how it was when you unmute or leave.
+- **Teams:** while you're muted in a meeting.
+- **Discord:** while you're muted or deafened in a voice channel.
+- **Setup:** Settings → **Deck** → **Mute lights**. Pick a light for each, switch it on, and use **Test** to see it go red for 3 seconds. Teams and Discord can use different lights or the same one.
+- **Where the mute state comes from:** the Edge helper's Teams and Discord feeds (ports 6793 and 6789). If the helper stops, the light goes back to normal.
+- **If the dashboard crashes while a light is red:** its old state is kept in `mute-lights.saved.json` and put back on the next start.
+- Local files (git-ignored): `mute-lights.json` (your choices) and `mute-lights.saved.json`.
+
 ## Run it
 ```powershell
 npm install

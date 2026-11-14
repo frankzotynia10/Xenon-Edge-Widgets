@@ -33,3 +33,5 @@ edge-dashboard/deck.json
 edge-dashboard/deck-icons/
 edge-dashboard/lights.json
 edge-dashboard/obs.json
+edge-dashboard/mute-lights.json
+edge-dashboard/mute-lights.saved.json

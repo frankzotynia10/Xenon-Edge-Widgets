@@ -12,6 +12,7 @@ const { EventEmitter } = require('events');
 const sensors = require('./sensors');
 const deck = require('./deck');
 const fps = require('./fps');
+const muteLights = require('./mute-lights');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
@@ -134,6 +135,11 @@ async function dashHandler(req, res) {
     if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current(), lights: deck.lights.stateNow() });
     if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
     if (p === '/api/fps') return jsonCors(req, res, 200, fps.read());
+    if (p === '/api/mute-lights') {
+      let list = [], error = null;
+      try { list = await deck.lights.colorLights(); } catch (e) { error = e.message; }
+      return json(res, 200, { ...muteLights.status(), lights: list, error });
+    }
     if (p === '/api/lights/catalog') return json(res, 200, { ...(await deck.lights.catalog()), obs: deck.lights.obs.status() });
     if (p.startsWith('/deck-icon/')) {
       const file = deck.icon(decodeURIComponent(p.slice('/deck-icon/'.length)));
@@ -234,6 +240,8 @@ async function dashHandler(req, res) {
     }
     // Pair with the Hue bridge: press its link button, then call this (it waits up to 30 s).
     // OBS WebSocket password / port, from the Deck settings page. The password is never sent back.
+    if (p === '/api/mute-lights') return json(res, 200, muteLights.setConfig(body));
+    if (p === '/api/mute-lights/test') { try { await muteLights.test(String(body.which)); return json(res, 200, { ok: true }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); } }
     if (p === '/api/obs/config') { deck.lights.obs.setConfig(body); await new Promise(r => setTimeout(r, 1500)); return json(res, 200, deck.lights.obs.status()); }
     if (p === '/api/lights/discover') { try { await deck.lights.discover(); return json(res, 200, await deck.lights.catalog()); } catch (e) { return json(res, 500, { error: e.message }); } }
     if (p === '/api/lights/pair-hue') {
@@ -258,6 +266,7 @@ async function start(opts = {}) {
   const layout = loadLayout();
   deck.init({ log: opts.log });
   fps.init({ log: opts.log, foreground: deck.foreground });
+  muteLights.init({ log: opts.log });
   deck.onChange(s => broadcast('deck', s));
   deck.lights.watch(s => broadcast('lights', s));
   const servers = [await listen(DASH_PORT, dashHandler)];
@@ -265,7 +274,7 @@ async function start(opts = {}) {
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };
 }
 
-module.exports = { start, events, broadcast, widgetList, DASH_PORT };
+module.exports = { start, events, broadcast, widgetList, DASH_PORT, muteLights };
 
 if (require.main === module) {
   start().then(r => console.log(`Edge dashboard on ${r.url}`), e => { console.error(e.message); process.exit(1); });
