@@ -157,6 +157,13 @@ npx electron . --dev
 
 Close iCUE (or turn its Edge dashboard off) first, or the two will fight over the screen.
 
+**Start menu shortcut** (per user, no admin), so you can start it from Start as "Edge Dashboard":
+```powershell
+$d = (Resolve-Path .).Path; $s = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path ([Environment]::GetFolderPath('Programs')) 'Edge Dashboard.lnk'))
+$s.TargetPath = "$d\node_modules\electron\dist\electron.exe"; $s.Arguments = "`"$d`""; $s.WorkingDirectory = $d; $s.IconLocation = "$d\resources\app.ico,0"; $s.Save()
+```
+Run it in `edge-dashboard/`. Starting it when it's already running does nothing.
+
 ## How it works
 - **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6807), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
