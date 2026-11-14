@@ -13,7 +13,8 @@
     "sensor-box":   { "dir": "sensor-box-edge/widget",   "port": 6806 },
     "deck":         { "dir": "deck-edge/widget",         "port": 6807 },
     "weather":      { "dir": "weather-edge/widget",      "port": 6808 },
-    "claude":       { "dir": "claude-edge/widget",       "port": 6809 }
+    "claude":       { "dir": "claude-edge/widget",       "port": 6809 },
+    "homelab":      { "dir": "homelab-edge/widget",      "port": 6810 }
   },
 
   "pages": [

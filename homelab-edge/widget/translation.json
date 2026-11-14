@@ -1,0 +1,10 @@
+{
+  "en": {
+    "translation": {
+      "Name stopped containers": "Name stopped containers",
+      "Accent color": "Accent color",
+      "Homelab": "Homelab",
+      "Needs the Edge helper. Servers are set in homelab-edge/helper/config.json (SSH or the Unraid API).": "Needs the Edge helper. Servers are set in homelab-edge/helper/config.json (SSH or the Unraid API)."
+    }
+  }
+}

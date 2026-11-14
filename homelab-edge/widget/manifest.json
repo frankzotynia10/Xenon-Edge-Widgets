@@ -1,0 +1,28 @@
+{
+  "author": "Frank",
+  "id": "com.frank.homelab",
+  "name": "Homelab",
+  "description": "Your Unraid servers at a glance: online, ping, CPU, memory, array and Docker containers, plus internet ping. Needs the Edge helper; servers are read over SSH or the Unraid API.",
+  "version": "1.0.0",
+  "preview_icon": "resources/icon.png",
+  "min_app_version": "5.44",
+  "min_framework_version": "1.0.0",
+  "os": [
+    {
+      "platform": "windows"
+    }
+  ],
+  "supported_devices": [
+    {
+      "type": "dashboard_lcd"
+    }
+  ],
+  "interactive": false,
+  "permissions": [
+    {
+      "type": "url",
+      "domain": "localhost",
+      "port": 6796
+    }
+  ]
+}

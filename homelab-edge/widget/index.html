@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Homelab'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-property" content="homelabShowStopped" data-label="tr('Name stopped containers')" data-type="switch" data-default="true" />
+<meta name="x-icue-property" content="homelabAccent" data-label="tr('Accent color')" data-type="color" data-default="'#4CC2FF'" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Homelab')", "properties": ["homelabShowStopped", "homelabAccent"], "info": "tr('Needs the Edge helper. Servers are set in homelab-edge/helper/config.json (SSH or the Unraid API).')" }
+]
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #26272b; --text: #f2f3f5; --muted: #949ba4; --accent: #4CC2FF;
+    --ok: #3ba55c; --warn: #f0b232; --bad: #ed4245; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; user-select: none; }
+  #wrap { position: absolute; inset: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .top { display: flex; align-items: center; gap: 12px; height: 34px; flex: 0 0 auto; }
+  .top svg { width: 28px; height: 28px; color: var(--accent); }
+  .top .name { font-size: 24px; font-weight: 700; }
+  .pings { margin-left: auto; display: flex; gap: 8px; }
+  .chip { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 99px; background: var(--panel); font-size: 16px; font-weight: 600; color: var(--muted); }
+  .chip b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex: 0 0 auto; }
+  .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+  #cards { flex: 1; min-height: 0; display: grid; gap: 12px; grid-auto-rows: 1fr; }
+  .card { background: var(--panel); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
+  .card.off { opacity: .7; }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .head .dot { width: 13px; height: 13px; }
+  .head .sname { font-size: 22px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .head .meta { margin-left: auto; font-size: 15px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bar { display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 10px; font-size: 15px; }
+  .bar .lbl { color: var(--muted); font-weight: 600; }
+  .bar .val { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .track { height: 10px; border-radius: 99px; background: var(--panel2); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s; }
+  .fill.warn { background: var(--warn); } .fill.bad { background: var(--bad); }
+  .docker { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); font-weight: 600; }
+  .docker b { color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; overflow: hidden; min-height: 0; }
+  .chips span { font-size: 13px; padding: 3px 9px; border-radius: 99px; background: var(--panel2); color: var(--muted); white-space: nowrap; }
+  .chips span.bad { background: rgba(237,66,69,.18); color: #ff8a8c; }
+  .err { font-size: 14px; color: #ff8a8c; line-height: 1.3; overflow: hidden; }
+  .note { font-size: 13px; color: var(--warn); }
+  #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 8px; text-align: center; padding: 30px; }
+  #msg b { font-size: 24px; } #msg span { color: var(--muted); font-size: 16px; max-width: 640px; }
+  /* Tall slots (M, L, full height): everything bigger, so the cards fill the space */
+  body.tall .card { padding: 22px 24px; gap: 22px; border-radius: 20px; }
+  body.tall .head .sname { font-size: 32px; } body.tall .head .dot { width: 17px; height: 17px; }
+  body.tall .head .meta { font-size: 19px; }
+  body.tall .bar { grid-template-columns: 1fr; gap: 8px; font-size: 20px; }
+  body.tall .bar .lbl { display: flex; justify-content: space-between; }
+  body.tall .track { height: 16px; }
+  body.tall .docker { font-size: 21px; } body.tall .chips span { font-size: 16px; padding: 5px 12px; }
+  body.tall .err { font-size: 18px; }
+  /* Short slots: drop the less important rows */
+  body.short .chips { display: none; }
+  body.tiny .bar.mem { display: none; }
+</style>
+<div id="wrap">
+  <div class="top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>
+    <div class="name">Homelab</div>
+    <div class="pings" id="pings"></div>
+  </div>
+  <div id="cards"></div>
+</div>
+<div id="msg"><b id="msgT"></b><span id="msgS"></span></div>
+<script>
+'use strict';
+const HELPER = 'http://localhost:6796';
+let showStopped = true, data = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// 1000-based, like Unraid shows them
+function size(b) {
+  if (b == null) return '–';
+  const u = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']; let i = 0; let v = b;
+  while (v >= 1000 && i < u.length - 1) { v /= 1000; i++; }
+  return (v >= 100 ? v.toFixed(0) : v.toFixed(1)) + ' ' + u[i];
+}
+function ago(s) {
+  if (s == null) return '';
+  if (s < 3600) return Math.round(s / 60) + ' min';
+  if (s < 86400 * 2) return Math.round(s / 3600) + ' h';
+  return Math.round(s / 86400) + ' d';
+}
+const level = pct => pct >= 90 ? 'bad' : pct >= 75 ? 'warn' : '';
+function bar(cls, label, pct, val) {
+  const p = Math.max(0, Math.min(100, pct || 0));
+  // Tall layout: label and value on one line above the bar; otherwise label | bar | value in a row.
+  if (document.body.classList.contains('tall'))
+    return `<div class="bar ${cls}"><span class="lbl"><span>${label}</span><span class="val">${val}</span></span><div class="track"><div class="fill ${level(p)}" style="width:${p}%"></div></div></div>`;
+  return `<div class="bar ${cls}"><span class="lbl">${label}</span><div class="track"><div class="fill ${level(p)}" style="width:${p}%"></div></div><span class="val">${val}</span></div>`;
+}
+
+function card(s) {
+  const problems = (s.array && (s.array.problems || s.array.state !== 'STARTED')) || (s.docker && s.docker.unhealthy && s.docker.unhealthy.length);
+  const dot = !s.online ? 'bad' : (s.error || s.stale || problems) ? 'warn' : '';
+  const meta = [s.ping != null ? s.ping + ' ms' : (s.online ? '' : 'offline'), s.uptime ? 'up ' + ago(s.uptime) : ''].filter(Boolean).join(' · ');
+  let h = `<div class="card${s.online ? '' : ' off'}"><div class="head"><span class="dot ${dot}"></span><span class="sname">${esc(s.name)}</span><span class="meta">${esc(meta)}</span></div>`;
+  if (s.cpu != null) h += bar('cpu', 'CPU', s.cpu, s.cpu + '%');
+  if (s.mem) h += bar('mem', 'Memory', s.mem.used / s.mem.total * 100, `${size(s.mem.used)} / ${size(s.mem.total)}`);
+  const a = s.array;
+  if (a) {
+    if (a.check) h += bar('arr', a.action && /clear|recon|sync/i.test(a.check.action) ? 'Sync' : 'Parity', a.check.pct, a.check.pct + '% checked');
+    else if (a.state !== 'STARTED') h += `<div class="err">Array ${esc(a.state.toLowerCase())}</div>`;
+    else if (a.total) h += bar('arr', 'Array', a.used / a.total * 100, `${size(a.used)} / ${size(a.total)}`);
+    if (a.problems) h += `<div class="err">${a.problems} disk${a.problems > 1 ? 's' : ''} need${a.problems > 1 ? '' : 's'} attention</div>`;
+  }
+  const d = s.docker;
+  if (d) {
+    h += `<div class="docker">Docker <b>${d.running} / ${d.total}</b> running</div>`;
+    const chips = [...(d.unhealthy || []).map(n => `<span class="bad">${esc(n)} · unhealthy</span>`),
+      ...(showStopped ? (d.stopped || []).map(n => `<span>${esc(n)}</span>`) : [])];
+    if (chips.length) h += `<div class="chips">${chips.join('')}</div>`;
+  }
+  if (s.error) h += `<div class="err">${s.stale ? 'Last read failed: ' : ''}${esc(s.error)}</div>`;
+  if (s.note) h += `<div class="note">${esc(s.note)}</div>`;
+  return h + '</div>';
+}
+
+function render() {
+  const W = innerWidth, H = innerHeight;
+  document.body.classList.toggle('short', H < 420);
+  document.body.classList.toggle('tall', H >= 600);
+  document.body.classList.toggle('tiny', H < 300);
+  if (!data) return;
+  if (!data.configured) return msg('No servers set up', 'Copy homelab-edge/helper/config.example.json to config.json and list your servers (SSH or the Unraid API key).');
+  $('msg').style.display = 'none'; $('wrap').style.display = '';
+  $('pings').innerHTML = (data.pings || []).map(p => `<div class="chip"><span class="dot ${p.ms == null ? 'bad' : p.ms > 80 ? 'warn' : ''}"></span>${esc(p.name)} <b>${p.ms == null ? 'down' : p.ms + ' ms'}</b></div>`).join('');
+  const n = data.servers.length;
+  // Side by side while each card gets ~380 px, otherwise stacked
+  const cols = Math.max(1, Math.min(n, Math.floor((W - 32 + 12) / 392)));
+  $('cards').style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  $('cards').innerHTML = data.servers.map(card).join('');
+}
+function msg(t, s) { $('msgT').textContent = t; $('msgS').textContent = s; $('msg').style.display = 'flex'; $('wrap').style.display = 'none'; }
+
+function connect() {
+  const es = new EventSource(HELPER + '/events');
+  es.onmessage = e => { try { data = JSON.parse(e.data); render(); } catch { /* ignore */ } };
+  es.onerror = () => { if (es.readyState === 2) { es.close(); setTimeout(connect, 3000); } if (!data) msg('Edge helper not running', 'The Homelab widget reads your servers through the Edge helper (port 6796).'); };
+}
+
+// Settings arrive as globals (window.homelabShowStopped etc.), from iCUE or the Edge dashboard.
+function applySettings() {
+  showStopped = window.homelabShowStopped !== false && window.homelabShowStopped !== 'false';
+  if (window.homelabAccent) document.documentElement.style.setProperty('--accent', window.homelabAccent);
+  render();
+}
+window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+applySettings();
+addEventListener('resize', render);
+connect();
+</script>
+</body>
+</html>
