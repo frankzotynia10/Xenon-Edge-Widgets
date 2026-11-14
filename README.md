@@ -14,6 +14,7 @@ Custom iCUE widgets for the Corsair Xeneon Edge, the background helper that powe
 | **Claude** | Your Claude Code sessions: working, needs you, or your turn. Needs a Claude Code hook. | `claude-edge/` |
 | **Homelab** | Your Unraid servers: online, ping, CPU, memory, array and Docker containers, plus internet ping. Read over SSH or the Unraid API. | `homelab-edge/` |
 | **Timer** | A countdown with presets, pause and ±1 minute. Flashes and beeps when it's done. | `timer-edge/` |
+| **Garmin** | Today from your Garmin (Body Battery, sleep, HRV, readiness and more) with 7-day trends, from a self-hosted fitness-sync database. Edge dashboard only. | `garmin-edge/` |
 | **Deck** | A button deck in place of the Virtual Stream Deck: hotkeys, text, commands, pages and folders, and a profile that follows the app in front (WoW). Edge dashboard only. | `deck-edge/` |
 
 Each folder has its own README with details and settings.

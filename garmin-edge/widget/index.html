@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>'Garmin'</title>
+<link rel="icon" type="image/png" href="resources/icon.png" />
+<meta name="x-icue-property" content="garminApi" data-label="tr('Data URL (PostgREST)')" data-type="textfield" data-default="''" />
+<script type="application/json" id="x-icue-groups">
+[
+  { "title": "tr('Garmin')", "properties": ["garminApi"], "info": "tr('Reads the garmin_daily table of your fitness-sync stack through PostgREST, e.g. http://tower:3001. See garmin-edge/README.md.')" }
+]
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+<style>
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #26272b; --text: #f2f3f5; --muted: #949ba4;
+    --bb: #4cc2ff; --sleep: #9b84ee; --hrv: #3ba55c; --hr: #ed4245; --steps: #f0b232; --ready: #00c2a8; --stress: #f26522; --load: #eb459e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; user-select: none; }
+  #wrap { position: absolute; inset: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .top { display: flex; align-items: center; gap: 12px; height: 32px; flex: 0 0 auto; }
+  .top svg { width: 26px; height: 26px; color: var(--bb); }
+  .top .name { font-size: 23px; font-weight: 700; }
+  .top .when { margin-left: auto; font-size: 15px; color: var(--muted); font-weight: 600; }
+  #tiles { flex: 1; min-height: 0; display: grid; gap: 10px; }
+  .tile { background: var(--panel); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; position: relative; }
+  .tile .lbl { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; display: flex; align-items: center; gap: 7px; }
+  .tile .lbl i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .tile .val { font-size: 34px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tile .val small { font-size: .45em; color: var(--muted); font-weight: 600; margin-left: 3px; }
+  .tile .sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .delta { font-size: 13px; font-weight: 700; margin-left: 6px; }
+  .delta.up { color: #57d685; } .delta.down { color: #ff8a8c; }
+  .tile svg.spark { margin-top: auto; width: 100%; height: 30%; min-height: 18px; max-height: 70px; }
+  .spark path { fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .spark .area { fill: var(--c); opacity: .12; stroke: none; }
+  .spark circle { fill: var(--c); }
+  /* Wide tiles: text on the left, the trend beside it */
+  body.big .tile { padding: 14px 20px; flex-direction: row; align-items: center; gap: 18px; }
+  body.big .tile .txt { flex: 0 0 auto; min-width: 0; }
+  body.big .tile svg.spark { margin-top: 0; flex: 1; height: 62%; max-height: none; }
+  body.big .tile .val { font-size: 46px; } body.big .tile .lbl { font-size: 15px; } body.big .tile .sub { font-size: 16px; }
+  body.small .tile .sub { display: none; } body.small .tile .val { font-size: 28px; }
+  #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 8px; text-align: center; padding: 30px; }
+  #msg b { font-size: 24px; } #msg span { color: var(--muted); font-size: 16px; max-width: 620px; }
+</style>
+<div id="wrap">
+  <div class="top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+    <div class="name">Today</div>
+    <div class="when" id="when"></div>
+  </div>
+  <div id="tiles"></div>
+</div>
+<div id="msg"><b id="msgT"></b><span id="msgS"></span></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const COLS = 'date,updated_at,steps,body_battery,body_battery_high,body_battery_low,body_battery_at_wake,sleep_seconds,sleep_score,hrv,resting_hr,training_readiness,training_status,stress_avg,acute_training_load,intensity_minutes_moderate,intensity_minutes_vigorous';
+let rows = null, err = null, api = '';
+
+const hm = s => s == null ? '–' : `${Math.floor(s / 3600)}h ${String(Math.round(s % 3600 / 60)).padStart(2, '0')}m`;
+const num = v => v == null ? '–' : Math.round(v).toLocaleString();
+// "PRODUCTIVE_1" -> "Productive"
+const status = s => s ? String(s).replace(/_\d+$/, '').replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase()) : '';
+
+// The tiles, in order of importance (small sizes show the first few).
+const TILES = [
+  { key: 'bb', label: 'Body Battery', c: 'var(--bb)', v: r => r.body_battery, val: r => num(r.body_battery), sub: r => r.body_battery_high != null ? `High ${r.body_battery_high} · low ${r.body_battery_low}` : '', spark: r => r.body_battery_at_wake },
+  { key: 'sleep', label: 'Sleep', c: 'var(--sleep)', v: r => r.sleep_score, val: r => num(r.sleep_score), sub: r => hm(r.sleep_seconds), spark: r => r.sleep_score },
+  { key: 'hrv', label: 'HRV', c: 'var(--hrv)', v: r => r.hrv, val: r => r.hrv == null ? '–' : `${Math.round(r.hrv)}<small>ms</small>`, sub: () => 'Overnight average', spark: r => r.hrv, good: 1 },
+  { key: 'ready', label: 'Readiness', c: 'var(--ready)', v: r => r.training_readiness, val: r => num(r.training_readiness), sub: r => status(r.training_status), spark: r => r.training_readiness, good: 1 },
+  { key: 'hr', label: 'Resting HR', c: 'var(--hr)', v: r => r.resting_hr, val: r => r.resting_hr == null ? '–' : `${r.resting_hr}<small>bpm</small>`, sub: () => '', spark: r => r.resting_hr, good: -1 },
+  { key: 'steps', label: 'Steps', c: 'var(--steps)', v: r => r.steps, val: r => num(r.steps), sub: r => `${(r.intensity_minutes_moderate || 0) + 2 * (r.intensity_minutes_vigorous || 0)} intensity min`, spark: r => r.steps },
+  { key: 'stress', label: 'Stress', c: 'var(--stress)', v: r => r.stress_avg, val: r => num(r.stress_avg), sub: () => 'Average', spark: r => r.stress_avg, good: -1 },
+  { key: 'load', label: 'Training load', c: 'var(--load)', v: r => r.acute_training_load, val: r => num(r.acute_training_load), sub: () => 'Acute (7 days)', spark: r => r.acute_training_load },
+];
+
+function spark(vals) {
+  const pts = vals.map((v, i) => [i, v]).filter(p => p[1] != null);
+  if (pts.length < 2) return '';
+  const n = vals.length - 1, ys = pts.map(p => p[1]), lo = Math.min(...ys), hi = Math.max(...ys), span = hi - lo || 1;
+  const xy = pts.map(([i, v]) => [i / n * 100, 36 - (v - lo) / span * 30]);
+  const line = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const last = xy[xy.length - 1];
+  return `<svg class="spark" viewBox="-3 0 106 40" preserveAspectRatio="none"><path class="area" d="${line} L${last[0]} 40 L${xy[0][0]} 40 Z"/><path d="${line}"/></svg>`;
+}
+
+function render() {
+  const W = innerWidth, H = innerHeight;
+  if (!api) return msg('Set the data URL', 'In the widget settings, enter the PostgREST address of your fitness-sync stack, for example http://tower:3001.');
+  if (err && !rows) return msg("Can't read the Garmin data", err);
+  if (!rows) return;
+  if (!rows.length) return msg('No Garmin data yet', 'garmin_daily is empty.');
+  $('msg').style.display = 'none'; $('wrap').style.display = '';
+  // Oldest first for the sparklines; today is the last one.
+  const days = rows.slice().reverse(), today = rows[0], yday = rows[1];
+  const isToday = today.date === new Date().toLocaleDateString('en-CA');
+  $('when').textContent = (isToday ? '' : today.date + ' · ') + (today.updated_at ? 'synced ' + ago(Date.parse(today.updated_at)) : '') + (err ? ' · offline' : '');
+  // Grid: tiles about 190+ px wide and 140+ px tall
+  // Tall slots (M, L): two columns of wide tiles rather than many narrow ones
+  const cols = (H - 70) > (W - 32) * 0.6 ? 2 : Math.max(2, Math.min(8, Math.floor((W - 32 + 10) / 200)));
+  const rowsFit = Math.max(1, Math.floor((H - 70 + 10) / 140));
+  const n = Math.min(TILES.length, cols * rowsFit);
+  const r = Math.ceil(n / cols);
+  document.body.classList.toggle('big', (H - 70) / r > 140 && (W - 32) / cols > 340);
+  document.body.classList.toggle('small', (H - 70) / r < 150);
+  $('tiles').style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  $('tiles').style.gridTemplateRows = `repeat(${r}, 1fr)`;
+  $('tiles').innerHTML = TILES.slice(0, n).map(t => {
+    let delta = '';
+    if (yday && t.v(today) != null && t.v(yday) != null && t.good) {
+      const d = t.v(today) - t.v(yday);
+      if (Math.round(d)) delta = `<span class="delta ${d * t.good > 0 ? 'up' : 'down'}">${d > 0 ? '▲' : '▼'} ${Math.abs(Math.round(d))}</span>`;
+    }
+    return `<div class="tile" style="--c:${t.c}"><div class="txt"><div class="lbl"><i></i>${t.label}</div><div class="val">${t.val(today)}${delta}</div>` +
+      `<div class="sub">${esc(t.sub(today) || '')}</div></div>${spark(days.map(t.spark))}</div>`;
+  }).join('');
+}
+function ago(ms) { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; }
+function msg(t, s) { $('msgT').textContent = t; $('msgS').textContent = s; $('msg').style.display = 'flex'; $('wrap').style.display = 'none'; }
+
+let timer = null;
+async function fetchData() {
+  clearTimeout(timer);
+  if (api) {
+    try {
+      const r = await fetch(`${api.replace(/\/+$/, '')}/garmin_daily?select=${COLS}&order=date.desc&limit=8`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`The server answered ${r.status}.`);
+      rows = await r.json(); err = null;
+    } catch (e) { err = e.message === 'Failed to fetch' ? `No answer from ${api}.` : e.message; }
+  }
+  render();
+  timer = setTimeout(fetchData, 5 * 60000);   // garmin-sync runs hourly; every 5 minutes is plenty
+}
+
+// Settings arrive as globals (window.garminApi), from iCUE or the Edge dashboard.
+function applySettings() {
+  const a = String(window.garminApi || '').trim();
+  const changed = a !== api; api = a;
+  if (changed) { rows = null; fetchData(); } else render();
+}
+window.icueEvents = { onICUEInitialized: applySettings, onDataUpdated: applySettings };
+addEventListener('resize', render);
+setInterval(render, 60000);   // keeps "synced N min ago" current
+applySettings();
+</script>
+</body>
+</html>

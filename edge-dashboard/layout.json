@@ -15,7 +15,8 @@
     "weather":      { "dir": "weather-edge/widget",      "port": 6808 },
     "claude":       { "dir": "claude-edge/widget",       "port": 6809 },
     "homelab":      { "dir": "homelab-edge/widget",      "port": 6810 },
-    "timer":        { "dir": "timer-edge/widget",        "port": 6811 }
+    "timer":        { "dir": "timer-edge/widget",        "port": 6811 },
+    "garmin":       { "dir": "garmin-edge/widget",       "port": 6812 }
   },
 
   "pages": [

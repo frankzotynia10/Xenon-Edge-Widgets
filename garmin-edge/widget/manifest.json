@@ -1,0 +1,11 @@
+{
+  "author": "Frank",
+  "id": "com.frank.garmin",
+  "name": "Garmin",
+  "description": "Today from your Garmin, read from a self-hosted fitness-sync stack (PostgREST): Body Battery, sleep, HRV, readiness, resting HR, steps, stress and training load, with 7-day trends.",
+  "version": "1.0.0",
+  "os": [{ "platform": "windows" }],
+  "supported_devices": [{ "type": "dashboard_lcd" }],
+  "interactive": false,
+  "permissions": []
+}
