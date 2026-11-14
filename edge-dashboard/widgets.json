@@ -1,0 +1,16 @@
+{
+  "widgets": {
+    "discord":      { "dir": "discord-edge/widget",      "port": 6801 },
+    "notifications": { "dir": "notifications-edge/widget", "port": 6802 },
+    "apple-music":  { "dir": "apple-music-edge/widget",  "port": 6803 },
+    "teams":        { "dir": "teams-edge/widget",        "port": 6804 },
+    "launcher":     { "dir": "launcher-edge/widget",     "port": 6805 },
+    "sensor-box":   { "dir": "sensor-box-edge/widget",   "port": 6806 },
+    "deck":         { "dir": "deck-edge/widget",         "port": 6807 },
+    "weather":      { "dir": "weather-edge/widget",      "port": 6808 },
+    "claude":       { "dir": "claude-edge/widget",       "port": 6809 },
+    "homelab":      { "dir": "homelab-edge/widget",      "port": 6810 },
+    "timer":        { "dir": "timer-edge/widget",        "port": 6811 },
+    "garmin":       { "dir": "garmin-edge/widget",       "port": 6812 }
+  }
+}

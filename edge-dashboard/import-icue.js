@@ -82,9 +82,12 @@ function readIcue() {
 // Sensor picks are skipped: iCUE stores them as its own sensor GUIDs, which mean nothing to
 // LibreHardwareMonitor, so those settings fall back to the automatic sensors instead.
 function idMap() {
-  const layout = JSON.parse(fs.readFileSync(LAYOUT, 'utf8'));
+  // Every widget: widgets.json, plus any only listed in an older layout.json.
+  const read = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')).widgets || {}; } catch { return {}; } };
+  const asMap = w => Array.isArray(w) ? Object.fromEntries(w.map(x => [x.id, x])) : w;
+  const all = { ...asMap(read(LAYOUT)), ...asMap(read(path.join(__dirname, 'widgets.json'))) };
   const map = {};
-  const list = Array.isArray(layout.widgets) ? layout.widgets : Object.entries(layout.widgets || {}).map(([id, w]) => ({ id, ...w }));
+  const list = Object.entries(all).map(([id, w]) => ({ id, ...w }));
   for (const w of list) {
     try {
       const html = fs.readFileSync(path.join(ROOT, w.dir, 'index.html'), 'utf8');

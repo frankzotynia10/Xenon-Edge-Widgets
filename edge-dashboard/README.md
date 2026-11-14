@@ -15,7 +15,7 @@ What it has:
 To start it at login, use the tray menu. To start it from the Start menu, see the shortcut steps under "Run it".
 
 ## Pages
-`layout.json` can have several pages, each with its own layout. Ways to switch:
+Your pages are in `layout.json`. It's yours alone: git ignores it, and the first start makes it from `layout.example.json`. It can have several pages, each with its own layout. Ways to switch:
 - **Alt+← / Alt+→** from any app, like iCUE. They wrap around.
   - These are global hotkeys, so they take Alt+← (Back) from browsers too, the same as iCUE does.
   - Change them with `"pageKeys": { "previous": "...", "next": "..." }` in `layout.json`, using Electron key names. Set one to `""` to turn it off.
@@ -25,10 +25,10 @@ To start it at login, use the tray menu. To start it from the Start menu, see th
 
 Every page stays loaded, so switching is instant and the widgets stay connected. The dashboard remembers the page you were on.
 
-The default pages follow the iCUE ones:
-1. **Main:** Music (S) and Sensor Box (S), Discord (M), Deck (M).
-2. **Meetings:** Music and Notifications, Teams (M), Deck (M).
-3. **Discord:** full width.
+The example pages (`layout.example.json`):
+1. **Meetings:** Music and Sensor Box (S), Notifications (M), Teams (M).
+2. **Main:** Music and Sensor Box (S), Discord (M), Deck (M).
+3. **Weather:** full width.
 
 Slots match iCUE's: 840×344 (S), 840×704 (M) or 2540×704 (full), in three columns at x = 10, 860 and 1710, edge to edge.
 
@@ -40,7 +40,7 @@ Tray → **Settings…** → **Layout** (at the top of the list).
   - Click a widget to change it, resize it or remove it, or drag it to a free spot.
 - **Save and show on the Edge** writes `layout.json` and reloads the dashboard. **Undo changes** throws away anything not saved.
 - A widget can be on as many pages as you like.
-- A new widget folder still has to be added to `"widgets"` in `layout.json` by hand, with its own port, and the dashboard restarted.
+- A new widget folder has to be added to `widgets.json` by hand, with its own port, and the dashboard restarted.
 
 ## Tray icon and log
 The dashboard has a tray icon (a little blue Edge) in the notification area. Its menu has:
@@ -61,7 +61,7 @@ Everything that happens goes to **`dashboard.log`**: the Edge found or lost, re-
 When the dashboard runs on the Edge, `mouse-lock.ps1` keeps the **mouse** off the Edge, like iCUE's mouse lock. **Touch** still works.
 - **How it works:** a low-level mouse hook drops mouse moves that would land on the Edge. Windows tags taps from the touchscreen and pen, and those pass through.
 - **After a tap:** the next real mouse move sends the cursor back to where it was on your main screen.
-- **Turning it off:** untick **Mouse lock** in the tray menu. Or, to change the default for everyone, set `"mouseLock": false` in `layout.json`.
+- **Turning it off:** untick **Mouse lock** in the tray menu. Or, to change the default for everyone, set `"mouseLock": false` in `layout.example.json` (yours: `layout.json`).
 - **When it runs:** only in Edge mode, not with `--dev`. The dashboard restarts it if it stops.
 
 ## Settings
@@ -168,7 +168,7 @@ $s.TargetPath = "$d\node_modules\electron\dist\electron.exe"; $s.Arguments = "`"
 Run it in `edge-dashboard/`. Starting it when it's already running does nothing.
 
 ## How it works
-- **`layout.json`** has `widgets`, which maps each widget to its folder and its own port (6801–6812), and `pages`, which places widgets on the 2560×720 screen. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
+- **`widgets.json`** (in git) maps each widget to its folder and its own port (6801–6812). **`layout.json`** (yours, git-ignored) has `pages`, which places widgets on the 2560×720 screen, plus the screen size, page keys and mouse lock. The server puts the two together. Each widget gets its own origin and storage, like separate widgets in iCUE. A widget can be on several pages.
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
   - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
   - `/api/sensors` returns the LibreHardwareMonitor sensors (read by **`sensors.js`**) and the automatic picks.

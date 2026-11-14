@@ -16,13 +16,27 @@ const muteLights = require('./mute-lights');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
+// widgets.json (in git): every widget's folder and port. layout.json (yours, git-ignored): your pages and
+// screen settings; made from layout.example.json the first time. loadLayout() puts the two together.
 const LAYOUT = path.join(__dirname, 'layout.json');
+const LAYOUT_EXAMPLE = path.join(__dirname, 'layout.example.json');
+const WIDGETS = path.join(__dirname, 'widgets.json');
 const SETTINGS = path.join(__dirname, 'settings.json');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
 
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } };
-const loadLayout = () => readJson(LAYOUT, { widgets: {}, pages: [] });
+// Your layout (or the example), with the widgets from widgets.json. A widget only listed in an older
+// layout.json still counts; widgets.json wins for the ones in both.
+function loadLayout() {
+  const mine = readJson(LAYOUT, null) || readJson(LAYOUT_EXAMPLE, { pages: [] });
+  const asMap = w => Array.isArray(w) ? Object.fromEntries(w.map(x => [x.id, x])) : (w || {});
+  return { ...mine, widgets: { ...asMap(mine.widgets), ...asMap(readJson(WIDGETS, {}).widgets) } };
+}
+// First run: start your layout.json from the example, so the layout editor has a file to save into.
+function ensureLayout() {
+  if (!fs.existsSync(LAYOUT) && fs.existsSync(LAYOUT_EXAMPLE)) fs.copyFileSync(LAYOUT_EXAMPLE, LAYOUT);
+}
 // layout.json "widgets" is { id: { dir, port } }; this returns [{ id, dir, port }].
 const widgetList = layout => Array.isArray(layout.widgets) ? layout.widgets : Object.entries(layout.widgets || {}).map(([id, w]) => ({ id, ...w }));
 const loadSettings = () => readJson(SETTINGS, {});
@@ -97,15 +111,19 @@ function broadcast(event, data) {
   for (const res of clients) res.write(msg);
 }
 
-// layout.json, written the way it's laid out by hand: one line per widget and per slot.
+// layout.json / widgets.json, written the way they're laid out by hand: one line per widget and per slot.
+// Each part is only written when it's there, so the same function writes either file.
 function layoutText(layout) {
   const { widgets, pages, ...rest } = layout;
-  const top = Object.entries(rest).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v).replace(/,"/g, ', "').replace(/":/g, '": ').replace(/^\{/, '{ ').replace(/\}$/, ' }')}`);
   const pad = (s, n) => s + ' '.repeat(Math.max(1, n - s.length));
+  const parts = [];
+  const top = Object.entries(rest).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v).replace(/,"/g, ', "').replace(/":/g, '": ').replace(/^\{/, '{ ').replace(/\}$/, ' }')}`);
+  if (top.length) parts.push(top.join(',\n'));
   const wl = Object.entries(widgets || {}).map(([id, w]) => `    ${pad(JSON.stringify(id) + ':', 16)}{ "dir": ${pad(JSON.stringify(w.dir) + ',', 28)}"port": ${w.port} }`);
-  const pl = (pages || []).map(pg => `    { "name": ${JSON.stringify(pg.name)}, "items": [\n` +
-    pg.items.map(it => `      { "widget": ${pad(JSON.stringify(it.widget) + ',', 16)}"x": ${pad(it.x + ',', 6)}"y": ${pad(it.y + ',', 5)}"w": ${pad(it.w + ',', 6)}"h": ${it.h} }`).join(',\n') + '\n    ] }');
-  return `{\n${top.join(',\n')},\n\n  "widgets": {\n${wl.join(',\n')}\n  },\n\n  "pages": [\n${pl.join(',\n')}\n  ]\n}\n`;
+  if (wl.length) parts.push(`  "widgets": {\n${wl.join(',\n')}\n  }`);
+  if (pages) parts.push(`  "pages": [\n${pages.map(pg => `    { "name": ${JSON.stringify(pg.name)}, "items": [\n` +
+    pg.items.map(it => `      { "widget": ${pad(JSON.stringify(it.widget) + ',', 16)}"x": ${pad(it.x + ',', 6)}"y": ${pad(it.y + ',', 5)}"w": ${pad(it.w + ',', 6)}"h": ${it.h} }`).join(',\n') + '\n    ] }').join(',\n')}\n  ]`);
+  return `{\n${parts.join(',\n\n')}\n}\n`;
 }
 
 function saveSettings(all) { fs.writeFileSync(SETTINGS, JSON.stringify(all, null, 2) + '\n'); }
@@ -151,7 +169,7 @@ async function dashHandler(req, res) {
     if (p === '/deck-editor.js') return sendFile(res, path.join(__dirname, 'deck-editor.js'));
     if (p === '/deck-icon-suggest.js') return sendFile(res, path.join(__dirname, 'deck-icon-suggest.js'));
     if (p === '/layout-editor.js') return sendFile(res, path.join(__dirname, 'layout-editor.js'));
-    if (p === '/layout.json') return sendFile(res, LAYOUT);
+    if (p === '/layout.json') return json(res, 200, loadLayout());   // yours + widgets.json, put together
     if (p === '/api/widgets') return json(res, 200, widgetList(loadLayout()).map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
     if (p === '/api/settings') return json(res, 200, loadSettings());
     if (p === '/api/sensors') {
@@ -212,8 +230,10 @@ async function dashHandler(req, res) {
           if (it.x + it.w > W || it.y + it.h > Hh) return json(res, 400, { error: `${it.widget} is off the screen` });
         }
       }
-      layout.pages = pages.map(pg => ({ name: pg.name, items: pg.items.map(({ widget, x, y, w, h }) => ({ widget, x, y, w, h })) }));
-      fs.writeFileSync(LAYOUT, layoutText(layout));
+      // Only your part goes into layout.json; the widget list lives in widgets.json.
+      const { widgets: _w, ...mine } = readJson(LAYOUT, null) || readJson(LAYOUT_EXAMPLE, {});
+      mine.pages = pages.map(pg => ({ name: pg.name, items: pg.items.map(({ widget, x, y, w, h }) => ({ widget, x, y, w, h })) }));
+      fs.writeFileSync(LAYOUT, layoutText(mine));
       broadcast('reload', {});
       return json(res, 200, { ok: true });
     }
@@ -263,6 +283,7 @@ function listen(port, handler) {
 }
 
 async function start(opts = {}) {
+  ensureLayout();
   const layout = loadLayout();
   deck.init({ log: opts.log });
   fps.init({ log: opts.log, foreground: deck.foreground });
@@ -275,7 +296,7 @@ async function start(opts = {}) {
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };
 }
 
-module.exports = { start, events, broadcast, widgetList, DASH_PORT, muteLights };
+module.exports = { start, events, broadcast, widgetList, loadLayout, layoutText, DASH_PORT, muteLights };
 
 if (require.main === module) {
   start().then(r => console.log(`Edge dashboard on ${r.url}`), e => { console.error(e.message); process.exit(1); });

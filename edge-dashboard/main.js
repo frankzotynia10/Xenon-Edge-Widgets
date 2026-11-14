@@ -12,6 +12,8 @@ const server = require('./server');
 const DEV = process.argv.includes('--dev');
 const EDGE = { width: 2560, height: 720 };
 const LAYOUT = path.join(__dirname, 'layout.json');
+// Your layout.json, or the example until the server has made yours (first run).
+const layoutCfg = () => readJson(LAYOUT, null) || readJson(path.join(__dirname, 'layout.example.json'), {});
 const PREFS = path.join(__dirname, 'prefs.json');
 const LOG = path.join(__dirname, 'dashboard.log');
 
@@ -30,7 +32,7 @@ process.on('unhandledRejection', e => log('Unhandled rejection:', e));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } };
-const prefs = () => ({ mouseLock: readJson(LAYOUT, {}).mouseLock !== false, ...readJson(PREFS, {}) });
+const prefs = () => ({ mouseLock: layoutCfg().mouseLock !== false, ...readJson(PREFS, {}) });
 function setPref(key, value) { const p = readJson(PREFS, {}); p[key] = value; fs.writeFileSync(PREFS, JSON.stringify(p, null, 2) + '\n'); }
 
 // The Edge is the display whose physical resolution is 2560x720.
@@ -80,7 +82,7 @@ function repin(reason) {
 let lockProc = null, quitting = false, lockRestart = null;
 function startMouseLock() {
   if (DEV || lockProc || !prefs().mouseLock) return;
-  const s = readJson(LAYOUT, {}).screen || EDGE;
+  const s = layoutCfg().screen || EDGE;
   lockProc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'mouse-lock.ps1'),
     '-Width', String(s.width), '-Height', String(s.height)], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   log('Mouse lock started');
@@ -113,7 +115,7 @@ function openSettings() {
 // Global, so they work from any app. Like iCUE's, they take those keys from other apps
 // (Alt+Left is Back in browsers); change them with "pageKeys" in layout.json.
 function registerPageKeys() {
-  const keys = { previous: 'Alt+Left', next: 'Alt+Right', ...(readJson(LAYOUT, {}).pageKeys || {}) };
+  const keys = { previous: 'Alt+Left', next: 'Alt+Right', ...(layoutCfg().pageKeys || {}) };
   for (const [name, accel] of Object.entries(keys)) {
     if (!accel) continue;
     const step = name === 'previous' ? -1 : 1;
