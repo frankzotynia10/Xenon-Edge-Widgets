@@ -8,6 +8,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { EventEmitter } = require('events');
 
 const ROOT = path.resolve(__dirname, '..');
 const DASH_PORT = 6800;
@@ -53,10 +54,96 @@ function widgetHandler(w) {
   };
 }
 
-function dashHandler(req, res) {
+// ---------- widget properties, read from each widget's <meta name="x-icue-property"> tags ----------
+const decodeEntities = s => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const PLUGINS_STUB = { Sensorsdataprovider: { getDefaultSensorIdBlock: () => '' } };
+function evalExpr(expr) {
+  if (expr == null || expr === '') return undefined;
+  try { return new Function('tr', 'plugins', 'return (' + expr + ');')(s => s, PLUGINS_STUB); } catch { return expr; }
+}
+function readProps(w) {
+  const html = fs.readFileSync(path.join(ROOT, w.dir, 'index.html'), 'utf8');
+  const props = [];
+  for (const tag of html.match(/<meta\s+name="x-icue-property"[^>]*>/g) || []) {
+    const attrs = {};
+    for (const [, k, v] of tag.matchAll(/([\w-]+)="([^"]*)"/g)) attrs[k] = decodeEntities(v);
+    if (!attrs.content) continue;
+    props.push({
+      key: attrs.content, type: attrs['data-type'] || 'textfield', label: evalExpr(attrs['data-label']) || attrs.content,
+      default: evalExpr(attrs['data-default']), values: evalExpr(attrs['data-values']),
+      min: attrs['data-min'] != null ? Number(attrs['data-min']) : undefined, max: attrs['data-max'] != null ? Number(attrs['data-max']) : undefined,
+      step: attrs['data-step'] != null ? Number(attrs['data-step']) : undefined, unit: evalExpr(attrs['data-unit-label']),
+    });
+  }
+  let groups = [];
+  const g = /<script[^>]*id="x-icue-groups"[^>]*>([\s\S]*?)<\/script>/.exec(html);
+  if (g) { try { groups = JSON.parse(g[1]).map(x => ({ title: evalExpr(x.title) || x.title, properties: x.properties || [] })); } catch { /* ignore */ } }
+  let name = w.id;
+  try { name = JSON.parse(fs.readFileSync(path.join(ROOT, w.dir, 'manifest.json'), 'utf8')).name || w.id; } catch { /* ignore */ }
+  return { id: w.id, name, port: w.port, props, groups };
+}
+
+// ---------- live updates (Server-Sent Events) ----------
+const events = new EventEmitter();
+const clients = new Set();
+function broadcast(event, data) {
+  const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) res.write(msg);
+}
+
+function saveSettings(all) { fs.writeFileSync(SETTINGS, JSON.stringify(all, null, 2) + '\n'); }
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
+    req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch (e) { reject(e); } });
+  });
+}
+const json = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
+
+async function dashHandler(req, res) {
   const p = req.url.split('?')[0];
-  if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
-  if (p === '/layout.json') return sendFile(res, LAYOUT);
+  if (req.method === 'GET') {
+    if (p === '/' || p === '/index.html') return sendFile(res, path.join(__dirname, 'dashboard.html'));
+    if (p === '/settings') return sendFile(res, path.join(__dirname, 'settings.html'));
+    if (p === '/layout.json') return sendFile(res, LAYOUT);
+    if (p === '/api/widgets') return json(res, 200, loadLayout().widgets.map(w => { try { return readProps(w); } catch (e) { return { id: w.id, name: w.id, props: [], groups: [], error: e.message }; } }));
+    if (p === '/api/settings') return json(res, 200, loadSettings());
+    if (p === '/api/events') {
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
+      res.write(': hi\n\n'); clients.add(res); req.on('close', () => clients.delete(res));
+      return;
+    }
+  }
+  if (req.method === 'POST' && p.startsWith('/api/')) {
+    // Only our own pages may change things: they send this header, which other sites can't
+    // send cross-origin without a CORS preflight we never answer.
+    if (req.headers['x-edge-dashboard'] !== '1') { res.writeHead(403); return res.end(); }
+    let body;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'bad json' }); }
+    const m = /^\/api\/settings\/([\w-]+)$/.exec(p);
+    if (m) {
+      const id = m[1];
+      if (!loadLayout().widgets.some(w => w.id === id)) return json(res, 404, { error: 'no such widget' });
+      const all = loadSettings();
+      all[id] = { ...(all[id] || {}), ...body };
+      saveSettings(all);
+      broadcast('settings', { id, settings: body });
+      return json(res, 200, { ok: true });
+    }
+    if (p === '/api/import-icue') {
+      try {
+        const found = require('./import-icue').importSettings();
+        const all = loadSettings();
+        for (const [id, inst] of Object.entries(found)) { all[id] = { ...(all[id] || {}), ...inst.settings }; broadcast('settings', { id, settings: inst.settings }); }
+        saveSettings(all);
+        return json(res, 200, { ok: true, imported: Object.fromEntries(Object.entries(found).map(([id, i]) => [id, Object.keys(i.settings).length])) });
+      } catch (e) { return json(res, 500, { error: e.message }); }
+    }
+    if (p === '/api/open-settings') { const opened = events.listenerCount('open-settings') > 0; events.emit('open-settings'); return json(res, 200, { opened }); }
+    if (p === '/api/reload') { broadcast('reload', {}); return json(res, 200, { ok: true }); }
+  }
   res.writeHead(404); res.end();
 }
 
@@ -75,7 +162,7 @@ async function start() {
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };
 }
 
-module.exports = { start, DASH_PORT };
+module.exports = { start, events, DASH_PORT };
 
 if (require.main === module) {
   start().then(r => console.log(`Edge dashboard on ${r.url}`), e => { console.error(e.message); process.exit(1); });

@@ -7,11 +7,14 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
   #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #gear { position: absolute; right: 8px; top: 332px; width: 48px; height: 56px; border: 0; background: none; color: #fff; opacity: .28; cursor: pointer; padding: 8px 6px; }
+  #gear:active { opacity: .8; }
+  #gear svg { width: 100%; height: 100%; }
   iframe { position: absolute; border: 0; border-radius: 12px; background: #000; overflow: hidden; }
 </style>
 </head>
 <body>
-<div id="stage"></div>
+<div id="stage"><button id="gear" title="Widget settings" aria-label="Widget settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
 <script>
 'use strict';
 (async function () {
@@ -21,13 +24,31 @@
   stage.style.width = W + 'px'; stage.style.height = H + 'px';
   document.body.style.background = layout.background || '#000';
 
+  const frames = {};
   for (const w of layout.widgets) {
     const f = document.createElement('iframe');
     f.src = `http://127.0.0.1:${w.port}/`;
     f.title = w.id;
     Object.assign(f.style, { left: w.x + 'px', top: w.y + 'px', width: w.w + 'px', height: w.h + 'px' });
     stage.appendChild(f);
+    frames[w.id] = { frame: f, origin: `http://127.0.0.1:${w.port}` };
   }
+
+  // Setting changes from the settings page go straight to the widget (iCUE's onDataUpdated).
+  const es = new EventSource('/api/events');
+  es.addEventListener('settings', e => {
+    const { id, settings } = JSON.parse(e.data), t = frames[id];
+    if (t && t.frame.contentWindow) t.frame.contentWindow.postMessage({ type: 'edge-settings', settings }, t.origin);
+  });
+  es.addEventListener('reload', () => location.reload());
+
+  // Gear: opens the settings window on the main screen (or a browser tab outside Electron).
+  const gear = document.getElementById('gear');
+  gear.addEventListener('click', async () => {
+    const r = await fetch('/api/open-settings', { method: 'POST', headers: { 'x-edge-dashboard': '1' } });
+    const j = await r.json().catch(() => ({}));
+    if (!j.opened) window.open('/settings', '_blank');
+  });
 
   // Scale the 2560x720 stage to the window, so a smaller preview window shows the whole layout.
   // The iframes keep their real CSS sizes, so the widgets' size media queries still match.

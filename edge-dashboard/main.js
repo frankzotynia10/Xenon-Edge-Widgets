@@ -31,8 +31,21 @@ function createWindow(url) {
   win.on('closed', () => { win = null; });
 }
 
+// Settings open in a normal window on the main screen, where there's a mouse and keyboard.
+let settingsWin = null;
+function openSettings(url) {
+  if (settingsWin) { settingsWin.show(); settingsWin.focus(); return; }
+  const wa = screen.getPrimaryDisplay().workArea;
+  const w = Math.min(1100, wa.width), h = Math.min(820, wa.height);
+  settingsWin = new BrowserWindow({ x: wa.x + Math.round((wa.width - w) / 2), y: wa.y + Math.round((wa.height - h) / 2), width: w, height: h,
+    title: 'Edge widget settings', backgroundColor: '#0f1012', autoHideMenuBar: true });
+  settingsWin.loadURL(url + 'settings');
+  settingsWin.on('closed', () => { settingsWin = null; });
+}
+
 app.whenReady().then(async () => {
   const { url } = await server.start();
+  server.events.on('open-settings', () => openSettings(url));
   createWindow(url);
 
   // Re-pin after the Edge is unplugged/replugged or Windows rearranges displays.
@@ -46,4 +59,5 @@ app.whenReady().then(async () => {
   screen.on('display-added', repin); screen.on('display-removed', repin); screen.on('display-metrics-changed', repin);
 });
 
-app.on('window-all-closed', () => app.quit());
+// Closing the settings window must not quit the dashboard.
+app.on('window-all-closed', () => { if (!win) app.quit(); });

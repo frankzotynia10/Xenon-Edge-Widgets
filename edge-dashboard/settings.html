@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Edge settings</title>
+<style>
+  :root { --bg: #0f1012; --panel: #1a1b1f; --panel2: #24262b; --line: #2e3036; --text: #eceef2; --muted: #9096a1; --accent: #5b8def; --ok: #3ccf7a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.4 "Segoe UI", system-ui, sans-serif; min-height: 100vh; display: flex; }
+  nav { width: 220px; flex: 0 0 220px; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+  nav h1 { font-size: 18px; padding: 0 10px 14px; }
+  nav button { text-align: left; padding: 10px 12px; border-radius: 8px; border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+  nav button:hover { background: var(--panel2); color: var(--text); }
+  nav button.on { background: var(--panel2); color: var(--text); font-weight: 600; }
+  nav .spacer { flex: 1; }
+  nav .tool { color: var(--text); border: 1px solid var(--line); text-align: center; margin-top: 6px; }
+  main { flex: 1; padding: 28px 36px; max-width: 760px; }
+  h2 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-bottom: 22px; }
+  .group { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 18px; overflow: hidden; }
+  .group h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 14px 18px 6px; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 12px 18px; border-top: 1px solid var(--line); }
+  .group h3 + .row { border-top: 0; }
+  .row label { flex: 1; }
+  .row .ctl { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+  select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; max-width: 320px; }
+  input[type=color] { width: 44px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 0; cursor: pointer; }
+  input[type=range] { width: 200px; accent-color: var(--accent); }
+  input[type=text] { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; width: 260px; }
+  .val { color: var(--muted); min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+  .switch { position: relative; width: 46px; height: 26px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #3a3d44; border-radius: 13px; transition: .15s; cursor: pointer; }
+  .switch span::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: .15s; }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(20px); }
+  .reset { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 13px; visibility: hidden; }
+  .row.custom .reset { visibility: visible; }
+  .reset:hover { color: var(--text); }
+  #toast { position: fixed; right: 20px; bottom: 20px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+  .empty { color: var(--muted); padding: 16px 18px; }
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Edge widgets</h1></nav>
+<main id="main"></main>
+<div id="toast"></div>
+<script>
+'use strict';
+const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
+let widgets = [], settings = {}, current = null;
+const $ = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
+
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1600); }
+
+const timers = {};
+function save(id, key, value) {
+  settings[id] = settings[id] || {};
+  settings[id][key] = value;
+  clearTimeout(timers[id + key]);
+  timers[id + key] = setTimeout(async () => {
+    const r = await fetch('/api/settings/' + id, { method: 'POST', headers: H, body: JSON.stringify({ [key]: value }) });
+    toast(r.ok ? 'Saved' : 'Could not save');
+  }, 250);
+}
+
+const toBool = v => v === true || v === 'true';
+function control(w, p, value, onChange) {
+  switch (p.type) {
+    case 'switch': {
+      const i = $('input', { type: 'checkbox' }); i.checked = toBool(value);
+      i.addEventListener('change', () => onChange(i.checked));
+      return $('label', { class: 'switch' }, i, $('span'));
+    }
+    case 'color': {
+      const i = $('input', { type: 'color' }); i.value = String(value || '#000000').slice(0, 7);
+      i.addEventListener('input', () => onChange(i.value));
+      return i;
+    }
+    case 'slider': {
+      const v = $('span', { class: 'val' });
+      const i = $('input', { type: 'range', min: p.min ?? 0, max: p.max ?? 100, step: p.step ?? 1 });
+      i.value = value ?? p.min ?? 0;
+      const show = () => { v.textContent = i.value + (p.unit ? String(p.unit).trim() : ''); };
+      i.addEventListener('input', () => { show(); onChange(Number(i.value)); }); show();
+      return $('span', { class: 'ctl' }, i, v);
+    }
+    case 'combobox': {
+      const s = $('select');
+      for (const o of Array.isArray(p.values) ? p.values : []) { const opt = $('option', { value: o.key }); opt.textContent = o.value; s.append(opt); }
+      s.value = value ?? '';
+      s.addEventListener('change', () => onChange(s.value));
+      return s;
+    }
+    case 'sensors-combobox': return $('span', { class: 'val' }, 'Comes with the sensor step');
+    default: {
+      const i = $('input', { type: 'text' }); i.value = value ?? '';
+      i.addEventListener('change', () => onChange(i.value));
+      return i;
+    }
+  }
+}
+
+function render() {
+  const w = widgets.find(x => x.id === current); const main = document.getElementById('main');
+  main.replaceChildren();
+  if (!w) return;
+  main.append($('h2', {}, w.name), $('div', { class: 'sub' }, 'Changes apply on the Edge right away.'));
+  const byKey = Object.fromEntries(w.props.map(p => [p.key, p]));
+  const groups = w.groups.length ? w.groups.map(g => ({ title: g.title, props: g.properties.map(k => byKey[k]).filter(Boolean) })) : [];
+  const grouped = new Set(groups.flatMap(g => g.props.map(p => p.key)));
+  const rest = w.props.filter(p => !grouped.has(p.key));
+  if (rest.length) groups.push({ title: groups.length ? 'Other' : 'Settings', props: rest });
+  if (!w.props.length) main.append($('div', { class: 'group' }, $('div', { class: 'empty' }, 'This widget has no settings.')));
+  for (const g of groups) {
+    if (!g.props.length) continue;
+    const box = $('div', { class: 'group' }, $('h3', {}, g.title));
+    for (const p of g.props) {
+      const s = settings[w.id] || {};
+      const has = Object.prototype.hasOwnProperty.call(s, p.key);
+      const row = $('div', { class: 'row' + (has ? ' custom' : '') });
+      const ctl = control(w, p, has ? s[p.key] : p.default, v => { row.classList.add('custom'); save(w.id, p.key, v); });
+      const reset = $('button', { class: 'reset', title: 'Back to the default', onclick: () => { save(w.id, p.key, p.default); setTimeout(render, 300); } }, 'Default');
+      row.append($('label', {}, p.label), $('span', { class: 'ctl' }, ctl, reset));
+      box.append(row);
+    }
+    main.append(box);
+  }
+}
+
+function nav() {
+  const n = document.getElementById('nav');
+  n.replaceChildren($('h1', {}, 'Edge widgets'));
+  for (const w of widgets) n.append($('button', { class: w.id === current ? 'on' : '', onclick: () => { current = w.id; nav(); render(); } }, w.name));
+  n.append($('div', { class: 'spacer' }),
+    $('button', { class: 'tool', onclick: importIcue }, 'Import from iCUE'),
+    $('button', { class: 'tool', onclick: async () => { await fetch('/api/reload', { method: 'POST', headers: H, body: '{}' }); toast('Reloading the Edge'); } }, 'Reload widgets'));
+}
+
+async function importIcue() {
+  const r = await fetch('/api/import-icue', { method: 'POST', headers: H, body: '{}' });
+  const j = await r.json();
+  if (!r.ok) return toast('Import failed: ' + (j.error || r.status));
+  const names = Object.entries(j.imported).map(([id, n]) => `${(widgets.find(w => w.id === id) || {}).name || id} (${n})`);
+  toast(names.length ? 'Imported ' + names.join(', ') : 'Nothing to import');
+  settings = await (await fetch('/api/settings')).json(); render();
+}
+
+(async () => {
+  [widgets, settings] = await Promise.all([fetch('/api/widgets').then(r => r.json()), fetch('/api/settings').then(r => r.json())]);
+  current = new URLSearchParams(location.search).get('w') || (widgets[0] && widgets[0].id);
+  nav(); render();
+})();
+</script>
+</body>
+</html>

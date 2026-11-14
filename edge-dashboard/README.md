@@ -2,11 +2,22 @@
 
 Shows the widgets full-screen on the Xeneon Edge **without iCUE**. It's a small Electron window, which uses about 270 MB with all five widgets, compared with iCUE's growing memory use.
 
-**Status: work in progress.** This is step 1: the window, the layout and the iCUE stand-in. Still to do:
-- a settings page, including importing your current iCUE settings
+**Status: work in progress.** Done:
+- the window, the layout and the iCUE stand-in
+- the settings page, with an import of your iCUE settings
+
+Still to do:
 - Sensor Box sensors and FPS
 - Stream Deck
 - start at login
+
+## Settings
+- **Opening it:** tap the faint gear at the right edge of the Edge. The settings window opens on your main screen. Outside Electron, open `http://127.0.0.1:6800/settings`.
+- **What's on it:** the page is built from each widget's own setting definitions, so new settings show up on their own. Changes apply on the Edge right away; iCUE's equivalent is `onDataUpdated`.
+- **Import from iCUE:** copies what you set in iCUE. The command-line version is `node import-icue.js`, or `node import-icue.js --dry-run` to see what it would import.
+  - It reads `%APPDATA%\Corsair\CUE5\dashlcd\storage`.
+  - If a widget is on several iCUE pages, it takes the copy with the most settings.
+- **Who can change settings:** only the dashboard's own pages. Changes need an `x-edge-dashboard` header, which other websites can't send to it.
 
 ## Run it
 ```bash
@@ -26,6 +37,8 @@ Close iCUE (or turn its Edge dashboard off) first, or the two will fight over th
     - **M:** 624×704
     - **L:** 1920×720
 - **`server.js`** serves the dashboard on port 6800 and each widget on its own port. It injects the saved settings and `shim.js` into each widget's `index.html`.
+  - It also serves the settings API: `/api/widgets`, `/api/settings`, and live events at `/api/events`.
+- **`settings.html`** is the settings page, and **`import-icue.js`** is the iCUE importer. It decodes iCUE's saved values from Qt's binary format: switches, numbers, text and colors.
 - **`shim.js`** stands in for the parts of iCUE the widgets use:
   - Each `<meta name="x-icue-property">` becomes a global, set from `settings.json` or from the tag's `data-default`.
   - It calls `icueEvents.onICUEInitialized()` after load and sets `iCUE_initialized`.
