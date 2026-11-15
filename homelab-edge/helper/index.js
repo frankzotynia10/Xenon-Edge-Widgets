@@ -116,13 +116,24 @@ function parseProbe(out) {
 // ---------- Unraid API (GraphQL) ----------
 const QUERY = `query { info { os { uptime } } array { state capacity { kilobytes { total used } } parityCheckStatus { status progress } disks { status } }
   docker { containers { names state status } } metrics { cpu { percentTotal } memory { total available } } }`;
-function postJson(url, body, headers) {
+// Posts the query. Unraid often redirects http:// to its https:// address (another port, e.g. 443 or
+// 8443); that's followed, but only to the same server name, so the API key never goes anywhere else.
+// onMoved(url) is told the address that answered, so later rounds go straight there.
+function postJson(url, body, headers, onMoved, hops = 0) {
   return new Promise((resolve, reject) => {
     const u = new URL(url), mod = u.protocol === 'https:' ? https : http;
     const data = JSON.stringify(body);
     // Unraid's own certificate is usually self-signed; this only ever talks to your server's address.
     const req = mod.request(u, { method: 'POST', timeout: 10000, rejectUnauthorized: false,
       headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(data), ...headers } }, res => {
+      if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+        res.resume();
+        let next; try { next = new URL(res.headers.location, u); } catch { return reject(new Error('API sent a bad redirect')); }
+        if (next.hostname !== u.hostname || !/^https?:$/.test(next.protocol)) return reject(new Error(`API redirects to another host (${next.hostname}); set "url" in config.json`));
+        if (hops >= 3) return reject(new Error('API redirects too many times'));
+        if (onMoved) onMoved(next.href);
+        return postJson(next.href, body, headers, onMoved, hops + 1).then(resolve, reject);
+      }
       let out = ''; res.on('data', d => out += d);
       res.on('end', () => { try { const j = JSON.parse(out); res.statusCode < 400 ? resolve(j) : reject(new Error(`API ${res.statusCode}: ${(j.errors && j.errors[0] && j.errors[0].message) || ''}`)); } catch { reject(new Error(`API ${res.statusCode}`)); } });
     });
@@ -131,10 +142,11 @@ function postJson(url, body, headers) {
     req.end(data);
   });
 }
+const movedTo = {};   // host -> the https address its http:// redirected to
 async function viaApi(s) {
   if (!s.apiKey) throw new Error('no apiKey in config.json');
-  const url = s.url || `http://${s.host}/graphql`;
-  const j = await postJson(url, { query: QUERY }, { 'x-api-key': s.apiKey });
+  const url = s.url || movedTo[s.host] || `http://${s.host}/graphql`;
+  const j = await postJson(url, { query: QUERY }, { 'x-api-key': s.apiKey }, to => { if (!s.url) movedTo[s.host] = to; });
   if (j.errors && j.errors.length && !j.data) throw new Error(j.errors[0].message.slice(0, 140));
   const d = j.data || {}, r = {};
   const m = d.metrics || {};

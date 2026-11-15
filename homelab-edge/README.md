@@ -34,7 +34,7 @@ The widget is fed by the Edge helper, which reads the servers every 10 seconds. 
 
 Each server is read one of two ways:
 - **`ssh`:** runs `helper/probe.sh` over SSH. `ssh user@host` must work from this PC without a password (an SSH key). Nothing is installed on the server.
-- **`api`:** Unraid's built-in API (Unraid 7). Make a key in Unraid under Settings → Management Access → API Keys, with read access. `url` defaults to `http://<host>/graphql`; set it if your server uses https or another port.
+- **`api`:** Unraid's built-in API (Unraid 7). Make a key in Unraid under Settings → Management Access → API Keys, with read access. `url` defaults to `http://<host>/graphql`. If the server redirects that to its https address (most do, e.g. `https://tower:443` or `:8443`), the helper follows it, but only to the same server name. Set `url` yourself if the API is somewhere else.
 
 Both are read-only: nothing on the servers is changed. Changes to `config.json` are picked up within a minute.
 
