@@ -208,7 +208,9 @@ function nav() {
   const n = document.getElementById('nav');
   n.replaceChildren($('h1', {}, 'Edge widgets'));
   n.append($('button', { class: current === '__layout' ? 'on' : '', onclick: () => { current = '__layout'; nav(); render(); } }, '▦  Layout'), $('div', { class: 'navsep' }));
-  for (const w of widgets) n.append($('button', { class: w.id === current ? 'on' : '', onclick: () => { current = w.id; nav(); render(); } }, w.name));
+  // Widgets A to Z
+  const sorted = widgets.slice().sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  for (const w of sorted) n.append($('button', { class: w.id === current ? 'on' : '', onclick: () => { current = w.id; nav(); render(); } }, w.name));
   n.append($('div', { class: 'spacer' }),
     $('button', { class: 'tool', onclick: importIcue }, 'Import from iCUE'),
     $('button', { class: 'tool', onclick: async () => { await fetch('/api/reload', { method: 'POST', headers: H, body: '{}' }); toast('Reloading the Edge'); } }, 'Reload widgets'));
