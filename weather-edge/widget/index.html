@@ -6,10 +6,11 @@
 <link rel="icon" type="image/png" href="resources/icon.png" />
 <meta name="x-icue-property" content="weatherPlace" data-label="tr('Location')" data-type="textfield" data-default="''" />
 <meta name="x-icue-property" content="weatherUnits" data-label="tr('Units')" data-type="combobox" data-default="'imperial'" data-values="[{'key':'imperial','value':tr('Fahrenheit, mph')},{'key':'metric','value':tr('Celsius, km/h')}]" />
+<meta name="x-icue-property" content="weatherForecast" data-label="tr('Forecast')" data-type="combobox" data-default="'days'" data-values="[{'key':'days','value':tr('Next 5 days')},{'key':'hours','value':tr('Next hours')}]" />
 <meta name="x-icue-property" content="weatherClock" data-label="tr('24-hour clock')" data-type="switch" data-default="false" />
 <script type="application/json" id="x-icue-groups">
 [
-  { "title": "tr('Weather')", "properties": ["weatherPlace", "weatherUnits", "weatherClock"], "info": "tr('A town (\"Denver, CO\" or \"Paris, France\") or coordinates (\"39.74, -104.99\"). Forecasts are from Open-Meteo, no account needed.')" }
+  { "title": "tr('Weather')", "properties": ["weatherPlace", "weatherUnits", "weatherForecast", "weatherClock"], "info": "tr('A town (\"Denver, CO\" or \"Paris, France\") or coordinates (\"39.74, -104.99\"). Forecasts are from Open-Meteo, no account needed.')" }
 ]
 </script>
 </head>
@@ -55,6 +56,16 @@
   .day .track { flex: 1; height: 1.1vh; border-radius: 1vh; background: var(--panel2); position: relative; }
   .day .track b { position: absolute; top: 0; bottom: 0; border-radius: 1vh; background: linear-gradient(90deg, var(--cold), var(--sun), var(--hot)); }
 
+  /* 5-day columns (Forecast: Next 5 days), in the same card the hours use */
+  .dc { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1vh 0; min-width: 0; }
+  .dc .t { font-size: 3.8vh; color: var(--muted); font-weight: 700; white-space: nowrap; }
+  .dc.today .t { color: var(--text); }
+  .dc svg { width: 11vh; height: 11vh; }
+  .dc .hi { font-size: 6vh; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .dc .tt { display: flex; flex-direction: column; align-items: center; gap: .8vh; }
+  .dc .lo { font-size: 4vh; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dc .p { font-size: 3.4vh; font-weight: 700; color: var(--rain); min-height: 4vh; }
+
   #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 2vh; text-align: center; padding: 6vh; }
   #msg b { font-size: 6vh; } #msg span { font-size: 4vh; color: var(--muted); }
   #updated { position: absolute; right: 2.6vh; bottom: 1.6vh; font-size: 2.6vh; color: var(--dim); }
@@ -77,6 +88,18 @@
     #app { grid-template-columns: 0.8fr 1.4fr 1fr; grid-template-areas: "now hours days"; }
     #days { display: flex; flex-direction: column; justify-content: space-around; }
     .day { grid-template-columns: 8vh 6vh 6vh 1fr; }
+  }
+  /* Forecast: Next 5 days. Tall (M): current on top, then the day list with the room the hours had.
+     Wide: current and five day columns, no separate list. */
+  @media (max-aspect-ratio: 13/10) {
+    body.fdays #app { grid-template-rows: auto 1fr; grid-template-areas: "now" "days"; }
+    body.fdays #hours { display: none; }
+    body.fdays .day { grid-template-columns: 13vh 8vh 7vh 1fr; }
+    body.fdays .day .n { font-size: 3.6vh; } body.fdays .day svg { width: 7vh; height: 7vh; } body.fdays .day .range { font-size: 3.6vh; }
+  }
+  @media (min-aspect-ratio: 3/1) {
+    body.fdays #app { grid-template-columns: 0.8fr 2.4fr; grid-template-areas: "now hours"; }
+    body.fdays #days { display: none; }
   }
 </style>
 <div id="app">
@@ -204,10 +227,22 @@ function draw() {
     hours += `<div class="hr${i === 0 ? ' nowh' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
       <div class="v">${r0(data.hourly.temperature_2m[k])}°</div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
   }
+  // Forecast "Next 5 days": the same card gets one column per day instead of the hours.
+  const fdays = setting('weatherForecast', 'days') !== 'hours';
+  document.body.classList.toggle('fdays', fdays);
+  if (fdays) {
+    const d = data.daily, nd = 5;
+    hours = '';
+    for (let i = 0; i < nd && i < d.time.length; i++) {
+      const date = new Date(d.time[i] + 'T12:00'), p = d.precipitation_probability_max[i];
+      hours += `<div class="dc${i === 0 ? ' today' : ''}"><div class="t">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
+        <div class="tt"><div class="hi">${r0(d.temperature_2m_max[i])}°</div><div class="lo">${r0(d.temperature_2m_min[i])}°</div></div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
+    }
+  }
   $('hours').innerHTML = hours;
 
   // days, with a range bar across the week's lows and highs
-  const n = wide ? 5 : 6, d = data.daily;
+  const n = wide || (tall && setting('weatherForecast', 'days') !== 'hours') ? 5 : 6, d = data.daily;
   const lo = Math.min(...d.temperature_2m_min.slice(0, n)), hi = Math.max(...d.temperature_2m_max.slice(0, n)), span = Math.max(1, hi - lo);
   let days = '';
   for (let i = 0; i < n && i < d.time.length; i++) {
