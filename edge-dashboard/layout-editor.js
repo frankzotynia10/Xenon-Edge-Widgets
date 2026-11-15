@@ -21,6 +21,8 @@
 
   let layout, widgets = [], pi = 0, sel = null, dirty = false, root;
   const page = () => layout.pages[pi];
+  // The widget dropdowns list them A to Z (colors still follow the original order, so they don't change).
+  const byName = () => widgets.slice().sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   const nameOf = id => (widgets.find(w => w.id === id) || {}).name || id;
   const colorOf = id => COLORS[Math.max(0, widgets.findIndex(w => w.id === id)) % COLORS.length];
 
@@ -89,7 +91,7 @@
     // add / edit panel
     if (sel && sel.add) {
       const opts = SIZES.filter(s => fits(sel.c, sel.r, s[1], s[2], -1));
-      const wSel = el('select'); widgets.forEach(w => wSel.append(el('option', { value: w.id }, w.name)));
+      const wSel = el('select'); byName().forEach(w => wSel.append(el('option', { value: w.id }, w.name)));
       const sSel = el('select'); opts.forEach(s => sSel.append(el('option', { value: s[0] }, s[3])));
       root.append(el('div', { class: 'group' }, el('h3', {}, 'Add a widget here'),
         el('div', { class: 'row' }, el('label', {}, 'Widget'), el('span', { class: 'ctl' }, wSel)),
@@ -102,7 +104,7 @@
           } }, 'Add'))));
     } else if (sel && pg.items[sel.i]) {
       const it = pg.items[sel.i], g = toCells(it);
-      const wSel = el('select'); widgets.forEach(w => wSel.append(el('option', { value: w.id }, w.name))); wSel.value = it.widget;
+      const wSel = el('select'); byName().forEach(w => wSel.append(el('option', { value: w.id }, w.name))); wSel.value = it.widget;
       wSel.addEventListener('change', () => { it.widget = wSel.value; change(); });
       const rows = [el('div', { class: 'row' }, el('label', {}, 'Widget'), el('span', { class: 'ctl' }, wSel))];
       if (g) {
