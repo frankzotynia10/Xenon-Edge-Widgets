@@ -1,21 +1,16 @@
 # Weather
 
-Current conditions and the forecast, for the Edge: the next 5 days (the default) or the next hours.
+Current conditions, the next hours and the days ahead, for the Edge.
 
-**Sizes**, with **Forecast: Next 5 days**:
-- **S:** now, plus a column for each of the next 5 days (high, low, and rain chance when it's 20% or more).
-- **M:** now on top, then the 5 days as a list with a temperature range bar.
-- **Full width:** now, plus the 5 day columns.
-
-With **Forecast: Next hours**:
-- **S:** now, plus the next 12 hours.
+**Sizes:**
+- **S:** now, plus either the next 5 days (a column each: high, low, and rain chance when it's 20% or more) or the next 12 hours. **Tap the forecast to switch**; the "Forecast on the S size" setting picks which one it starts with.
 - **M:** now, the next 6 hours, and 6 days with a temperature range bar.
 - **Full width:** all three side by side.
 
 **Settings** (dashboard settings page → Weather, or in iCUE):
 - **Location:** a town, like `Denver, CO` or `Paris, France` (US state abbreviations work), or coordinates like `39.74, -104.99`.
 - **Units:** °F and mph, or °C and km/h.
-- **Forecast:** next 5 days, or next hours.
+- **Forecast on the S size:** next 5 days (default) or next hours. A tap on the forecast switches it until you change this setting.
 - **24-hour clock** (for the hours).
 
 **Where the data comes from:** [Open-Meteo](https://open-meteo.com), which is free and needs no account or key.

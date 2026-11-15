@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" href="resources/icon.png" />
 <meta name="x-icue-property" content="weatherPlace" data-label="tr('Location')" data-type="textfield" data-default="''" />
 <meta name="x-icue-property" content="weatherUnits" data-label="tr('Units')" data-type="combobox" data-default="'imperial'" data-values="[{'key':'imperial','value':tr('Fahrenheit, mph')},{'key':'metric','value':tr('Celsius, km/h')}]" />
-<meta name="x-icue-property" content="weatherForecast" data-label="tr('Forecast')" data-type="combobox" data-default="'days'" data-values="[{'key':'days','value':tr('Next 5 days')},{'key':'hours','value':tr('Next hours')}]" />
+<meta name="x-icue-property" content="weatherForecast" data-label="tr('Forecast on the S size')" data-type="combobox" data-default="'days'" data-values="[{'key':'days','value':tr('Next 5 days')},{'key':'hours','value':tr('Next hours')}]" />
 <meta name="x-icue-property" content="weatherClock" data-label="tr('24-hour clock')" data-type="switch" data-default="false" />
 <script type="application/json" id="x-icue-groups">
 [
@@ -89,18 +89,8 @@
     #days { display: flex; flex-direction: column; justify-content: space-around; }
     .day { grid-template-columns: 8vh 6vh 6vh 1fr; }
   }
-  /* Forecast: Next 5 days. Tall (M): current on top, then the day list with the room the hours had.
-     Wide: current and five day columns, no separate list. */
-  @media (max-aspect-ratio: 13/10) {
-    body.fdays #app { grid-template-rows: auto 1fr; grid-template-areas: "now" "days"; }
-    body.fdays #hours { display: none; }
-    body.fdays .day { grid-template-columns: 13vh 8vh 7vh 1fr; }
-    body.fdays .day .n { font-size: 3.6vh; } body.fdays .day svg { width: 7vh; height: 7vh; } body.fdays .day .range { font-size: 3.6vh; }
-  }
-  @media (min-aspect-ratio: 3/1) {
-    body.fdays #app { grid-template-columns: 0.8fr 2.4fr; grid-template-areas: "now hours"; }
-    body.fdays #days { display: none; }
-  }
+  /* S only: the forecast card shows 5 days or the hours; tap it to switch. (M and full width show both.) */
+  body.small #hours { cursor: pointer; }
 </style>
 <div id="app">
   <div class="card" id="now"></div>
@@ -204,6 +194,22 @@ function hourLabel(d, i) {
   const h = d.getHours() % 12 || 12; return h + (d.getHours() < 12 ? 'a' : 'p');
 }
 
+// What the S size shows: a tap on the forecast card switches it and is remembered; changing the
+// Forecast setting starts from that again.
+let tapMode = null, tapFor = null;
+try { const m = JSON.parse(localStorage.getItem('weatherTap') || 'null'); if (m) { tapMode = m.mode; tapFor = m.for; } } catch { /* ignore */ }
+function smallMode() {
+  const s = setting('weatherForecast', 'days') === 'hours' ? 'hours' : 'days';
+  return tapMode && tapFor === s ? tapMode : s;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#hours') || !document.body.classList.contains('small')) return;
+  tapFor = setting('weatherForecast', 'days') === 'hours' ? 'hours' : 'days';
+  tapMode = smallMode() === 'days' ? 'hours' : 'days';
+  try { localStorage.setItem('weatherTap', JSON.stringify({ mode: tapMode, for: tapFor })); } catch { /* ignore */ }
+  draw();
+});
+
 function draw() {
   if (!data) return;
   $('msg').style.display = 'none'; $('app').style.visibility = '';
@@ -227,10 +233,11 @@ function draw() {
     hours += `<div class="hr${i === 0 ? ' nowh' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
       <div class="v">${r0(data.hourly.temperature_2m[k])}°</div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
   }
-  // Forecast "Next 5 days": the same card gets one column per day instead of the hours.
-  const fdays = setting('weatherForecast', 'days') !== 'hours';
-  document.body.classList.toggle('fdays', fdays);
-  if (fdays) {
+  // S only: the card shows the next 5 days or the hours (the Forecast setting, or a tap on the card).
+  // M and full width have room for both, so they show the hours here and the days in their own card.
+  const small = !tall && !wide;
+  document.body.classList.toggle('small', small);
+  if (small && smallMode() === 'days') {
     const d = data.daily, nd = 5;
     hours = '';
     for (let i = 0; i < nd && i < d.time.length; i++) {
@@ -242,7 +249,7 @@ function draw() {
   $('hours').innerHTML = hours;
 
   // days, with a range bar across the week's lows and highs
-  const n = wide || (tall && setting('weatherForecast', 'days') !== 'hours') ? 5 : 6, d = data.daily;
+  const n = wide ? 5 : 6, d = data.daily;
   const lo = Math.min(...d.temperature_2m_min.slice(0, n)), hi = Math.max(...d.temperature_2m_max.slice(0, n)), span = Math.max(1, hi - lo);
   let days = '';
   for (let i = 0; i < n && i < d.time.length; i++) {

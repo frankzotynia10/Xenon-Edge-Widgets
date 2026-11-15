@@ -17,7 +17,7 @@
       "type": "dashboard_lcd"
     }
   ],
-  "interactive": false,
+  "interactive": true,
   "permissions": [
     {
       "type": "url",
