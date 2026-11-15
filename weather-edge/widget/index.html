@@ -91,6 +91,23 @@
   }
   /* S only: the forecast card shows 5 days or the hours; tap it to switch. (M and full width show both.) */
   body.small #hours { cursor: pointer; }
+
+  /* S: bigger, brighter, and nothing left empty at the bottom */
+  body.small { --muted: #b4b9c2; }
+  body.small #now { padding: 3.6vh 4vh; }
+  body.small #now .place { font-size: 5.4vh; color: var(--muted); }
+  body.small #now .cond { font-size: 7vh; }
+  body.small #now .meta { font-size: 4.8vh; gap: 3.4vh; }
+  body.small #hours { padding: 2.4vh; gap: 1.6vh; }
+  body.small .dc, body.small .hr { background: var(--panel2); border-radius: 2vh; padding: 3vh 0 2.6vh; justify-content: space-between; }
+  body.small .dc .t, body.small .hr .t { font-size: 5.4vh; }
+  body.small .dc > svg, body.small .hr > svg { width: 20vh; height: 20vh; margin: -1.5vh 0; }
+  body.small .dc .hi, body.small .hr .v { font-size: 9.5vh; line-height: 1; }
+  body.small .dc .lo { font-size: 6vh; }
+  body.small .dc .tt { gap: 1.2vh; }
+  body.small .rain { display: flex; align-items: center; gap: .6vh; font-size: 4.6vh; font-weight: 700; color: var(--rain); min-height: 0; }
+  body.small .rain svg { width: 3.6vh; height: 3.6vh; }
+  body.small .rain.low { color: #6f7f94; }
 </style>
 <div id="app">
   <div class="card" id="now"></div>
@@ -210,6 +227,10 @@ document.addEventListener('click', e => {
   draw();
 });
 
+// Rain chance. On S it's always shown, with a drop, and dimmed under 20%; elsewhere only from 20%.
+const DROP = '<svg viewBox="0 0 24 24"><path d="M12 3c3.5 4.6 6 8 6 11a6 6 0 0 1-12 0c0-3 2.5-6.4 6-11z" fill="currentColor"/></svg>';
+const rain = (p, small) => small ? `<div class="p rain${p >= 20 ? '' : ' low'}">${DROP}${p == null ? 0 : p}%</div>` : `<div class="p">${p >= 20 ? p + '%' : ''}</div>`;
+
 function draw() {
   if (!data) return;
   $('msg').style.display = 'none'; $('app').style.visibility = '';
@@ -231,7 +252,7 @@ function draw() {
     const k = start + i * stepH; if (k >= times.length) break;
     const p = data.hourly.precipitation_probability[k];
     hours += `<div class="hr${i === 0 ? ' nowh' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
-      <div class="v">${r0(data.hourly.temperature_2m[k])}°</div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
+      <div class="v">${r0(data.hourly.temperature_2m[k])}°</div>${rain(p, !tall && !wide)}</div>`;
   }
   // S only: the card shows the next 5 days or the hours (the Forecast setting, or a tap on the card).
   // M and full width have room for both, so they show the hours here and the days in their own card.
@@ -243,7 +264,7 @@ function draw() {
     for (let i = 0; i < nd && i < d.time.length; i++) {
       const date = new Date(d.time[i] + 'T12:00'), p = d.precipitation_probability_max[i];
       hours += `<div class="dc${i === 0 ? ' today' : ''}"><div class="t">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
-        <div class="tt"><div class="hi">${r0(d.temperature_2m_max[i])}°</div><div class="lo">${r0(d.temperature_2m_min[i])}°</div></div><div class="p">${p >= 20 ? p + '%' : ''}</div></div>`;
+        <div class="tt"><div class="hi">${r0(d.temperature_2m_max[i])}°</div><div class="lo">${r0(d.temperature_2m_min[i])}°</div></div>${rain(p, true)}</div>`;
     }
   }
   $('hours').innerHTML = hours;
