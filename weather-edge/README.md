@@ -2,10 +2,13 @@
 
 Current conditions, the next hours and the days ahead, for the Edge.
 
+The forecast is shown as tiles: one per day (high, low) or per hour, each with its rain chance (blue from 20%). Every size uses the same tiles and text sizes.
+
 **Sizes:**
-- **S:** now, plus either the next 5 days (a column each: high, low, and rain chance when it's 20% or more) or the next 12 hours. **Tap the forecast to switch**; the "Forecast on the S size" setting picks which one it starts with.
-- **M:** now, the next 6 hours, and 6 days with a temperature range bar.
-- **Full width:** all three side by side.
+- **S:** now, plus either the next 5 days or the next 12 hours. **Tap the forecast to switch**; the "Forecast on the S size" setting picks which one it starts with.
+- **M:** now on top, then the next 6 hours, then the next 5 days.
+- **L:** now on the left; the hours and the 5 days on the right.
+- **Wide and full width:** now, the hours and the 5 days side by side.
 
 **Settings** (dashboard settings page → Weather, or in iCUE):
 - **Location:** a town, like `Denver, CO` or `Paris, France` (US state abbreviations work), or coordinates like `39.74, -104.99`.

@@ -16,98 +16,66 @@
 </head>
 <body>
 <style>
-  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #232428; --text: #f2f3f5; --muted: #949ba4; --dim: #6d717a; --sun: #ffc83d; --rain: #4ea7ff; --hot: #ff8a5c; --cold: #7cc4ff; }
+  :root { --bg: #111214; --panel: #1b1c1f; --panel2: #25262b; --text: #f2f3f5; --muted: #b4b9c2; --dim: #6f7f94; --sun: #ffc83d; --rain: #4ea7ff; --gap: 2.2vmin; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
     font-family: "Segoe UI Variable Display", "Segoe UI", "Noto Sans", sans-serif; user-select: none; }
-  #app { width: 100%; height: 100%; padding: 3vh; display: grid; gap: 2.4vh;
-    grid-template-columns: 0.95fr 1.3fr; grid-template-rows: 1fr; grid-template-areas: "now hours"; }
-  .card { background: var(--panel); border-radius: 2.6vh; min-width: 0; min-height: 0; overflow: hidden; position: relative; }
 
-  /* current conditions */
-  #now { grid-area: now; padding: 3.4vh 3.6vh; display: flex; flex-direction: column; justify-content: space-between; }
-  #now .place { font-size: 4.2vh; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #now .main { display: flex; align-items: center; gap: 2.6vh; }
-  #now .main svg { width: 25vh; height: 25vh; flex: 0 0 auto; }
-  #now .temp { font-size: 22vh; font-weight: 700; line-height: .9; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-  #now .temp sup { font-size: 9vh; font-weight: 600; color: var(--muted); vertical-align: top; margin-left: .4vh; }
-  #now .cond { font-size: 5.2vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #now .meta { display: flex; gap: 3vh; font-size: 3.8vh; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  /* Layouts (set from the size in draw()):
+     S       now | 5 days or hours (tap to switch)
+     L       now | hours over days
+     M       now, then hours, then days
+     W       now | hours | days            (wide and full width) */
+  #app { width: 100%; height: 100%; padding: var(--gap); display: grid; gap: var(--gap); }
+  body.lay-s #app { grid-template-columns: 0.95fr 1.3fr; grid-template-areas: "now fc"; }
+  body.lay-s #hours, body.lay-s #days { grid-area: fc; }
+  body.lay-s.show-days #hours, body.lay-s.show-hours #days { display: none; }
+  body.lay-s #hours, body.lay-s #days { cursor: pointer; }
+  body.lay-l #app { grid-template-columns: 0.8fr 1.6fr; grid-template-rows: 1fr 1fr; grid-template-areas: "now hours" "now days"; }
+  body.lay-m #app { grid-template-rows: 0.85fr 1fr 1fr; grid-template-areas: "now" "hours" "days"; }
+  body.lay-w #app { grid-template-columns: 0.75fr 1.5fr 1.25fr; grid-template-areas: "now hours days"; }
+  #now { grid-area: now; } #hours { grid-area: hours; } #days { grid-area: days; }
+  /* Text in the tiles grows with the tile's height; M has two rows of short tiles, so it
+     scales it up to match S and the wide sizes. */
+  body { --k: 1; }
+  body.lay-m { --k: 1.6; }
+  body.lay-m .tile > svg { width: min(29cqh, 70cqw); height: min(29cqh, 70cqw); margin: -2cqh 0; }
+  body.lay-m .tile .tt { gap: 1cqh; }
+
+  .card { background: var(--panel); border-radius: 2.4vmin; min-width: 0; min-height: 0; overflow: hidden; position: relative; }
+
+  /* current conditions: sized from its own card, so it looks the same in every layout */
+  #now { container-type: size; padding: 2.6vmin 3vmin; display: flex; flex-direction: column; justify-content: space-between; }
+  #now .place { font-size: min(6.2cqh, 5.4cqw); font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #now .main { display: flex; align-items: center; gap: 3cqh; }
+  #now .main svg { width: min(30cqh, 28cqw); height: min(30cqh, 28cqw); flex: 0 0 auto; }
+  #now .temp { font-size: min(27cqh, 25cqw); font-weight: 700; line-height: .9; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  #now .temp sup { font-size: .4em; font-weight: 600; color: var(--muted); vertical-align: top; margin-left: .1em; }
+  #now .cond { font-size: min(8cqh, 7cqw); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #now .meta { display: flex; gap: 1em; font-size: min(5.6cqh, 4.6cqw); color: var(--muted); font-weight: 600; white-space: nowrap; margin-top: .3em; }
   #now .meta b { color: var(--text); font-weight: 700; }
+  /* A wide, short card (M): conditions on the left, details on the right */
+  body.lay-m #now { flex-direction: row; align-items: center; padding: 2.6vmin 3vmin; }
+  body.lay-m #now .place { position: absolute; top: 2.6vmin; left: 3vmin; font-size: 11cqh; }
+  body.lay-m #now .main svg { width: 44cqh; height: 44cqh; } body.lay-m #now .temp { font-size: 40cqh; }
+  body.lay-m #now > div:last-child { text-align: right; } body.lay-m #now .cond { font-size: 14cqh; } body.lay-m #now .meta { font-size: 11cqh; justify-content: flex-end; }
 
-  /* next hours */
-  #hours { grid-area: hours; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 2.6vh 1.6vh; }
-  .hr { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1vh 0; min-width: 0; }
-  .hr .t { font-size: 3.8vh; color: var(--muted); font-weight: 700; white-space: nowrap; }
-  .hr.nowh .t { color: var(--text); }
-  .hr svg { width: 11vh; height: 11vh; }
-  .hr .v { font-size: 6vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .hr .p { font-size: 3.4vh; font-weight: 700; color: var(--rain); min-height: 4vh; }
-
-  /* days (M and wide only) */
-  #days { grid-area: days; display: none; padding: 1.6vh 3vh; }
-  .day { display: grid; grid-template-columns: 9vh 7vh 6vh 1fr; align-items: center; gap: 2vh; padding: .6vh 0; }
-  .day .n { font-size: 3.2vh; font-weight: 700; }
-  .day svg { width: 6vh; height: 6vh; }
-  .day .p { font-size: 2.6vh; font-weight: 700; color: var(--rain); }
-  .day .range { display: flex; align-items: center; gap: 1.6vh; font-size: 3.2vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .day .range .lo { color: var(--muted); width: 6vh; text-align: right; }
-  .day .range .hi { width: 6vh; }
-  .day .track { flex: 1; height: 1.1vh; border-radius: 1vh; background: var(--panel2); position: relative; }
-  .day .track b { position: absolute; top: 0; bottom: 0; border-radius: 1vh; background: linear-gradient(90deg, var(--cold), var(--sun), var(--hot)); }
-
-  /* 5-day columns (Forecast: Next 5 days), in the same card the hours use */
-  .dc { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1vh 0; min-width: 0; }
-  .dc .t { font-size: 3.8vh; color: var(--muted); font-weight: 700; white-space: nowrap; }
-  .dc.today .t { color: var(--text); }
-  .dc svg { width: 11vh; height: 11vh; }
-  .dc .hi { font-size: 6vh; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-  .dc .tt { display: flex; flex-direction: column; align-items: center; gap: .8vh; }
-  .dc .lo { font-size: 4vh; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .dc .p { font-size: 3.4vh; font-weight: 700; color: var(--rain); min-height: 4vh; }
+  /* the hours and days cards: a row of tiles */
+  #hours, #days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--gap); padding: var(--gap); }
+  .tile { container-type: size; background: var(--panel2); border-radius: 2vmin; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1.8vmin 0 1.6vmin; }
+  .tile .t { font-size: min(calc(7cqh * var(--k)), 22cqw); font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .tile.first .t { color: var(--text); }
+  .tile > svg { width: min(26cqh, 78cqw); height: min(26cqh, 78cqw); margin: -2cqh 0; }
+  .tile .tt { display: flex; flex-direction: column; align-items: center; gap: 2cqh; }
+  .tile .hi { font-size: min(calc(12.5cqh * var(--k)), 36cqw); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tile .lo { font-size: min(calc(7.5cqh * var(--k)), 23cqw); font-weight: 700; line-height: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rain { display: flex; align-items: center; gap: .2em; font-size: min(calc(6cqh * var(--k)), 18cqw); font-weight: 700; color: var(--rain); }
+  .rain svg { width: .8em; height: .8em; }
+  .rain.low { color: var(--dim); }
 
   #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 2vh; text-align: center; padding: 6vh; }
   #msg b { font-size: 6vh; } #msg span { font-size: 4vh; color: var(--muted); }
-  #updated { position: absolute; right: 2.6vh; bottom: 1.6vh; font-size: 2.6vh; color: var(--dim); }
-
-  /* M (tall): current on top, hours, then days */
-  @media (max-aspect-ratio: 13/10) {
-    #app { grid-template-columns: 1fr; grid-template-rows: auto 0.9fr 1.35fr; grid-template-areas: "now" "hours" "days"; gap: 1.6vh; padding: 1.8vh; }
-    #now { padding: 2.4vh 3vh; gap: 1vh; }
-    #now .place { font-size: 2.6vh; }
-    #now .main svg { width: 14vh; height: 14vh; }
-    #now .temp { font-size: 12vh; } #now .temp sup { font-size: 5vh; }
-    #now .cond { font-size: 3.4vh; } #now .meta { font-size: 2.4vh; gap: 2vh; }
-    #hours { padding: 1.4vh 1vh; }
-    .hr .t { font-size: 2.3vh; } .hr svg { width: 6.4vh; height: 6.4vh; } .hr .v { font-size: 3.6vh; } .hr .p { font-size: 2.1vh; min-height: 2.4vh; }
-    #days { display: flex; flex-direction: column; justify-content: space-around; }
-    #updated { font-size: 1.8vh; }
-  }
-  /* wide: current, hours and days side by side */
-  @media (min-aspect-ratio: 3/1) {
-    #app { grid-template-columns: 0.8fr 1.4fr 1fr; grid-template-areas: "now hours days"; }
-    #days { display: flex; flex-direction: column; justify-content: space-around; }
-    .day { grid-template-columns: 8vh 6vh 6vh 1fr; }
-  }
-  /* S only: the forecast card shows 5 days or the hours; tap it to switch. (M and full width show both.) */
-  body.small #hours { cursor: pointer; }
-
-  /* S: bigger, brighter, and nothing left empty at the bottom */
-  body.small { --muted: #b4b9c2; }
-  body.small #now { padding: 3.6vh 4vh; }
-  body.small #now .place { font-size: 5.4vh; color: var(--muted); }
-  body.small #now .cond { font-size: 7vh; }
-  body.small #now .meta { font-size: 4.8vh; gap: 3.4vh; }
-  body.small #hours { padding: 2.4vh; gap: 1.6vh; }
-  body.small .dc, body.small .hr { background: var(--panel2); border-radius: 2vh; padding: 3vh 0 2.6vh; justify-content: space-between; }
-  body.small .dc .t, body.small .hr .t { font-size: 5.4vh; }
-  body.small .dc > svg, body.small .hr > svg { width: 20vh; height: 20vh; margin: -1.5vh 0; }
-  body.small .dc .hi, body.small .hr .v { font-size: 9.5vh; line-height: 1; }
-  body.small .dc .lo { font-size: 6vh; }
-  body.small .dc .tt { gap: 1.2vh; }
-  body.small .rain { display: flex; align-items: center; gap: .6vh; font-size: 4.6vh; font-weight: 700; color: var(--rain); min-height: 0; }
-  body.small .rain svg { width: 3.6vh; height: 3.6vh; }
-  body.small .rain.low { color: #6f7f94; }
 </style>
 <div id="app">
   <div class="card" id="now"></div>
@@ -220,20 +188,32 @@ function smallMode() {
   return tapMode && tapFor === s ? tapMode : s;
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('#hours') || !document.body.classList.contains('small')) return;
+  if (!e.target.closest('#hours, #days') || !document.body.classList.contains('lay-s')) return;
   tapFor = setting('weatherForecast', 'days') === 'hours' ? 'hours' : 'days';
   tapMode = smallMode() === 'days' ? 'hours' : 'days';
   try { localStorage.setItem('weatherTap', JSON.stringify({ mode: tapMode, for: tapFor })); } catch { /* ignore */ }
   draw();
 });
 
-// Rain chance. On S it's always shown, with a drop, and dimmed under 20%; elsewhere only from 20%.
+// Rain chance on every tile, with a drop; dimmed under 20%.
 const DROP = '<svg viewBox="0 0 24 24"><path d="M12 3c3.5 4.6 6 8 6 11a6 6 0 0 1-12 0c0-3 2.5-6.4 6-11z" fill="currentColor"/></svg>';
-const rain = (p, small) => small ? `<div class="p rain${p >= 20 ? '' : ' low'}">${DROP}${p == null ? 0 : p}%</div>` : `<div class="p">${p >= 20 ? p + '%' : ''}</div>`;
+const rain = p => `<div class="rain${p >= 20 ? '' : ' low'}">${DROP}${p == null ? 0 : p}%</div>`;
+
+// Which layout fits the widget's size: S (840x344), L (1690x704), M (840x704), W (wide and full width).
+function layout() {
+  const W = innerWidth, H = innerHeight, r = W / H;
+  return r <= 1.3 ? 'm' : r >= 3 ? 'w' : H >= 500 ? 'l' : 's';
+}
 
 function draw() {
   if (!data) return;
   $('msg').style.display = 'none'; $('app').style.visibility = '';
+  const lay = layout();
+  for (const k of ['s', 'l', 'm', 'w']) document.body.classList.toggle('lay-' + k, k === lay);
+  const mode = smallMode();
+  document.body.classList.toggle('show-days', lay === 's' && mode === 'days');
+  document.body.classList.toggle('show-hours', lay === 's' && mode === 'hours');
+
   const c = data.current, unit = data._imperial ? 'mph' : 'km/h';
   const today = { hi: data.daily.temperature_2m_max[0], lo: data.daily.temperature_2m_min[0] };
   $('now').innerHTML = `
@@ -242,43 +222,25 @@ function draw() {
     <div><div class="cond">${WORDS[c.weather_code] || ''}</div>
       <div class="meta"><span>H <b>${r0(today.hi)}°</b></span><span>L <b>${r0(today.lo)}°</b></span><span>Feels <b>${r0(c.apparent_temperature)}°</b></span><span>${r0(c.wind_speed_10m)} ${unit}</span></div></div>`;
 
-  // next hours, starting with the current hour
+  // Hours: 6 tiles. Every hour on M (narrow tiles cover less), every 2 hours elsewhere (12 hours ahead).
   const now = new Date(), times = data.hourly.time.map(t => new Date(t));
   let start = times.findIndex(t => t.getTime() + 3600e3 > now.getTime()); if (start < 0) start = 0;
-  const tall = matchMedia('(max-aspect-ratio: 13/10)').matches, wide = matchMedia('(min-aspect-ratio: 3/1)').matches;
-  const count = tall ? 6 : wide ? 8 : 6, stepH = tall ? 1 : 2;
+  const stepH = lay === 'm' ? 1 : 2;
   let hours = '';
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 6; i++) {
     const k = start + i * stepH; if (k >= times.length) break;
-    const p = data.hourly.precipitation_probability[k];
-    hours += `<div class="hr${i === 0 ? ' nowh' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
-      <div class="v">${r0(data.hourly.temperature_2m[k])}°</div>${rain(p, !tall && !wide)}</div>`;
-  }
-  // S only: the card shows the next 5 days or the hours (the Forecast setting, or a tap on the card).
-  // M and full width have room for both, so they show the hours here and the days in their own card.
-  const small = !tall && !wide;
-  document.body.classList.toggle('small', small);
-  if (small && smallMode() === 'days') {
-    const d = data.daily, nd = 5;
-    hours = '';
-    for (let i = 0; i < nd && i < d.time.length; i++) {
-      const date = new Date(d.time[i] + 'T12:00'), p = d.precipitation_probability_max[i];
-      hours += `<div class="dc${i === 0 ? ' today' : ''}"><div class="t">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
-        <div class="tt"><div class="hi">${r0(d.temperature_2m_max[i])}°</div><div class="lo">${r0(d.temperature_2m_min[i])}°</div></div>${rain(p, true)}</div>`;
-    }
+    hours += `<div class="tile${i === 0 ? ' first' : ''}"><div class="t">${hourLabel(times[k], i)}</div>${icon(kindOf(data.hourly.weather_code[k], data.hourly.is_day[k]))}
+      <div class="tt"><div class="hi">${r0(data.hourly.temperature_2m[k])}°</div></div>${rain(data.hourly.precipitation_probability[k])}</div>`;
   }
   $('hours').innerHTML = hours;
 
-  // days, with a range bar across the week's lows and highs
-  const n = wide ? 5 : 6, d = data.daily;
-  const lo = Math.min(...d.temperature_2m_min.slice(0, n)), hi = Math.max(...d.temperature_2m_max.slice(0, n)), span = Math.max(1, hi - lo);
+  // Days: 5 tiles, high over low.
+  const d = data.daily;
   let days = '';
-  for (let i = 0; i < n && i < d.time.length; i++) {
-    const date = new Date(d.time[i] + 'T12:00'), p = d.precipitation_probability_max[i];
-    const a = (d.temperature_2m_min[i] - lo) / span * 100, b = (d.temperature_2m_max[i] - lo) / span * 100;
-    days += `<div class="day"><div class="n">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
-      <div class="p">${p >= 20 ? p + '%' : ''}</div>
-      <div class="range"><span class="lo">${r0(d.temperature_2m_min[i])}°</span><span class="track"><b style="left:${a}%;right:${100 - b}%"></b></span><span class="hi">${r0(d.temperature_2m_max[i])}°</span></div></div>`;
+  for (let i = 0; i < 5 && i < d.time.length; i++) {
+    const date = new Date(d.time[i] + 'T12:00');
+    days += `<div class="tile${i === 0 ? ' first' : ''}"><div class="t">${i === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}</div>${icon(kindOf(d.weather_code[i], 1))}
+      <div class="tt"><div class="hi">${r0(d.temperature_2m_max[i])}°</div><div class="lo">${r0(d.temperature_2m_min[i])}°</div></div>${rain(d.precipitation_probability_max[i])}</div>`;
   }
   $('days').innerHTML = days;
 }
@@ -288,6 +250,7 @@ window.icueEvents = {
   onDataUpdated: p => { if (p && p.settings) for (const [k, v] of Object.entries(p.settings)) window[k] = v; data = null; refresh(); },
 };
 new ResizeObserver(() => draw()).observe(document.body);
+addEventListener('resize', () => draw());
 // Not in iCUE or the dashboard (a plain browser): start anyway.
 setTimeout(() => { if (!data && !timer) refresh(); }, 1500);
 </script>
