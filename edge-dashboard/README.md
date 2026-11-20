@@ -127,6 +127,7 @@ The Deck widget (`deck-edge/`) is a button deck in place of the Virtual Stream D
   - The mouse jiggler key comes over with its plugin's images.
 - **Images:** pick from the imported Stream Deck images (`sd/…`) or the WoW icon pack (`wow/…`, from `wow-streamdeck/png`).
 - **How keys are sent:** `deck-keys.ps1` stays running and sends the keys with `SendInput` to the app in front. It also reports which app that is, for the profiles.
+- **Batteries:** `battery.cs`, compiled into `deck-keys.ps1` and run on its own thread there, asks wireless mice and keyboards for their battery once a minute: Razer and Pulsar receivers with their own USB reports, Logitech with HID++ 2.0, Bluetooth LE from what Windows already reads. Only questions are sent, never settings.
   - The Edge window never takes focus, so keys go to the game.
   - The widget only sends which button was pressed. The server looks up what that button does in `deck.json`, so a web page can't make it send keys.
 - **Lights** (`lights.js`, all local, no cloud). Their status is on the Deck settings page under **Lights**, with **Pair** and **Search again**.

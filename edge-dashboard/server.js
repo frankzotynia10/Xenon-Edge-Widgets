@@ -106,8 +106,8 @@ function readProps(w) {
 // ---------- live updates (Server-Sent Events) ----------
 const events = new EventEmitter();
 const clients = new Set();
-// What Deck buttons show live: lights, OBS, the jiggler, and the mouse battery.
-const liveState = () => ({ ...deck.lights.stateNow(), ...deck.batteryState() });
+// What Deck buttons show live: lights, OBS, the jiggler, and mouse / keyboard batteries.
+const liveState = () => ({ ...deck.lights.stateNow(), ...deck.battery.state() });
 
 function broadcast(event, data) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -154,6 +154,7 @@ async function dashHandler(req, res) {
   }
   if (req.method === 'GET') {
     if (p === '/api/deck') return jsonCors(req, res, 200, { config: deck.load(), ...deck.current(), lights: liveState() });
+    if (p === '/api/battery') return json(res, 200, deck.battery.list());
     if (p === '/api/deck/icons') return json(res, 200, deck.iconList());
     if (p === '/api/fps') return jsonCors(req, res, 200, fps.read());
     if (p === '/api/mute-lights') {
@@ -294,7 +295,7 @@ async function start(opts = {}) {
   deck.onChange(s => broadcast('deck', s));
   deck.onVolume(v => broadcast('volume', v || {}));
   deck.lights.watch(() => broadcast('lights', liveState()));
-  deck.onBattery(() => broadcast('lights', liveState()));
+  deck.battery.onChange(() => broadcast('lights', liveState()));
   const servers = [await listen(DASH_PORT, dashHandler)];
   for (const w of widgetList(layout)) servers.push(await listen(w.port, widgetHandler(w)));
   return { url: `http://127.0.0.1:${DASH_PORT}/`, servers };

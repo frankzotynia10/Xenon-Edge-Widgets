@@ -4,7 +4,7 @@
 (() => {
   const H = { 'content-type': 'application/json', 'x-edge-dashboard': '1' };
   const el = (t, a = {}, ...kids) => { const e = document.createElement(t); for (const [k, v] of Object.entries(a)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null) e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
-  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC or an app)'], ['screens-off', 'Turn screens off'], ['battery', 'Mouse battery (Razer)'], ['webhook', 'Webhook (call a URL)'], ['hue-dim', 'Hue brightness slider'], ['keylight-dim', 'Key Light brightness slider'], ['open', 'Open (command line)'],['page', 'Next / previous page'],
+  const TYPES = [['', 'Nothing'], ['keys', 'Hotkey'], ['text', 'Type text'], ['app', 'Start / switch to app'], ['volume', 'Volume slider (PC or an app)'], ['screens-off', 'Turn screens off'], ['battery', 'Battery (wireless mouse / keyboard)'], ['webhook', 'Webhook (call a URL)'], ['hue-dim', 'Hue brightness slider'], ['keylight-dim', 'Key Light brightness slider'], ['open', 'Open (command line)'],['page', 'Next / previous page'],
     ['folder', 'Open folder'], ['back', 'Back (out of a folder)'],
     ['obs', 'OBS Studio'], ['shadowplay', 'NVIDIA ShadowPlay'],
     ['edge-sleep', 'Edge sleep cover (dim the Edge)'], ['jiggler', 'Mouse jiggler: pause today / resume'], ['keylight', 'Elgato Key Light'], ['hue-scene', 'Hue scene'], ['hue-room', 'Hue room on / off'], ['huesync', 'Hue Sync start / stop'],
@@ -19,7 +19,7 @@
     ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down', Escape: 'Esc', PageUp: 'PageUp', PageDown: 'PageDown' };
 
   let ml = null;
-  let cfg, icons = [], cat = null, pairing = false, pi = 0, pgi = 0, sel = null, root, saveTimer;
+  let cfg, icons = [], cat = null, bats = [], pairing = false, pi = 0, pgi = 0, sel = null, root, saveTimer;
   const prof = () => cfg.profiles[pi];
   const page = () => prof().pages[pgi];
   const grid = () => prof().grid || cfg.grid || { cols: 5, rows: 3 };
@@ -327,7 +327,15 @@
         if ((a.method || 'POST') === 'POST') bbox.append(field('Body', text(a.body, v => { a.body = v; changed(false); }, { placeholder: '{"from": "edge"}', class: 'wide' }),
           'Optional. Sent as JSON if it is JSON, otherwise as text. The button flashes red if the URL doesn\'t answer OK.'));
       }
-      if (a.type === 'battery') bbox.append(field('Note', el('span', { class: 'hint' }, "Shows your Razer mouse's battery, read straight from the mouse once a minute. Synapse doesn't need to be running. Tap the button to read it right away. Leave the image empty to see the battery gauge.")));
+      if (a.type === 'battery') {
+        const BRANDS = { razer: 'Razer', logitech: 'Logitech', pulsar: 'Pulsar', bt: 'Bluetooth' };
+        const opts = bats.map(d => [d.id, `${d.name} (${BRANDS[d.id.split(':')[0]] || d.id.split(':')[0]}, ${d.level == null ? 'asleep now' : d.level + '%'})`]);
+        if (a.device && !bats.some(d => d.id === a.device)) opts.unshift([a.device, BRANDS[a.device] ? `First ${BRANDS[a.device]} device found` : `${a.device} (not found right now)`]);
+        if (!opts.length) opts.push(['', 'No devices found yet']);
+        bbox.append(field('Device', el('span', { class: 'row-inline' }, select(opts, a.device || '', v => { a.device = v; changed(); }), ' ',
+          el('button', { class: 'small', onclick: async () => { bats = await (await fetch('/api/battery')).json(); draw(); } }, 'Refresh')),
+          "Razer, Logitech (Unifying, Bolt, Lightspeed) and Pulsar receivers, and Bluetooth devices Windows shows a battery for. Read once a minute, no vendor app needed. A sleeping device shows as asleep; wake it and press Refresh. Leave the image empty to see the gauge."));
+      }
       if (a.type === 'screens-off') bbox.append(field('Note', el('span', { class: 'hint' }, 'Turns every screen off, the Edge too. Any mouse move, key or touch wakes them. The mouse jiggler wakes them too, so pause it first.')));
       if (a.type === 'volume' || a.type === 'hue-dim' || a.type === 'keylight-dim') {
         const c = cat || { keylights: [], rooms: [], hue: {} };
@@ -380,6 +388,7 @@
     pi = Math.min(pi, cfg.profiles.length - 1); pgi = Math.min(pgi, prof().pages.length - 1);
     draw();
     fetch('/api/lights/catalog').then(r => r.json()).then(c => { cat = c; draw(); }).catch(() => {});
+    fetch('/api/battery').then(r => r.json()).then(b => { bats = b; draw(); }).catch(() => {});
     fetch('/api/mute-lights').then(r => r.json()).then(m => { ml = m; draw(); }).catch(() => {});
   }
 

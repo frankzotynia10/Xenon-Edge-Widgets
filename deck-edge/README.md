@@ -13,7 +13,7 @@ What a button can do:
 - **Hue / Key Light brightness sliders:** the same kind of column for a Hue room (or zone) or a Key Light. Drag to dim; all the way down turns it off, and dragging up turns it on. Tap the bulb to turn it on or off. They follow changes made in the Hue app or Control Center within a few seconds.
 - **Turn screens off:** turns every screen off, the Edge too. Any mouse move, key or touch wakes them, and so does the mouse jiggler, so pause it first.
 - **Webhook:** calls a URL (POST with an optional body, or GET), for example an n8n or Home Assistant webhook. The button flashes red if it doesn't answer OK.
-- **Mouse battery (Razer):** a battery gauge with the percentage, read straight from a Razer mouse over USB once a minute, so Synapse can stay closed. Green, amber under 40%, red at 15% and below, with a bolt while it charges. Shows "asleep" when the mouse doesn't answer. Tap it to read it again right away.
+- **Battery (wireless mouse / keyboard):** a battery gauge with the percentage, read straight from the device once a minute, so no vendor app (Synapse, G Hub, Fusion) needs to be running. Pick the device in the editor. Works with Razer, Logitech (Unifying, Bolt and Lightspeed receivers, or a cable) and Pulsar receivers, plus any Bluetooth device Windows shows a battery for. Green, amber under 40%, red at 15% and below (the button then pulses red until it charges), with a bolt while it charges. Shows "asleep" when the device doesn't answer. Tap it to read it again right away.
 - **Open:** a command line, like Stream Deck's Open (e.g. an SSH session).
 - **Pages, folders and Back.**
 - **Elgato Key Light:** on/off, brightness steps, warmer/cooler. The button shows the current brightness or color temperature.

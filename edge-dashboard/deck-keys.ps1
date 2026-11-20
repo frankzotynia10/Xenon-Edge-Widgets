@@ -8,21 +8,24 @@
 #   AM <proc>           mute / unmute one app
 #   W <proc>,<proc>     the apps to report with "avol" lines
 #   S                   turn all screens off (any mouse move, key or touch wakes them)
-#   B                   read the Razer mouse battery now (it's also read once a minute)
+#   B                   read the mouse / keyboard batteries now (they're also read once a minute; see battery.cs)
 # stdout:
 #   vol <0-100|-> <0|1>               the system volume and whether it's muted, whenever it changes
 #   avol <proc> <0-100|-> <0|1>       a watched app's volume ("-" = no audio session right now)
-#   bat razer <0-100|-> <0|1> <name>  the Razer mouse's battery and whether it's charging ("-" = no answer)
+#   bats <id>|<0-100|->|<0|1>|<name>;...   wireless mouse / keyboard batteries, after each read
 #   fg <process> <0|1> <window class>   whenever the foreground window (or whether it fills its screen) changes;
 #                                       1 = it covers the whole monitor, like a fullscreen game
 #   ok | err <message>            after each command
 # Keys go to whatever window has focus. The dashboard never takes focus, so that's the game or app you're in.
 $ErrorActionPreference = 'Stop'
 
+Add-Type -Path (Join-Path $PSScriptRoot 'battery.cs')   # Batteries.Scan(), used on its own thread below
+
 Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -193,57 +196,15 @@ public static class DeckKeys {
 
   static void Say(string s) { lock (outLock) { Console.WriteLine(s); Console.Out.Flush(); } }
 
-  // ---------- Razer mouse battery, asked straight from the mouse over USB (no Synapse needed) ----------
-  // Razer's 90-byte feature report: transaction id 0x1F, class 0x07, command 0x80 = battery (0-255), 0x84 = charging.
-  [DllImport("hid.dll", SetLastError = true)] static extern bool HidD_SetFeature(Microsoft.Win32.SafeHandles.SafeFileHandle h, byte[] b, int n);
-  [DllImport("hid.dll", SetLastError = true)] static extern bool HidD_GetFeature(Microsoft.Win32.SafeHandles.SafeFileHandle h, byte[] b, int n);
-  [DllImport("hid.dll", CharSet = CharSet.Unicode)] static extern bool HidD_GetProductString(Microsoft.Win32.SafeHandles.SafeFileHandle h, StringBuilder b, int n);
-  [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-  static extern Microsoft.Win32.SafeHandles.SafeFileHandle CreateFile(string p, uint access, uint share, IntPtr sa, uint disp, uint flags, IntPtr t);
-  static readonly object batLock = new object();
-  static string razerPath, lastBat;
-
-  static List<string> RazerPaths() {
-    List<string> list = new List<string>();
-    using (Microsoft.Win32.RegistryKey hid = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Enum\HID")) {
-      if (hid == null) return list;
-      foreach (string dev in hid.GetSubKeyNames()) {
-        if (!dev.StartsWith("VID_1532&", StringComparison.OrdinalIgnoreCase)) continue;
-        using (Microsoft.Win32.RegistryKey k = hid.OpenSubKey(dev))
-          foreach (string inst in k.GetSubKeyNames()) list.Add(@"\\?\HID#" + dev + "#" + inst + "#{4d1e55b2-f16f-11cf-88cb-001111000030}");
-      }
-    }
-    return list;
-  }
-  static byte[] RazerAsk(Microsoft.Win32.SafeHandles.SafeFileHandle h, byte cls, byte cmd) {
-    byte[] q = new byte[91]; q[2] = 0x1F; q[6] = 2; q[7] = cls; q[8] = cmd;
-    byte crc = 0; for (int i = 3; i <= 88; i++) crc ^= q[i]; q[89] = crc;
-    if (!HidD_SetFeature(h, q, 91)) return null;
-    Thread.Sleep(60);
-    byte[] r = new byte[91];
-    if (!HidD_GetFeature(h, r, 91)) return null;
-    return r[1] == 0x02 && r[7] == cls && r[8] == cmd ? r : null;   // status 2 = answered
-  }
-  // "<0-100> <charging 0|1> <product name>", or null if this interface isn't a Razer mouse that answers
-  static string ReadRazer(string path) {
-    Microsoft.Win32.SafeHandles.SafeFileHandle h = CreateFile(path, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
-    if (h.IsInvalid) h = CreateFile(path, 0, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
-    using (h) {
-      if (h.IsInvalid) return null;
-      byte[] b = RazerAsk(h, 0x07, 0x80); if (b == null) return null;
-      byte[] c = RazerAsk(h, 0x07, 0x84);
-      StringBuilder name = new StringBuilder(128); HidD_GetProductString(h, name, 256);
-      return (int)Math.Round(b[10] * 100 / 255.0) + " " + (c != null && c[10] == 1 ? "1" : "0") + " " + name.ToString().Trim();
-    }
-  }
-  // bat razer <0-100|-> <0|1> <name>, when it changes ("-" = no Razer mouse answering: unplugged or asleep)
-  static void ReportBattery(bool force) {
-    lock (batLock) {
-      string got = razerPath != null ? ReadRazer(razerPath) : null;
-      if (got == null) { razerPath = null; foreach (string p in RazerPaths()) { got = ReadRazer(p); if (got != null) { razerPath = p; break; } } }
-      string line = "bat razer " + (got ?? "-");
-      if (force || line != lastBat) { lastBat = line; Say(line); }
-    }
+  // Batteries.Scan() from battery.cs (its own assembly, so found by name). Runs off the key and volume
+  // threads: a slow device can't hold up a hotkey.
+  static MethodInfo batScan;
+  static void ReportBatteries() {
+    try {
+      if (batScan == null)
+        foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies()) { Type t = asm.GetType("Batteries"); if (t != null) { batScan = t.GetMethod("Scan"); break; } }
+      if (batScan != null) Say((string)batScan.Invoke(null, null));
+    } catch { }
   }
 
   static INPUT Key(int vk, bool up) {
@@ -312,8 +273,8 @@ public static class DeckKeys {
           } else if (line.StartsWith("W ")) {         // W <process>,<process>,...  apps to report
             watchApps = line.Substring(2).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             lastApp.Clear(); ReportApps();
-          } else if (line == "B") {                   // read the mouse battery now
-            ReportBattery(true);
+          } else if (line == "B") {
+            ThreadPool.QueueUserWorkItem(_ => ReportBatteries());
           } else continue;
           Say("ok");
         } catch (Exception e) { Say("err " + e.Message.Replace("\n", " ")); }
@@ -324,9 +285,8 @@ public static class DeckKeys {
     // Volume changed elsewhere (keyboard, Windows, an app): checked 4 times a second, sent only when it changes.
     Thread vol = new Thread(() => { int i = 0; while (true) { ReportVolume(); if (i++ % 2 == 0) ReportApps(); Thread.Sleep(250); } });
     vol.IsBackground = true; vol.Start();
-    // Mouse battery: once a minute (it changes slowly; Razer's own app checks about as often).
-    Thread bat = new Thread(() => { while (true) { try { ReportBattery(false); } catch { } Thread.Sleep(60000); } });
-    bat.IsBackground = true; bat.Start();
+    Thread bat = new Thread(() => { while (true) { ReportBatteries(); Thread.Sleep(60000); } });
+    bat.IsBackground = true; bat.Priority = ThreadPriority.BelowNormal; bat.Start();
 
     try { SetProcessDpiAwarenessContext((IntPtr)(-4)); } catch { }   // real pixels, for the fullscreen check
     proc = (hook, ev, hwnd, idObject, idChild, thread, time) => ReportForeground();
