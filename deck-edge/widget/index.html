@@ -140,8 +140,10 @@ function batteryOf(id) {
   const k = lightState['battery:' + id] ? 'battery:' + id : Object.keys(lightState).find(k => k.startsWith('battery:' + id + ':'));
   return k ? lightState[k] : null;
 }
-// A battery: an outline filled to the level (green, amber under 40%, red at 15% and below), a bolt while charging.
+// A battery: an outline filled to the level (green, amber under 40%, red at 15% and below). While charging, just a
+// bolt and "charging": mice judge their level from the cell voltage, which the charger pushes up, so the % reads high.
 function batteryHtml(s) {
+  if (s && s.charging) return `<div class="bat"><svg viewBox="0 0 100 50"><rect x="3" y="5" width="86" height="40" rx="8" fill="none" stroke="#d8dbe4" stroke-width="5"/><rect x="91" y="17" width="7" height="16" rx="2" fill="#d8dbe4"/><path d="M52 8 L34 29 H48 L42 43 L62 20 H48 Z" fill="#5fd27a"/></svg><b style="font-size:calc(var(--t) * .13);color:#5fd27a">charging</b></div>`;
   if (!s || s.level == null) return `<div class="bat"><svg viewBox="0 0 100 50"><rect x="3" y="5" width="86" height="40" rx="8" fill="none" stroke="#5c6070" stroke-width="5"/><rect x="91" y="17" width="7" height="16" rx="2" fill="#5c6070"/></svg><b style="color:var(--muted)">asleep</b></div>`;
   const lvl = Math.max(0, Math.min(100, s.level)), col = lvl <= 15 ? 'var(--bad)' : lvl < 40 ? '#ffb347' : '#5fd27a';
   const bolt = s.charging ? '<path d="M50 9 L36 28 H48 L42 42 L60 21 H48 Z" fill="#fff" stroke="#000" stroke-opacity=".35" stroke-width="1.5"/>' : '';
@@ -194,8 +196,8 @@ function render() {
     // iconOff: a second image for when the button's thing is paused or off (the jiggler, a light that's off)
     const icon = li && (li.off || li.dark) && b.iconOff ? b.iconOff : b.icon;
     const bat = a.type === 'battery' ? batteryOf(a.device) : null;
-    if (a.type === 'battery' && !b.icon) { inner += batteryHtml(bat); cls.push('battery'); }
     if (bat && bat.level != null && bat.level <= 15 && !bat.charging) cls.push('low');   // red pulse, image or not
+    if (a.type === 'battery' && !b.icon) { inner += batteryHtml(bat); cls.push('battery'); }
     else if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false"${b.hue ? ` style="filter:hue-rotate(${Number(b.hue) | 0}deg)"` : ''}>`;
     else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
     else {
