@@ -34,6 +34,11 @@ button { font: inherit; color: inherit; border: none; background: none; cursor: 
   background: #ffd36b; box-shadow: 0 0 calc(var(--t) * .12) #ffcf5a; z-index: 2; }
 .key.lit { box-shadow: inset 0 0 0 2px rgba(255, 211, 107, .55); }
 .key .val { position: absolute; top: 6%; right: 7%; z-index: 2; font-size: calc(var(--t) * .1); font-weight: 700; color: #ffd36b; text-shadow: 0 1px 3px #000; }
+.key .bat { position: absolute; left: 14%; right: 14%; top: 16%; display: flex; flex-direction: column; align-items: center; gap: calc(var(--t) * .04); }
+.key .bat svg { width: 100%; height: auto; }
+.key .bat b { font-size: calc(var(--t) * .2); line-height: 1; }
+.key .bat.low b { color: var(--bad); }
+.key.battery .title { color: var(--muted); }
 .key.ok { box-shadow: inset 0 0 0 3px var(--accent); }
 .key.err { box-shadow: inset 0 0 0 3px var(--bad); }
 
@@ -122,6 +127,14 @@ function lightInfo(a) {
   if (a.type === 'keylight' && (a.op === 'warmer' || a.op === 'cooler')) return { lit: false, val: s.kelvin + 'K' };
   return { lit: !!s.on, dark: !s.on };   // dark: a light that's off shows its iconOff (bulb-off)
 }
+// A mouse battery: an outline filled to the level (green, amber under 40%, red at 15% and below), a bolt while charging.
+function batteryHtml(s) {
+  if (!s) return `<div class="bat"><svg viewBox="0 0 100 50"><rect x="3" y="5" width="86" height="40" rx="8" fill="none" stroke="#5c6070" stroke-width="5"/><rect x="91" y="17" width="7" height="16" rx="2" fill="#5c6070"/></svg><b style="color:var(--muted)">asleep</b></div>`;
+  const lvl = Math.max(0, Math.min(100, s.level)), col = lvl <= 15 ? 'var(--bad)' : lvl < 40 ? '#ffb347' : '#5fd27a';
+  const bolt = s.charging ? '<path d="M50 9 L36 28 H48 L42 42 L60 21 H48 Z" fill="#fff" stroke="#000" stroke-opacity=".35" stroke-width="1.5"/>' : '';
+  return `<div class="bat${lvl <= 15 && !s.charging ? ' low' : ''}"><svg viewBox="0 0 100 50"><rect x="3" y="5" width="86" height="40" rx="8" fill="none" stroke="#d8dbe4" stroke-width="5"/>`
+    + `<rect x="91" y="17" width="7" height="16" rx="2" fill="#d8dbe4"/><rect x="10" y="12" width="${(72 * lvl / 100).toFixed(1)}" height="26" rx="4" fill="${col}"/>${bolt}</svg><b>${lvl}%</b></div>`;
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -167,7 +180,8 @@ function render() {
     let inner = '';
     // iconOff: a second image for when the button's thing is paused or off (the jiggler, a light that's off)
     const icon = li && (li.off || li.dark) && b.iconOff ? b.iconOff : b.icon;
-    if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false"${b.hue ? ` style="filter:hue-rotate(${Number(b.hue) | 0}deg)"` : ''}>`;
+    if (a.type === 'battery' && !b.icon) { inner += batteryHtml(lightState['battery:' + (a.device || 'razer')]); cls.push('battery'); }
+    else if (icon) inner += `<img src="${API}/deck-icon/${encodeURIComponent(icon)}" alt="" draggable="false"${b.hue ? ` style="filter:hue-rotate(${Number(b.hue) | 0}deg)"` : ''}>`;
     else if (a.type === 'text' && a.text) inner += `<div class="text${[...a.text].length > 4 ? ' long' : ''}">${esc(a.text)}</div>`;
     else {
       const glyph = a.type === 'folder' ? 'folder' : a.type === 'back' ? 'back' : a.type === 'page' ? (a.step < 0 ? 'prev' : 'next') : null;

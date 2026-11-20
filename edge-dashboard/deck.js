@@ -58,8 +58,8 @@ function findButton(cfg, profile, page, pos) {
 
 // ---------- the key sender ----------
 let helper = null, pending = [], log = () => {};
-const state = { fg: '', fullscreen: false, profile: null, volume: null, appVol: {} };
-const listeners = new Set(), volListeners = new Set();
+const state = { fg: '', fullscreen: false, profile: null, volume: null, appVol: {}, battery: {} };
+const listeners = new Set(), volListeners = new Set(), batListeners = new Set();
 // Windows UI that shouldn't switch the deck away from the app you were in: Alt+Tab, Task View, the taskbar, Start.
 const SHELL_CLASSES = /^(ForegroundStaging|MultitaskingViewFrame|XamlExplorerHostIslandWindow|TaskSwitcherWnd|Shell_TrayWnd|Shell_SecondaryTrayWnd|Windows\.UI\.Core\.CoreWindow|NotifyIconOverflowWindow|TopLevelWindowForOverflowXamlIsland)$/;
 
@@ -96,6 +96,11 @@ function startHelper() {
         const [, proc, lvl, muted] = line.split(' ');
         state.appVol[proc.toLowerCase()] = lvl === '-' ? null : { level: Number(lvl), muted: muted === '1' };
         emitVolume();
+      } else if (line.startsWith('bat ')) {
+        // bat razer <0-100|-> <0|1> <name>
+        const [, dev, lvl, charging, ...name] = line.split(' ');
+        state.battery[dev] = lvl === '-' ? null : { level: Number(lvl), charging: charging === '1', name: name.join(' ') };
+        for (const fn of batListeners) fn(batteryState());
       } else if (line === 'ok' || line.startsWith('err')) {
         const cb = pending.shift();
         if (cb) cb(line === 'ok' ? null : new Error(line.slice(4)));
@@ -145,6 +150,7 @@ async function press(profile, page, pos, value) {
       spawn('cmd.exe', ['/d', '/s', '/c', `"start "" ${a.command}"`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref();
       return;
     case 'screens-off': return command('S');
+    case 'battery': return command('B');   // a tap reads it again now
     case 'webhook': return webhook(a);
     case 'app':
       // Start menu apps, through the App Launcher helper: starts each one, or brings it to the
@@ -250,6 +256,9 @@ const volSnapshot = () => ({ system: state.volume, apps: state.appVol, fg: state
 function emitVolume() { const v = volSnapshot(); for (const fn of volListeners) fn(v); }
 const current = () => ({ profile: state.profile || profileFor(state.fg), fg: state.fg, volume: volSnapshot() });
 const onVolume = fn => volListeners.add(fn);
+// Mouse battery for the Deck buttons, keyed like the light states: { 'battery:razer': { level, charging, name } | null }
+const batteryState = () => Object.fromEntries(Object.entries(state.battery).map(([k, v]) => ['battery:' + k, v]));
+const onBattery = fn => batListeners.add(fn);
 const foreground = () => ({ app: state.fg, fullscreen: state.fullscreen });
 
-module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, onVolume, current, foreground, VK, ICON_DIRS, lights };
+module.exports = { init, load, save, press, parseKeys, keysName, icon, iconList, onChange, onVolume, onBattery, batteryState, current, foreground, VK, ICON_DIRS, lights };
