@@ -384,6 +384,7 @@ $stdin = New-Object IO.StreamReader([Console]::OpenStandardInput(), [Text.Encodi
 $stdinTask = $stdin.ReadLineAsync()
 $lastExt = $null
 $nextPoll = [DateTime]::MinValue
+$polls = 0
 
 while ($true) {
   $handled = $false
@@ -413,6 +414,9 @@ while ($true) {
     }
     $json = $ext | ConvertTo-Json -Compress
     if ($json -ne $lastExt) { $lastExt = $json; [Console]::Out.WriteLine($json); [Console]::Out.Flush() }
+    # UI Automation objects hold native memory .NET can't see, so it rarely collects them (this process swung
+    # past 1 GB). A collection every ~10 seconds keeps it small.
+    if (++$polls % 12 -eq 0) { [GC]::Collect(); [GC]::WaitForPendingFinalizers() }
   }
   Start-Sleep -Milliseconds 60
 }

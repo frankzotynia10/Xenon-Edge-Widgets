@@ -66,6 +66,7 @@ function Read-Thumbnail($ref) {
 function Emit($obj) { [Console]::Out.WriteLine(($obj | ConvertTo-Json -Compress -Depth 4)); [Console]::Out.Flush() }
 
 $lastKey = $null
+$polls = 0
 $lastJson = $null
 $art = $null
 $stdin = New-Object IO.StreamReader([Console]::OpenStandardInput(), [Text.Encoding]::UTF8)
@@ -130,5 +131,8 @@ while ($true) {
   } catch {
     [Console]::Error.WriteLine("poll failed: $($_.Exception.Message)")
   }
+  # Each poll leaves WinRT objects whose real size .NET can't see, so it rarely collects them and the process
+  # drifted to 1 GB over a week. A collection every 10 seconds keeps it flat at about 80 MB.
+  if (++$polls % 25 -eq 0) { [GC]::Collect(); [GC]::WaitForPendingFinalizers() }
   Start-Sleep -Milliseconds 400
 }
